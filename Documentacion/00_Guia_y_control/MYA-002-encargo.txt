@@ -1,0 +1,9 @@
+MYA-002 — Interfaz integrada: menús y estados
+Continuar sobre Aplicacion/ de este proyecto, copia activa creada en MYA-001. Original anterior intacto.
+Objetivo: organizar de una vez los menús Archivo, Configuración, Opciones, Vista, Comandos, Ventanas y Ayuda con IDs comunes y estados honestos, usando análisis Smaart/Propi y módulosDSP/Diseño/Procesadores previstos.
+Leer solo secciones pertinentes de revision-manual-smaart-completa.txt, revision-propi-integracion.txt y rita-dsp-proyecto-integrado.txt en Documentacion/05_Referencia_tecnica. Decisiones de Antonio prevalecen frente a atajos de referencia.
+Implementar registro central de comandos (ID, nombreES/EN, atajo, habilitación, estado y acción) reutilizable por menú/botón. Conectar acciones ya existentes. Funciones sin motor deshabilitadas con razón clara; no cuadros de éxito ficticios. No desarrollar audio, DSP, API ni3D en este bloque. Conservar aspecto y controles actuales.
+Incluir organización de Procesadores: conexiónAPI futura por modelo, exportación de archivo y ficha manual futura; no asumir soporte validado.
+No ampliar indiscriminadamente Main.cpp: extraer definición de comandos a archivo dedicado. No refactorizar motores fuera del alcance.
+Aceptación: IDs únicos, acciones compartidas cuando existan duplicadas, ninguna emisión de audio, comandos no operativos identificados, atajos acordados conservados y no interceptados en campos, clavesES/EN consistentes. Compilar y pruebas específicas de registro/despacho.
+MYA-001 aún pendiente de aceptación visual: conservar esa limitación; no marcarla superada por compilar. No cerrar/reiniciar apps abiertas. Guardar informe breve y matriz menú→acción→estado en Documentacion/07_Verificacion/MYA-002-resultado.txt.

@@ -1,0 +1,30 @@
+#include "../src/MeterState.h"
+#include "../src/MeterAlarm.h"
+#include "../src/TFDisplayState.h"
+#include "../src/GraphViewState.h"
+#include "../src/GraphOptionInventory.h"
+#include "../src/PlotPresentation.h"
+#include <cassert>
+#include <iostream>
+#include <set>
+using namespace juce;
+int main(int argc,char** argv){
+ auto base=argc>1?File(String::fromUTF8(argv[1])):File::getCurrentWorkingDirectory().getChildFile("preferences-test-data");base.createDirectory();auto dir=base.getChildFile(Uuid().toString());dir.createDirectory();auto file=dir.getChildFile("meters.json");
+ MeterState state(file);assert(state.ready()&&state.state().cards.size()==4);for(int i=0;i<17;++i)assert(state.add());assert(state.state().cards.size()==21);assert(state.setGrid(3,7));auto id=state.state().cards[0].id;auto c=*state.find(id);c.name="FOH";c.deviceKey="OCTA-CAPTURE / CoreAudio";c.channel=7;c.metric=5;c.weight=2;c.alarmMetric=5;c.alarmWeight=2;c.warning=105;c.alarm=110;c.hysteresis=1;c.animate=false;assert(state.update(c));assert(state.move(id,1));assert(state.remove(state.state().cards.back().id));assert(state.window(450,120,1300,700));assert(state.sidebar(true));
+ auto before=file.loadFileAsString();assert(!state.setGrid(1,1));assert(file.loadFileAsString()==before);state.setSources({{"other device","Other",1}});assert(state.find(id)->deviceKey==c.deviceKey&&state.find(id)->channel==7);
+ MeterState restored(file);assert(restored.ready()&&restored.state().cards.size()==20);assert(restored.state().rows==3&&restored.state().columns==7&&restored.state().sidebarMeters);assert(restored.state().x==450&&restored.state().width==1300&&restored.state().height==700);assert(restored.state().cards[1].id==id);assert(restored.find(id)->metric==5&&restored.find(id)->weight==2&&!restored.find(id)->animate);
+ using Level=MeterAlarm::Level;MeterAlarm::Reading r{104.9,5,2,true,true,c.deviceKey,7};assert(MeterAlarm::evaluate(c,r)==Level::None);r.value=105;assert(MeterAlarm::evaluate(c,r)==Level::Warning);r.value=109.99;assert(MeterAlarm::evaluate(c,r)==Level::Warning);r.value=110;assert(MeterAlarm::evaluate(c,r)==Level::Alarm);r.value=109.5;assert(MeterAlarm::evaluate(c,r,Level::Alarm)==Level::Alarm);r.value=108.9;assert(MeterAlarm::evaluate(c,r,Level::Alarm)==Level::Warning);r.value=104.5;assert(MeterAlarm::evaluate(c,r,Level::Warning)==Level::Warning);r.value=103.9;assert(MeterAlarm::evaluate(c,r,Level::Warning)==Level::None);
+ r.value=115;r.calibrated=false;assert(MeterAlarm::evaluate(c,r)==Level::None);r.calibrated=true;r.acquisitionValid=false;assert(MeterAlarm::evaluate(c,r)==Level::None);r.acquisitionValid=true;r.metric=1;assert(MeterAlarm::evaluate(c,r)==Level::None);r.metric=5;r.weight=3;assert(MeterAlarm::evaluate(c,r)==Level::None);assert(MeterAlarm::evaluate(c,std::nullopt,Level::Alarm)==Level::None);
+ auto fs=c;fs.metric=1;fs.weight=1;fs.alarmMetric=1;fs.alarmWeight=1;fs.warning=-9;fs.alarm=-3;assert(state.update(fs));r={-2,1,1,true,false,c.deviceKey,7};assert(MeterAlarm::evaluate(fs,r)==Level::Alarm);fs.warning=105;fs.alarm=110;assert(!state.update(fs));
+ TFDisplayState tf;assert(tf.valid()&&tf.linkPhaseMag&&tf.phaseGrid==30&&tf.magGrid==3);for(int scale:{1,2,3,4}){tf.frequencyGrid=scale;for(double f:{20.,31.5,1000.,16000.,20000.})assert(std::abs(tf.frequency(tf.coordinate(f))-f)<1.e-8);}
+ tf.magMin=-30;tf.magMax=30;tf.phaseMin=-180;tf.phaseMax=180;for(int kind:{1,2})for(double v:{-10.,0.,15.})assert(std::abs(tf.physical(tf.normalize(v,kind),kind)-v)<1.e-12);
+ tf.coherenceThreshold=85;tf.coherenceSquared=false;assert(tf.passes(.81));assert(std::abs(tf.coherence(.81)-.9)<1.e-12);tf.coherenceSquared=true;assert(!tf.passes(.81));assert(std::abs(tf.coherence(.81)-.81)<1.e-12);tf.coherenceOn=false;assert(!tf.passes(.81));assert(!tf.passes(std::nullopt));tf.coherenceFollowTrace=true;assert(!tf.ownCoherenceWidthEditable());tf.coherenceFollowTrace=false;assert(tf.ownCoherenceWidthEditable());tf.coherenceHeight=.5;tf.linkPhaseMag=false;tf.foregroundWidth=3;auto tfFile=dir.getChildFile("tf.json");assert(tf.save(tfFile));auto loaded=TFDisplayState::read(tfFile);assert(loaded&&!loaded->linkPhaseMag&&loaded->foregroundWidth==3&&loaded->coherenceHeight>.4&&loaded->coherenceSquared);
+ auto invalid=tf.encode();invalid.getDynamicObject()->setProperty("magMax",-40);assert(!TFDisplayState::decode(invalid));
+ GraphViewState choice;choice.linkPhaseMag=false;auto decoded=GraphViewState::decode(choice.encode());assert(decoded&&!decoded->linkPhaseMag);auto legacy=choice.encode();legacy.getDynamicObject()->removeProperty("linkPhaseMag");auto old=GraphViewState::decode(legacy);assert(old&&!old->linkSpecified);
+ for(bool impulse:{false,true}){double z=1,pan=impulse?.3:.1;for(int i=0;i<12;++i)PlotPresentation::horizontalZoom(z,pan,false,impulse);if(impulse)assert(pan==0);else{double centre=.5+pan,half=.5/z;assert(centre-half>=0&&centre+half<=1);}for(int i=0;i<30;++i)PlotPresentation::horizontalZoom(z,pan,true,impulse);assert(z==(impulse?.25:1.));assert(pan==0);}
+ std::array<double,3> zx{{1,4,2}},px{{0,.1,0}},zy{{1,2,3}};auto beforeY=zy;PlotPresentation::linkFrequency(zx,px,1);assert(zx[2]==4&&px[2]==.1&&zy==beforeY);assert(zx[0]==1&&px[0]==0);
+ auto badBool=tf.encode();badBool.getDynamicObject()->setProperty("coherenceOn","false");assert(!TFDisplayState::decode(badBool));
+ std::set<std::string> keys;int pending=0;for(const auto& option:graphOptions()){assert(keys.insert(option.key).second&&!option.es.empty()&&!option.en.empty());if(!option.implemented)++pending;if(option.tab=="Spectrum")assert(!option.implemented);if(option.key=="tf.unwrap"||option.key=="tf.groupDelay")assert(!option.implemented);}
+ std::cout<<"PASS: 21 meters, grid/order/source/geometry persistence; unit-gated alarms and hysteresis; TF settings and independent smoothing/zoom; horizontal span policy; "<<keys.size()<<" graph options ("<<pending<<" pending)\n";
+ if(argc>2)for(const auto& option:graphOptions())std::cout<<option.tab<<'\t'<<option.key<<'\t'<<option.es<<'\t'<<option.en<<'\t'<<(option.implemented?"implemented":"pending")<<'\t'<<option.scope<<'\n';
+}

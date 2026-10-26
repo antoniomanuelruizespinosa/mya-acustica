@@ -1,0 +1,59 @@
+MYA ACUSTICA — DISEÑADOR DE ARREGLOS DE SUBGRAVES
+26-10-2026. Especificación e inspección de referencias; módulo aún no implementado.
+
+OBJETIVO
+Incorporar predicción espacial, calculadora geométrica y DSP de cada salida dentro del proyecto del recinto. La referencia SubMap permite modelar altavoces de una biblioteca y llevar la respuesta a RiTA; Mya debe conectar su propio modelo con los mismos motores DSP que procesan capturas.
+
+REFERENCIAS OBSERVADAS
+Web oficial SubMap: https://www.gaudiosolutions.com/en/producto/submap/
+Ejercicio oficial de arco gradiente, compatibilidad entre modelos y comprobación de cobertura: https://www.gaudiosolutions.com/exercise-2-covid-19/
+Bob McCarthy, artículo de end-fire con reconocimiento de Mauricio Ramirez: https://www.svconline.com/news/directional-bass-using-omnidirectional-components-397257
+Propi, ventana Sub Map observada en pantalla: modos L-R, Line, Arc, Elec.Arc, End Fired, End Fired Line, Cardioid, Cardioid Line, L-R End Fired y L-R Cardioid; frecuencia, cantidad, separación, vista espacial y tabla de delay. Estado observado L-R, 63 Hz, Count=2, Horizontal X=1.2 m, gap=4 m; tabla con L1/L2/R1/R2. No se ha auditado su algoritmo ni se infiere de la imagen una precisión cuantitativa.
+Excel abierto por usuario: 24 SUB 1100 A 2.5 METROS GRADIENTE PIRATA STAGE 3-4.xlsm, en Documents/S.A.D_V19 Arreglos de Sub. Se inspeccionaron fórmulas del archivo guardado y la vista de Excel, sin editar ni ejecutar macros.
+
+CASO DE EXCEL REVISADO
+Dashboard: D2=2 (Delayed horizontal array); D9=2 (patrón cardioide ideal); N2=12 stacks acústicos, cada uno formado por dos recintos en gradiente: 24 subgraves físicos, confirmado por el usuario; H4=2.5 m; H8=120 grados; H14=80 Hz LPF; H15=4; AH4=14 Celsius. Ganancias extremas -3 dB. La selección 2 corresponde al arco electrónico entre stacks; el patrón cardioide representa cada pareja. El modo 4 Gradient es una alternativa de arreglo de dos fuentes, no el desglose interno del montaje actual.
+Fuentes posicionadas de y=+13.75 a -13.75 m: extensión entre centros extremos 27.5 m. La hoja muestra también «array length»=30 m; son convenciones distintas que deben etiquetarse, no intercambiarse.
+La temperatura determina c=331.4+0.607*T=339.898 m/s. Es la aproximación de esa hoja, no una modelización atmosférica completa.
+Fórmulas trazadas: Dashboard!Y5:Y16 -> Setups!I83:I94 -> selección del arreglo -> Setups!I20:I31 -> T6:T17 -> S6:S17 (desplazamiento euclídeo entre arco virtual y línea física).
+Para N fuentes, separación d y arco total alpha en radianes:
+  R=(N-1)*d/alpha
+  u_i=(N-1)/2-i, i=0...N-1
+  theta_i=u_i*alpha/(N-1)
+  y_i=u_i*d
+  dx_i=R*(cos(theta_i)-1)
+  dy_i=R*sin(theta_i)-y_i
+  s_i=sqrt(dx_i^2+dy_i^2)
+  t_i=1000*(s_i-min(s))/c  [ms]
+Esta es la construcción concreta del Excel auditado. No se presenta como equivalencia exacta de todos los arcos físicos y electrónicos en todas las direcciones. alpha=0 y N=1 necesitan ramas explícitas; no usar divisiones singulares.
+Delays reproducidos: 20.36890, 13.71742, 8.29726, 4.17382, 1.39689, 0, 0, 1.39689, 4.17382, 8.29726, 13.71742, 20.36890 ms.
+Comparación independiente con valores guardados: error máximo inferior a 1e-9 ms y simetría verificada. Resultado en verificacion-arco-subs.json. No se recalcularon todas las hojas ni se validaron macros o comportamiento acústico.
+La referencia de media longitud de onda es c/(2d)=67.9796 Hz. El LPF a 80 Hz no es un muro: interesa predecir todo el rango de transición y los lóbulos, no declarar válido/inválido el arreglo únicamente con esa cifra.
+
+ENTRADAS DE MYA
+Cantidad de recintos físicos, grupos acústicos y salidas independientes; modelo o fuente ideal; coordenadas x/y/z, orientación y separación entre centros; ocupación/anchura de cajas; tipo de arreglo; corte HP/LP con familia/orden; respuesta real si disponible; temperatura; geometría de audiencia y escenario; banda a evaluar y objetivo de cobertura/rechazo.
+Número, corte y separación no determinan un único conjunto de delays. Faltan disposición y objetivo: línea, end-fire, gradiente y arco requieren reglas diferentes.
+
+MODOS
+Línea broadside; dirección angular mediante delays; arco físico; arco electrónico; end-fire; gradiente/cardioide; combinaciones por bloques y diseño manual. Evitar encadenar un preset cardioide interno y una receta externa como si el recinto fuera omnidireccional.
+Para end-fire ideal en eje +x: t_i=(x_i-min(x))/c, normalizado a delay no negativo; validar suma al frente. Para gradiente, derivar el delay y polaridad a partir del lado de cancelación y geometría, mostrando claramente qué recinto se retrasa. No compartir una única receta «d/c» sin identificar el arreglo.
+Enfocar a un punto no equivale a cubrir un área. Comparar resultados sobre una malla y frecuencias, con alternativa manual.
+
+PREDICCIÓN
+P_m(f)=sum_i H_mi(f)*g_i*p_i*F_i(f)*exp(-j*2*pi*f*t_i), p_i=+1/-1.
+H_mi incluye propagación/directividad si viene de medidas o modelo. Si se usa monopolo ideal, incluir 1/r y fase de recorrido una sola vez. No derivar una predicción espacial completa de una TF tomada en un punto.
+Mapa de nivel relativo con normalización visible; SPL absoluto solo cuando exista referencia de sensibilidad/nivel suficiente. Selección por frecuencia y banda; promediar energías para mapas por bandas, no sumar directamente fasores de frecuencias distintas.
+Entorno por defecto campo libre identificado. Suelo, límites y recinto requieren modelos adicionales; no etiquetar como «predicción del recinto» una suma ideal sin esas condiciones.
+
+MEJORAS DE INTERFAZ PROPUESTAS
+Plano cenital y sección vertical; mapa de cobertura con escala fija entre comparaciones; polares; respuestas en micrófonos virtuales; mapa frontal/posterior; tabla de cableado con ID físico, grupo, salida, ganancia, delay, polaridad y filtros.
+Mostrar separación acústica y espacio libre entre cajas por separado. Especificar si Count cuenta cajas por lado, pares o total.
+Comparar sin DSP/con DSP; conservar originales; enviar cada fuente/grupo al DSP virtual; guardar diseño y capturas en la carpeta del recinto; vincular mediciones de comprobación.
+Métricas: uniformidad en audiencia, rechazo posterior por banda, lóbulos secundarios, retardo máximo y recursos del procesador. El ingeniero elige entre alternativas y bloquea parámetros.
+
+RELACIÓN CON ARRAY VERTICAL Y LMBC
+Compartir editor de geometría, alturas, ángulos y centros acústicos, pero separar cálculo de apuntamiento mecánico y control de fase electrónico. Un dibujo de ángulos no demuestra control de directividad por APF. Usar modelos y límites de caja apropiados; la predicción acústica no certifica rigging/carga mecánica.
+Pendiente: inspeccionar la calculadora de ángulos específica que el usuario mostrará en Propi. En esta revisión se observó Sub Map.
+
+SIGUIENTE VALIDACIÓN
+Agrupación confirmada: 12 stacks de dos recintos, 24 recintos físicos. Falta representar explícitamente el procesamiento interno de cada pareja. Comparar el algoritmo de arco de la hoja con modelos de fuente virtual sobre toda la zona; validar end-fire y gradiente por separado. Verificar filtros, suelo y datos de directividad. Probar correspondencia de salidas y medir montaje real antes de tratar la tabla como ajuste definitivo.

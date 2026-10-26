@@ -1,0 +1,27 @@
+MYA ACUSTICA — REVISIÓN PREVIA MAC / WINDOWS — 26 OCT 2026
+
+ESTADO REAL
+La aplicación anterior y las vistas HTML son prototipos. Existe una biblioteca matemática Swift con cuatro comprobaciones superadas. No existe aún motor JUCE/C++ de adquisición, ni predicción 3D validada, ni exportación verificada a procesadores. El código actual no permite afirmar que la arquitectura definitiva esté probada ni libre de fallos.
+
+DECISIÓN
+C++ compartido para DSP, medición, modelo del proyecto y optimización. JUCE para audio y UI. Swift queda como referencia experimental. Compilación reproducible con CMake, versiones de dependencias fijadas. ARM64 Mac y x64 Windows como primeros objetivos. Otros destinos se incorporan explícitamente. CMake no está instalado en el entorno inspeccionado; resolver herramienta antes de construir JUCE.
+
+RIESGOS Y CONDICIONES DE ACEPTACIÓN
+1. Callback de audio: buffers preasignados, sin bloqueos, disco, red ni cálculo de mapas. Transferencia por colas acotadas; si se llena una cola, registrar pérdida y marcar discontinuidad, nunca ocultarla ni bloquear captura.
+2. Medición: TF multicanal con referencia común y timestamps; rechazar referencia ausente, saturación y datos no finitos. Find/Track no debe cambiar silenciosamente el tiempo de capturas archivadas. Validar signo/unidades de fase y delay, FFT, ventanas, promedios, coherencia y calibración.
+3. Optimización y predicción: workers limitados, cancelación y resultados con identificador de versión. No mostrar cálculo antiguo como si correspondiera a la geometría o DSP actuales.
+4. Gráficas: snapshots inmutables, historial acotado y decimación de visualización separada de los datos originales. Pausar repintado invisible. La cámara no invalida el cálculo acústico.
+5. 3D: backend aún no elegido. Probar integración GPU y recuperación de contexto en ambos SO antes de comprometer el producto. La existencia de OpenGL en JUCE no prueba por sí sola que sea la solución adecuada a largo plazo. Separar renderizador de solver acústico.
+6. Arranque: no exigir interfaz conectada, red ni licencia remota para abrir un proyecto de trabajo local. Cargar escenas/bibliotecas grandes de forma diferida. Salidas silenciadas por defecto. Cambios de dispositivo y frecuencia reconstruyen estado sin reutilizar buffers obsoletos.
+7. Archivos: esquema versionado, guardado atómico, copia de recuperación, importadores con límites de tamaño y validación. Conservar medidas originales y referencia temporal. Probar rutas Unicode y separadores decimales.
+8. Dispositivos: comprobar Roland y drivers reales en cada SO, hot-plug, cambio de búfer, reposo/reactivación y pérdida de canales. Estas comprobaciones quedan pendientes hasta tener hardware conectado.
+9. Salidas DSP: representación común y adaptadores por modelo/firmware; validar cuantización, delay máximo, tipos de filtros, FIR y latencia. Detectar incompatibilidad antes de exportar. No confundir receta ideal con parámetros ejecutables.
+10. Pruebas: núcleo en ambos SO, casos conocidos de loopback, cuatro micros, gráficos y cálculo 3D concurrentes; prueba prolongada con contadores de pérdidas. Registrar tiempo de apertura en frío/caliente, CPU, memoria, tiempo de callback y duración de predicción. Definir presupuestos numéricos tras medir una primera implementación; no presentar objetivos como resultados.
+
+CORRECCIONES VISUALES
+Referencia observada directamente: Propi, ventana principal y Sub Map. Fondo grafito fijo, plots negros, ejes azules, valores cian, selectores oscuros, botones con gradiente y marcos gris acero; capturas a izquierda, IR/fase/magnitud al centro y TF/generadores a derecha. Se aplicó a una nueva maqueta, conservando marca propia Mya. No se copiaron recursos gráficos ni código de Propi.
+
+FUENTES PRIMARIAS CONSULTADAS
+https://docs.juce.com/master/classjuce_1_1AudioIODeviceCallback.html
+https://docs.juce.com/master/classjuce_1_1AudioDeviceManager.html
+https://docs.juce.com/develop/classjuce_1_1OpenGLContext.html

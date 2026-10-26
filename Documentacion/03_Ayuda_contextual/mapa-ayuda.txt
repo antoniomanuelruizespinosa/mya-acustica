@@ -1,0 +1,13 @@
+MAPA INICIAL DE AYUDA — enlaces previstos, todavía no integrados
+help.audio.routing -> M03: dispositivo, entradas, referencia, salida y estado.
+help.tf.find -> M06: localizar tiempo individual; condiciones y aceptación.
+help.tf.track -> M06: seguimiento individual/global y estados.
+help.plot.cursor -> M07: fuente, frecuencia, magnitud, fase y bloqueo.
+help.plot.coherence -> M07: estimación, umbral y datos insuficientes.
+help.capture.folder -> M10: sesión, posición, captura y referencia temporal.
+help.spl.calibration -> M04/M11: cadena física, nivel conocido y validez.
+help.dsp.chain -> M12: orden, filtros, delay, polaridad, bypass y undo.
+help.optimization.proposal -> M14: objetivo, restricciones, incertidumbre y comparación.
+help.export.processor -> M16: modelo, capacidades y comprobación del resultado.
+help.vision.model -> M17: hipótesis, fuentes y límites de predicción.
+Cada ID debe funcionar en ES/EN y conservarse cuando se renombre un botón.

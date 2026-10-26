@@ -1,0 +1,62 @@
+MYA ACUSTICA — PROPUESTA DE CONTROL DE DIRECTIVIDAD CON ALL-PASS
+26-10-2026. Diseño independiente; no implementación ni réplica del algoritmo LMBC.
+
+REFERENCIA
+Meyer Sound denomina Low-Mid Beam Control (LMBC) a su procesamiento para ensanchar o dirigir hacia arriba la cobertura vertical de medios-graves mediante all-pass específicos por elemento o pareja. La documentación describe modos y configuración, pero las fuentes consultadas no publican el algoritmo completo que calcula los filtros. No se puede deducir equivalencia con LMBC a partir de fórmulas genéricas.
+La guía recomienda modelar en MAPP antes de aplicar. El informe técnico de 2002 sobre beam steering trata limitaciones generales; no debe interpretarse como una negación del LMBC posterior, que actúa en una banda específica.
+
+DOS HERRAMIENTAS COMPLEMENTARIAS
+1. Analizador APF: sobre filtro ideal o captura, mostrar magnitud, fase, retardo de fase, retardo de grupo, impulso y comparación de cascadas. Control manual de frecuencia/Q/orden y ajuste a una curva objetivo realizable.
+2. Diseñador espacial: geometría y respuestas de cada elemento para calcular la suma en una malla de audiencia y optimizar all-pass por salida. Modos propuestos: dirigir y ensanchar. No son equivalentes a alinear dos trazos en un micrófono.
+
+BASE MATEMÁTICA, CONVENCIONES EXPLÍCITAS
+Fase phi continua en radianes; f en Hz:
+  tau_g(f) = -(1/(2*pi)) d phi / d f  [segundos]
+  tau_p(f) = -phi(f)/(2*pi*f)         [segundos, depende de rama de fase]
+Un delay puro t tiene phi=-2*pi*f*t y tau_g=tau_p=t. Un APF no tiene necesariamente esa igualdad.
+Con fase en grados: tau_g=-d phi_deg/df /360. Derivar fase desenvuelta y excluir regiones de baja calidad o ceros; la derivación amplifica el ruido. Preservar la referencia temporal y mostrar si se ha restado un delay de medición.
+
+APF analógico de segundo orden, prototipo:
+  A(s)=(s^2-(w0/Q)*s+w0^2)/(s^2+(w0/Q)*s+w0^2)
+  tau_g(w0)=4Q/w0=2Q/(pi*f0)
+Ejemplo: f0=500 Hz, Q=0.707 -> tau_g(f0) aproximadamente 0.900 ms.
+En esa frecuencia la fase puede representarse como -180 grados: su retardo de fase sería 1.000 ms. La diferencia ilustra por qué convertir un ángulo a milisegundos NO calcula por sí solo el retardo de grupo.
+Esta expresión es para el prototipo analógico. Para DSP digital calcular la respuesta de los coeficientes efectivos a la Fs del destino; la transformación bilineal modifica la relación. No suponer que el valor en f0 es siempre el máximo de tau_g.
+
+GEOMETRÍA
+Para un array vertical recto ideal, separación d, ángulo theta desde broadside y campo lejano:
+  diferencia de camino = d*sin(theta)
+  magnitud de diferencia de tiempo = |d*sin(theta)|/c
+El signo se fija según orden de cajas y sentido de apuntamiento. Ejemplo didáctico d=0.5 m, theta=10 grados, c=343 m/s -> 0.253 ms entre elementos.
+Es una referencia de delay puro para fuentes ideales, NO una receta de APF ni el algoritmo LMBC.
+Para un punto objetivo x y posiciones r_i:
+  R_i=norm(x-r_i); t_i=(max(R)-R_i)/c
+iguala tiempos de llegada de fuentes ideales en ese punto, añadiendo tiempo a las más cercanas. En arrays curvos o campo cercano usar distancias reales, orientación y directividad, no extrapolar la fórmula de array recto.
+
+SUMA Y OPTIMIZACIÓN
+Con H_mi(f) como transferencia compleja ya medida/modelada desde salida i al punto m, incluyendo propagación:
+  P_m(f)=sum_i H_mi(f)*g_i*A_i(f)*exp(-j*2*pi*f*t_i)
+No añadir propagación otra vez si H_mi ya la incluye.
+Alternativa de modelo simplificado: H_mi=D_i(f,direccion)*exp(-j*k*R_mi)/R_mi, con normalización y respuesta del altavoz explícitas. Marcar que omite efectos de recinto, acoplamientos y detalles no modelados.
+Optimizar error de nivel en audiencia, uniformidad, energía fuera de zona, alteración de HF y coste/latencia. El retardo de grupo es una variable de diagnóstico y diseño, no el único objetivo: importa la suma espacial compleja.
+Parámetros: número de APF, f0/Q por sección y salida, delay y ganancias si se permiten. Límites de estabilidad, rangos del procesador, agrupación física de cajas y presupuesto de recursos.
+Mostrar alternativas y validación multiposición; no inferir una directividad completa desde una única captura del array combinado.
+
+INTERFAZ PROPUESTA
+Geometría: modelo, cantidad de cajas, coordenadas/altura, ángulos, agrupación por salida, datos de directividad, condiciones ambientales.
+Objetivo: banda de trabajo, sector de audiencia, dirigir/ensanchar, referencia y restricciones.
+Resultados: polar por frecuencia; mapa vertical antes/después; magnitud/fase/GD por salida; suma en puntos; lóbulos secundarios y energía posterior; tabla APF con orden/frecuencia/Q; delay y latencia.
+Docencia: conmutar fuentes ideales y datos reales, mover separación/ángulo, explicar fase frente a GD y efectos de Q.
+Exportación: parámetros manuales primero, archivos por modelo cuando estén verificados. No suponer que un APF del mismo nombre tiene idénticos coeficientes en todos los procesadores.
+
+EVIDENCIA Y PRUEBAS PENDIENTES
+No se han calculado filtros para un array real ni implementado este módulo.
+Validar APF de magnitud unitaria; GD analítica frente a derivada numérica; signo de steering; suma sin procesamiento; casos con datos espaciales conocidos; respuesta de archivo exportado; comparación con predicción especializada y mediciones físicas.
+
+FUENTES
+https://docs.meyersound.com/products/en/user-guide---galileo-galaxy.html
+https://meyersound.com/news/lmbc/
+https://docs.meyersound.com/products/en/user-guide---compass-go.html
+https://docs.meyersound.com/pdf/technical-reports/18.010.436.01%20A%20DSP%20BEAM%20STEERING%20W_MODERN%20LINE%20ARRAYS.pdf
+https://www.dsprelated.com/freebooks/filters/Phase_Group_Delay.html
+https://www.mathworks.com/help/signal/ug/delay.html

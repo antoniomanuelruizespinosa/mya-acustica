@@ -1,0 +1,58 @@
+MYA — FORMATOS Y CONECTIVIDAD, INVESTIGACIÓN INICIAL 26/10/2026
+Estado: especificación y evidencia documental parcial, sin adaptadores implementados ni pruebas de equipos. Prioridad ProdigyMP, GALAXY y Marani. No es inventario exhaustivo del mercado.
+
+SEPARACIÓN OBLIGATORIA
+1 TrazoTF: frecuenciaHz, magnituddB, fasegrados, coherencia opcional y máscara. TXT tabulado/TSV y CSV son contenedores; detectar columnas mediante perfil/vista previa, no por extensión. Fase ausente no equivale a0°, coherencia ausente no equivale a100%. No inferir delay absoluto de una fase ya compensada.
+2 IR: WAV con Fs/canales/origen temporal; preservar escala y datosfloat cuando corresponda. Un WAV deIR medida NO es automáticamente un FIR de corrección.
+3 ParámetrosDSP: tabla por canal y bloque con tipo, frecuencia, ganancia, Q oBW oS, orden, delay y polaridad. CSV genérico Mya sirve para intercambio Mya y ficha humana; NO se anuncia importable por un fabricante sin esquema probado.
+4 CoeficientesFIR: secuencia numérica en TXT/CSV/WAV/formatos específicos. Requiere Fs, orden, taps, precisión, normalización y límites. TXT/CSV normalmente no declara Fs: solicitarlo o tomarlo de perfil/metadata explícito. No normalizar, truncar ni remuestrear silenciosamente.
+5 ProyectoMya: contenedor versionado con manifiesto, originales, arrays, geometría, modelos, cadenasDSP, targets, variantes e historial. CSV no sustituye todo el proyecto. Extensión definitiva por decidir.
+
+MATRIZ INICIAL DOCUMENTADA
+PRODIGY.MP / DirectOut:
+Página oficial confirma FIR/IIR, globcon y protocolos JSONAPI/OSC/Ember+/otros. Dependencia de licencia/firmware y capacidades concretas pendientes. No confundir API Smaart accesible desdeglobcon con API de escrituraDSP del equipo. La tabla comparativa distingueMP/MX/MC; no generalizar funciones delMP a toda la marca.
+Vía propuesta: JSONAPI tras obtener especificación de endpoints y capacidades; ficha manual inmediata en desarrollo posterior. Gramática de importaciónFIR/globcon y permisos de lectura/escritura por parámetro aún pendientes. No se ha confirmado CSV universal ni endpoint para cargar FIR.
+Fuentes: https://www.directout.eu/product/prodigy-mp/ ; https://www.directout.eu/prodigy-mp-aoip-bridging-dsp-power-src-capabilities/ ; comparación oficial junio2024 enlazada desdeproducto.
+
+GALAXY / Meyer Sound:
+Guía oficial de programación accesible: OSC porTCP/UDP y controlASCII. Consulta de valores, descripciones/rangos y suscripciones documentadas. EjemploASCII puerto25003 en guía; implementación verificará configuración y framing del protocolo, no enviará comandos por mera detección deIP.
+Vía propuesta: adaptador de control con consulta de capacidades, mapeo de canales, lectura, comparación y escritura explícita. Compass usa proyectos/configuración propios: no prometer importar CSV deEQ como proyectoCompass.
+Importación de FIR arbitrario no confirmada por las fuentes consultadas; ausencia de la palabraFIR en guía no prueba imposibilidad. Estado UNKNOWN, no soportado por Mya hasta evidencia/prueba.
+Fuente: https://docs.meyersound.com/products/en/programming-guide---galileo-galaxy.html
+Producto: https://meyersound.com/product/galileo-galaxy/
+
+MARANI:
+LPP480F: manual oficial documenta coeficientesfloat TXT/CSV,1–512taps por salida y coeficientes estrictamente entre−2 y2. Load permite inspección antes deStore. Solo aplica al modelo/manual citado, no aMIR/MDA en general.
+MIR-A: localizado manual oficial, lectura directa falló por timeout; límites por bloque/Fs y formatos concretos quedan pendientes de extracción verificada. No adoptar cifras de resúmenes de terceros como perfil cerrado. Catálogo oficial contiene manuales/firmwares específicos MIRFI/MIRE/MDA y protocolo serial DPA480P. La existencia de este protocolo no lo convierte enAPI universal Marani.
+Vía propuesta: exportFIR por perfil probado + fichaDSP; control directo deMIR/MDA requiere protocolo autorizado/documentado y pruebas. ManualRiTA indica integración, pero no proporciona suficiente especificación para implementarla desdeMya.
+Fuentes: https://www.marani-proaudio.com/public/LPP-480F%20USER%20MANUAL.pdf ; https://marani-proaudio.com/download-Downloads/0_0/eng/ ; https://www.marani-proaudio.com/public/MIR-A%20User%20Manual.pdf
+
+OTROS FORMATOS Y PRIORIDADES
+Smaart: comenzar por exportASCII documentado en ayuda local (incluye suavizado/banding; valores inválidos pueden ser*). TRF/SRF nativos pendientes de contrato y fixtures. No convertir un import parcial en validación de referencia temporal.
+RiTA: manual local indica exportTXT/CSV, IR y filtros; proyectos.rita no se prometen compatibles. Propi: guía indicaTXT yCRV para targets; gramática pendiente.
+Después de las tres familias prioritarias: Lake, Powersoft, d&bR1, RCF RDNet yPK Sound, cada uno con investigación propia. No se atribuye aquí soporte probado.
+
+DISEÑO DEL IMPORTADOR
+Asistente: tipo de dato→programa/perfil→archivo→previsualizar columnas/unidades/metadatos→validar→crear copia de proyecto. Distinguir delimitador y separador decimal; en exportMya usar punto decimal y encabezados/versión estables. Admitir comentarios y marcadores de inválido solo segúnperfil. Rechazar ambiguos o pedir mapeo, nunca adivinarfase/Fs.
+Guardar original, hash, perfil y versión de parser, máscaras, smoothing, referenceDelay y estadoDSP previo. No reordenar, interpolar o quitar muestras sin registrar transformación. Exportar debe indicar datos originales o presentación suavizada.
+
+PERFIL DE PROCESADOR
+manufacturer/model/firmware/license; transporte y versión; funciones legibles/escribibles; canales/rutas; Fs porbloque; filtros disponibles; ecuacionesQ/BW/S; rangos/pasos; FIRtaps/coeficientes/latencia; gramática de archivo; capacidad backup/readback; evidencia y fecha. Valores desconocidos explícitos, no0 ni capacidad ilimitada.
+Tres acciones independientes: Preparar archivo / Mostrar ficha manual / Conectar. Comparar respuesta objetivo con respuesta realizable antes de envío. Conectar no altera equipo. Reconexión no reenvía comandos automáticamente. Registrar errores parciales y leer de vuelta si protocolo lo permite.
+Ficha manual incluye nombre/número de canal, orden de filtros, unidades nativas, valores redondeados y operaciones no representables. FIR arbitrario requiere fichero/coefs, no se representa mediante unos pocos controles manuales.
+
+PRUEBAS NECESARIAS
+Importar/exportar/reimportar con tolerancias definidas; fixture por programa/versión; tabs/comas/decimalcoma, BOM, filastruncadas, NaN, * yfaseausente; 48/96kHz y taps límite. Validar suma con referencia conocida. FIR identidad y retardo conocidos; respuesta calculada antes/después de cuantización. API primero simulador/procesadorvirtual si existe, después banco real; desconexión, duplicados, cambios externos, readback y persistencia. Documentado no equivale a probado.
+
+SIGUIENTE PASO
+Tras MYA-002: contrato de datos e importadorASCII/CSV con previsualización y ficha manual genérica, sin marcar perfiles de fabricante como operativos. Adquirir ejemplos reales exportados deglobcon/Compass/Marani y completar protocolos antes de programar adaptadores específicos. No se ha enviado nada a equipos ni contactado fabricantes.
+
+AMPLIACIÓN — L-ACOUSTICS Y d&b, 26/10/2026
+Ambas familias pasan a alcance solicitado por Antonio; evaluación inicial, no compatibilidad implementada.
+L-Acoustics: distinguir Soundvision (diseño), LA Network Manager (control) y M1/P1 (medición/ajuste). Página oficial confirma importación de datosSoundvision aLANM con grupos/ganancia/delay/balance tonal; M1/P1 permite capturar y ajustar después sin ruido. Es referencia directa para flujoMya, no prueba deAPI abierta para importar datosMya. Formatos de trazos/EQ/FIR de terceros, alcance deAPI y modelos compatibles aún sin confirmar. No inferir cargaFIR arbitrario porqueLANM ofrece filtrosFIR. Prioridad ficha manual de parámetros accesibles, luego perfil de archivo/protocolo probado. Mantener presets/protecciones de fabricante separados de ajustes de usuario.
+Fuente: https://www.l-acoustics.com/products/network-manager/
+Documentación: https://www.l-acoustics.com/result-documentation-center/?choice=LA+Network+Manager
+d&b: R1 es software decontrol, no un único procesador. Perfiles por amplificador y EQbank. Página oficial distingue4bandas D6/D12,8bandas5D y dos16bandas porcanal en modelos indicados; no generalizar recursos. Ethernet/CAN segúnmodelo; notas oficialesR1 describen OCA/AES70. Esto no proporciona por sí solo IDs/objetos accesibles para integraciónMya. OSC DS100 es documentación específica deSoundscape, noAPI universal deR1/amplificadores.
+ManualRiTA consultado indica exportIIR paraR1: pista de interoperabilidad; esquema exacto y fixture importado enR1 pendientes. No anunciar CSV genérico compatible ni importación libreFIR/ArrayProcessing. Distinguir ArrayCalc→R1 del intercambio conMya; no atribuir formatos de diseño compatibles sin verificarlos.
+Fuentes: https://www.dbaudio.com/global/en/products/software/r1/ ; https://swupdate.dbaudio.com/net_update/R1_V3/R1_V3.34.1_Rel_Notes.PDF ; https://www.dbaudio.com/assets/products/downloads/manuals-documentation/electronics/dbaudio-osc-protocol-ds100-1.3.12-en.pdf
+Pendiente porambas: documentación de importación/exportación concreta, archivos de ejemplo generados por versión oficial, capacidades de lectura/escritura y pruebas de traducción deQ/BW/shelf. No se contactó fabricantes ni se conectaron equipos.

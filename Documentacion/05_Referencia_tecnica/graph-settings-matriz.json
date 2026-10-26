@@ -1,0 +1,664 @@
+{
+  "schema": 1,
+  "version": "MYA-004",
+  "date": "2026-10-26",
+  "note": "Inventario y alcance; opciones pendientes deshabilitadas. No certifica equivalencia Smaart.",
+  "options": [
+    {
+      "tab": "TF",
+      "key": "tf.frequency",
+      "nombreES": "Escala y retícula de frecuencia",
+      "nombreEN": "Frequency scale and grid",
+      "estado": "implemented",
+      "alcance": "Presentación demo; originales intactos"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.globalSmoothing",
+      "nombreES": "Vincular suavizado global del mismo tipo",
+      "nombreEN": "Link global same-type smoothing",
+      "estado": "pending",
+      "alcance": "Pendiente: enlace global del mismo tipo entre ventanas"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.phaseMagSmoothing",
+      "nombreES": "Vincular suavizado fase y magnitud",
+      "nombreEN": "Link phase and magnitude smoothing",
+      "estado": "implemented",
+      "alcance": "Presentación demo; originales intactos"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.liveIR",
+      "nombreES": "Mostrar IR",
+      "nombreEN": "Display live IR",
+      "estado": "implemented",
+      "alcance": "Presentación demo; originales intactos"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.zoom",
+      "nombreES": "Vincular zoom de frecuencia X",
+      "nombreEN": "Link frequency X zoom",
+      "estado": "implemented",
+      "alcance": "Enlace del eje X común entre paneles; Y conserva sus unidades"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.foregroundWidth",
+      "nombreES": "Grosor frontal",
+      "nombreEN": "Foreground width",
+      "estado": "implemented",
+      "alcance": "Presentación demo; originales intactos"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.backgroundWidth",
+      "nombreES": "Grosor de fondo",
+      "nombreEN": "Background width",
+      "estado": "implemented",
+      "alcance": "Presentación demo; originales intactos"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.proportionalIR",
+      "nombreES": "IR proporcional",
+      "nombreEN": "Proportional IR",
+      "estado": "pending",
+      "alcance": "Pendiente: distribución proporcional del panel IR"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.instant",
+      "nombreES": "Respuesta instantánea",
+      "nombreEN": "Instantaneous response",
+      "estado": "pending",
+      "alcance": "Pendiente: motor, representación o validación"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.allowNone",
+      "nombreES": "Permitir sin suavizado",
+      "nombreEN": "Allow no smoothing",
+      "estado": "implemented",
+      "alcance": "Presentación demo; originales intactos"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.magMin",
+      "nombreES": "Mínimo magnitud",
+      "nombreEN": "Magnitude minimum",
+      "estado": "implemented",
+      "alcance": "Presentación demo; originales intactos"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.magMax",
+      "nombreES": "Máximo magnitud",
+      "nombreEN": "Magnitude maximum",
+      "estado": "implemented",
+      "alcance": "Presentación demo; originales intactos"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.magGrid",
+      "nombreES": "Paso retícula magnitud",
+      "nombreEN": "Magnitude grid step",
+      "estado": "implemented",
+      "alcance": "Presentación demo; originales intactos"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.magScroll",
+      "nombreES": "Paso desplazar magnitud",
+      "nombreEN": "Magnitude scroll step",
+      "estado": "implemented",
+      "alcance": "Presentación demo; originales intactos"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.magZoom",
+      "nombreES": "Paso zoom magnitud",
+      "nombreEN": "Magnitude zoom step",
+      "estado": "implemented",
+      "alcance": "Presentación demo; originales intactos"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.trackPeak",
+      "nombreES": "Seguimiento de pico",
+      "nombreEN": "Track peak",
+      "estado": "pending",
+      "alcance": "Pendiente: motor, representación o validación"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.magAveraging",
+      "nombreES": "Representación polar del promedio",
+      "nombreEN": "Polar magnitude averaging display",
+      "estado": "pending",
+      "alcance": "Pendiente: motor, representación o validación"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.weighting",
+      "nombreES": "Ponderación visual",
+      "nombreEN": "Visual weighting",
+      "estado": "pending",
+      "alcance": "Pendiente: motor, representación o validación"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.displayWeighting",
+      "nombreES": "Mostrar selector de ponderación",
+      "nombreEN": "Display weighting selector",
+      "estado": "pending",
+      "alcance": "Pendiente: motor, representación o validación"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.phaseMin",
+      "nombreES": "Mínimo fase envuelta",
+      "nombreEN": "Wrapped phase minimum",
+      "estado": "implemented",
+      "alcance": "Presentación demo; originales intactos"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.phaseMax",
+      "nombreES": "Máximo fase envuelta",
+      "nombreEN": "Wrapped phase maximum",
+      "estado": "implemented",
+      "alcance": "Presentación demo; originales intactos"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.phaseGrid",
+      "nombreES": "Paso retícula fase",
+      "nombreEN": "Phase grid step",
+      "estado": "implemented",
+      "alcance": "Presentación demo; originales intactos"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.phaseScroll",
+      "nombreES": "Paso desplazar fase",
+      "nombreEN": "Phase scroll step",
+      "estado": "implemented",
+      "alcance": "Presentación demo; originales intactos"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.phaseZoom",
+      "nombreES": "Paso zoom fase",
+      "nombreEN": "Phase zoom step",
+      "estado": "implemented",
+      "alcance": "Presentación demo; originales intactos"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.unwrap",
+      "nombreES": "Desenrollar fase",
+      "nombreEN": "Unwrap phase",
+      "estado": "pending",
+      "alcance": "Pendiente: motor, representación o validación"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.unwrapCentre",
+      "nombreES": "Frecuencia central de unwrap",
+      "nombreEN": "Unwrap centre frequency",
+      "estado": "pending",
+      "alcance": "Pendiente: motor, representación o validación"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.unwrapRange",
+      "nombreES": "Rango de unwrap",
+      "nombreEN": "Unwrap range",
+      "estado": "pending",
+      "alcance": "Pendiente: motor, representación o validación"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.groupDelay",
+      "nombreES": "Fase como retardo de grupo",
+      "nombreEN": "Phase as group delay",
+      "estado": "pending",
+      "alcance": "Pendiente: motor, representación o validación"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.coherence",
+      "nombreES": "Mostrar coherencia roja",
+      "nombreEN": "Show red coherence",
+      "estado": "implemented",
+      "alcance": "Presentación demo; originales intactos"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.threshold",
+      "nombreES": "Umbral coherencia mag y fase",
+      "nombreEN": "Magnitude and phase coherence threshold",
+      "estado": "implemented",
+      "alcance": "Presentación demo; originales intactos"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.coherenceHeight",
+      "nombreES": "Altura mitad o cuarto",
+      "nombreEN": "Half or quarter coherence height",
+      "estado": "implemented",
+      "alcance": "Presentación demo; originales intactos"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.mtw",
+      "nombreES": "Mostrar siempre coherencia MTW",
+      "nombreEN": "Always display MTW coherence",
+      "estado": "pending",
+      "alcance": "Pendiente: motor, representación o validación"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.squared",
+      "nombreES": "Coherencia normal o cuadrada, base gamma² declarada",
+      "nombreEN": "Normal or squared coherence, declared gamma-squared base",
+      "estado": "implemented",
+      "alcance": "Base modelo gamma². Normal=raíz; cuadrada=base, sin volver a cuadrar"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.coherenceWidth",
+      "nombreES": "Grosor coherencia",
+      "nombreEN": "Coherence width",
+      "estado": "implemented",
+      "alcance": "Presentación demo; originales intactos"
+    },
+    {
+      "tab": "TF",
+      "key": "tf.coherenceFollow",
+      "nombreES": "Coherencia sigue grosor frontal",
+      "nombreEN": "Coherence follows foreground width",
+      "estado": "implemented",
+      "alcance": "Presentación demo; originales intactos"
+    },
+    {
+      "tab": "Spectrum",
+      "key": "spectrum.banding",
+      "nombreES": "Vincular bandas entre gráficos",
+      "nombreEN": "Link plot banding",
+      "estado": "pending",
+      "alcance": "Pendiente: Spectrum/espectrograma reales"
+    },
+    {
+      "tab": "Spectrum",
+      "key": "spectrum.frequency",
+      "nombreES": "Escala de frecuencia",
+      "nombreEN": "Frequency scale",
+      "estado": "pending",
+      "alcance": "Pendiente: Spectrum/espectrograma reales"
+    },
+    {
+      "tab": "Spectrum",
+      "key": "spectrum.zoom",
+      "nombreES": "Vincular zoom",
+      "nombreEN": "Link plot zoom",
+      "estado": "pending",
+      "alcance": "Pendiente: Spectrum/espectrograma reales"
+    },
+    {
+      "tab": "Spectrum",
+      "key": "spectrum.weight",
+      "nombreES": "Ponderación visual",
+      "nombreEN": "Weighting",
+      "estado": "pending",
+      "alcance": "Pendiente: Spectrum/espectrograma reales"
+    },
+    {
+      "tab": "Spectrum",
+      "key": "spectrum.weightDisplay",
+      "nombreES": "Mostrar ponderación",
+      "nombreEN": "Display weighting",
+      "estado": "pending",
+      "alcance": "Pendiente: Spectrum/espectrograma reales"
+    },
+    {
+      "tab": "Spectrum",
+      "key": "spectrum.bars",
+      "nombreES": "Datos por bandas: barras",
+      "nombreEN": "Banded data: bars",
+      "estado": "pending",
+      "alcance": "Pendiente: Spectrum/espectrograma reales"
+    },
+    {
+      "tab": "Spectrum",
+      "key": "spectrum.peakHold",
+      "nombreES": "Retención de pico",
+      "nombreEN": "Peak hold",
+      "estado": "pending",
+      "alcance": "Pendiente: Spectrum/espectrograma reales"
+    },
+    {
+      "tab": "Spectrum",
+      "key": "spectrum.peakType",
+      "nombreES": "Tipo de pico: infinito",
+      "nombreEN": "Peak type: infinite",
+      "estado": "pending",
+      "alcance": "Pendiente: Spectrum/espectrograma reales"
+    },
+    {
+      "tab": "Spectrum",
+      "key": "spectrum.holdSeconds",
+      "nombreES": "Tiempo de retención en segundos",
+      "nombreEN": "Hold seconds",
+      "estado": "pending",
+      "alcance": "Pendiente: Spectrum/espectrograma reales"
+    },
+    {
+      "tab": "Spectrum",
+      "key": "spectrum.trackPeak",
+      "nombreES": "Seguimiento de pico",
+      "nombreEN": "Track peak",
+      "estado": "pending",
+      "alcance": "Pendiente: Spectrum/espectrograma reales"
+    },
+    {
+      "tab": "Spectrum",
+      "key": "spectrum.thd",
+      "nombreES": "Mostrar THD",
+      "nombreEN": "Show THD",
+      "estado": "pending",
+      "alcance": "Pendiente: Spectrum/espectrograma reales"
+    },
+    {
+      "tab": "Spectrum",
+      "key": "spectrum.calibrated",
+      "nombreES": "Nivel calibrado",
+      "nombreEN": "Plot calibrated level",
+      "estado": "pending",
+      "alcance": "Pendiente: Spectrum/espectrograma reales"
+    },
+    {
+      "tab": "Spectrum",
+      "key": "spectrum.averaged",
+      "nombreES": "Promedio",
+      "nombreEN": "Averaged",
+      "estado": "pending",
+      "alcance": "Pendiente: Spectrum/espectrograma reales"
+    },
+    {
+      "tab": "Spectrum",
+      "key": "spectrum.min",
+      "nombreES": "Mínimo RTA",
+      "nombreEN": "RTA minimum",
+      "estado": "pending",
+      "alcance": "Pendiente: Spectrum/espectrograma reales"
+    },
+    {
+      "tab": "Spectrum",
+      "key": "spectrum.max",
+      "nombreES": "Máximo RTA",
+      "nombreEN": "RTA maximum",
+      "estado": "pending",
+      "alcance": "Pendiente: Spectrum/espectrograma reales"
+    },
+    {
+      "tab": "Spectrum",
+      "key": "spectrum.yZoom",
+      "nombreES": "Paso zoom Y",
+      "nombreEN": "Y zoom step",
+      "estado": "pending",
+      "alcance": "Pendiente: Spectrum/espectrograma reales"
+    },
+    {
+      "tab": "Spectrum",
+      "key": "spectrum.yScroll",
+      "nombreES": "Paso desplazar Y",
+      "nombreEN": "Y scroll step",
+      "estado": "pending",
+      "alcance": "Pendiente: Spectrum/espectrograma reales"
+    },
+    {
+      "tab": "Spectrum",
+      "key": "spectrum.yGrid",
+      "nombreES": "Paso retícula Y",
+      "nombreEN": "Y grid step",
+      "estado": "pending",
+      "alcance": "Pendiente: Spectrum/espectrograma reales"
+    },
+    {
+      "tab": "Spectrum",
+      "key": "spectrum.foregroundWidth",
+      "nombreES": "Grosor frontal",
+      "nombreEN": "Foreground width",
+      "estado": "pending",
+      "alcance": "Pendiente: Spectrum/espectrograma reales"
+    },
+    {
+      "tab": "Spectrum",
+      "key": "spectrum.backgroundWidth",
+      "nombreES": "Grosor fondo",
+      "nombreEN": "Background width",
+      "estado": "pending",
+      "alcance": "Pendiente: Spectrum/espectrograma reales"
+    },
+    {
+      "tab": "Spectrum",
+      "key": "spectrum.sliceHeight",
+      "nombreES": "Altura de rebanada",
+      "nombreEN": "Slice height",
+      "estado": "pending",
+      "alcance": "Pendiente: Spectrum/espectrograma reales"
+    },
+    {
+      "tab": "Spectrum",
+      "key": "spectrum.dynamicMin",
+      "nombreES": "Mínimo espectrograma dBFS",
+      "nombreEN": "Spectrogram minimum dBFS",
+      "estado": "pending",
+      "alcance": "Pendiente: Spectrum/espectrograma reales"
+    },
+    {
+      "tab": "Spectrum",
+      "key": "spectrum.dynamicMax",
+      "nombreES": "Máximo espectrograma dBFS",
+      "nombreEN": "Spectrogram maximum dBFS",
+      "estado": "pending",
+      "alcance": "Pendiente: Spectrum/espectrograma reales"
+    },
+    {
+      "tab": "Spectrum",
+      "key": "spectrum.history",
+      "nombreES": "Rebanadas en historial",
+      "nombreEN": "Slices in history",
+      "estado": "pending",
+      "alcance": "Pendiente: Spectrum/espectrograma reales"
+    },
+    {
+      "tab": "Spectrum",
+      "key": "spectrum.gray",
+      "nombreES": "Escala de grises",
+      "nombreEN": "Grayscale",
+      "estado": "pending",
+      "alcance": "Pendiente: Spectrum/espectrograma reales"
+    },
+    {
+      "tab": "Spectrum",
+      "key": "spectrum.memory",
+      "nombreES": "Memoria mínima requerida",
+      "nombreEN": "Minimum memory required",
+      "estado": "pending",
+      "alcance": "Pendiente: Spectrum/espectrograma reales"
+    },
+    {
+      "tab": "IR",
+      "key": "ir.peak",
+      "nombreES": "Mostrar pico IR",
+      "nombreEN": "Show IR peak",
+      "estado": "pending",
+      "alcance": "Pendiente: IR de medición y contrato de procesado"
+    },
+    {
+      "tab": "IR",
+      "key": "ir.overlap",
+      "nombreES": "Solape %",
+      "nombreEN": "Overlap %",
+      "estado": "pending",
+      "alcance": "Pendiente: IR de medición y contrato de procesado"
+    },
+    {
+      "tab": "IR",
+      "key": "ir.optimize",
+      "nombreES": "Optimizar dibujo",
+      "nombreEN": "Optimize graphing",
+      "estado": "pending",
+      "alcance": "Pendiente: IR de medición y contrato de procesado"
+    },
+    {
+      "tab": "IR",
+      "key": "ir.threshold",
+      "nombreES": "Umbral magnitud dBFS",
+      "nombreEN": "Magnitude threshold dBFS",
+      "estado": "pending",
+      "alcance": "Pendiente: IR de medición y contrato de procesado"
+    },
+    {
+      "tab": "IR",
+      "key": "ir.foregroundWidth",
+      "nombreES": "Grosor frontal IR",
+      "nombreEN": "IR foreground width",
+      "estado": "implemented",
+      "alcance": "Grosor compartido de presentación TF / IR sintética"
+    },
+    {
+      "tab": "IR",
+      "key": "ir.backgroundWidth",
+      "nombreES": "Grosor fondo IR",
+      "nombreEN": "IR background width",
+      "estado": "implemented",
+      "alcance": "Grosor compartido de presentación TF / IR sintética"
+    },
+    {
+      "tab": "IR",
+      "key": "ir.hpfOn",
+      "nombreES": "Activar HPF",
+      "nombreEN": "Enable HPF",
+      "estado": "pending",
+      "alcance": "Pendiente: IR de medición y contrato de procesado"
+    },
+    {
+      "tab": "IR",
+      "key": "ir.hpfHz",
+      "nombreES": "Frecuencia HPF Hz",
+      "nombreEN": "HPF frequency Hz",
+      "estado": "pending",
+      "alcance": "Pendiente: IR de medición y contrato de procesado"
+    },
+    {
+      "tab": "IR",
+      "key": "ir.lpfOn",
+      "nombreES": "Activar LPF",
+      "nombreEN": "Enable LPF",
+      "estado": "pending",
+      "alcance": "Pendiente: IR de medición y contrato de procesado"
+    },
+    {
+      "tab": "IR",
+      "key": "ir.lpfHz",
+      "nombreES": "Frecuencia LPF Hz",
+      "nombreEN": "LPF frequency Hz",
+      "estado": "pending",
+      "alcance": "Pendiente: IR de medición y contrato de procesado"
+    },
+    {
+      "tab": "IR",
+      "key": "ir.min",
+      "nombreES": "Mínimo magnitud IR",
+      "nombreEN": "IR magnitude minimum",
+      "estado": "pending",
+      "alcance": "Pendiente: IR de medición y contrato de procesado"
+    },
+    {
+      "tab": "IR",
+      "key": "ir.max",
+      "nombreES": "Máximo magnitud IR",
+      "nombreEN": "IR magnitude maximum",
+      "estado": "pending",
+      "alcance": "Pendiente: IR de medición y contrato de procesado"
+    },
+    {
+      "tab": "IR",
+      "key": "ir.trace",
+      "nombreES": "Controles suavizado o bandas",
+      "nombreEN": "Trace controls smoothing or banding",
+      "estado": "pending",
+      "alcance": "Pendiente: IR de medición y contrato de procesado"
+    },
+    {
+      "tab": "IR",
+      "key": "ir.frequency",
+      "nombreES": "Escala de frecuencia",
+      "nombreEN": "Frequency scale",
+      "estado": "pending",
+      "alcance": "Pendiente: IR de medición y contrato de procesado"
+    },
+    {
+      "tab": "IR",
+      "key": "ir.gray",
+      "nombreES": "Escala de grises",
+      "nombreEN": "Grayscale",
+      "estado": "pending",
+      "alcance": "Pendiente: IR de medición y contrato de procesado"
+    },
+    {
+      "tab": "IR",
+      "key": "ir.dynamicMin",
+      "nombreES": "Mínimo rango dinámico IR",
+      "nombreEN": "IR dynamic range minimum",
+      "estado": "pending",
+      "alcance": "Pendiente: representación IR"
+    },
+    {
+      "tab": "IR",
+      "key": "ir.dynamicMax",
+      "nombreES": "Máximo rango dinámico IR",
+      "nombreEN": "IR dynamic range maximum",
+      "estado": "pending",
+      "alcance": "Pendiente: representación IR"
+    },
+    {
+      "tab": "IR",
+      "key": "ir.window",
+      "nombreES": "Ventana de datos (Hann)",
+      "nombreEN": "Data window (Hann)",
+      "estado": "pending",
+      "alcance": "Pendiente: IR de medición y contrato de procesado"
+    },
+    {
+      "tab": "IR",
+      "key": "ir.plot",
+      "nombreES": "Representar barras o líneas",
+      "nombreEN": "Plot bars or lines",
+      "estado": "pending",
+      "alcance": "Pendiente: IR de medición y contrato de procesado"
+    },
+    {
+      "tab": "IR",
+      "key": "ir.amplitude",
+      "nombreES": "Escala Lin / Log / ETC",
+      "nombreEN": "Lin / Log / ETC scale",
+      "estado": "implemented",
+      "alcance": "IR sintética: ETC con señal analítica probada"
+    },
+    {
+      "tab": "IR",
+      "key": "ir.timeZoom",
+      "nombreES": "Zoom temporal anclado a cero",
+      "nombreEN": "Time zoom anchored at zero",
+      "estado": "implemented",
+      "alcance": "Flechas; no altera muestras ni delays"
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+[
+  {
+    "origen": "/Users/antoniomanuelruizespinosa/Documents/Codex/2026-10-26/te/outputs/MyaAcustica/Diseno/revision-funcional-2026-10-26.txt",
+    "copia": "Documentacion/05_Referencia_tecnica/revision-funcional-2026-10-26.txt",
+    "sha256": "bf01953caefc01a5f803d20bf7000c9bcc32809f9d4b22f3bc79e202cb2db182"
+  },
+  {
+    "origen": "/Users/antoniomanuelruizespinosa/Documents/Codex/2026-10-26/te/outputs/MyaAcustica/Diseno/disenador-arreglos-subs.txt",
+    "copia": "Documentacion/05_Referencia_tecnica/disenador-arreglos-subs.txt",
+    "sha256": "1e194a749a9f1abffbc3480d0b46204aaaa595959ab658f41b96da2c7afbda1f"
+  },
+  {
+    "origen": "/Users/antoniomanuelruizespinosa/Documents/Codex/2026-10-26/te/outputs/MyaAcustica/Diseno/base-matematica.txt",
+    "copia": "Documentacion/05_Referencia_tecnica/base-matematica.txt",
+    "sha256": "b232afaf84bd8aacee38add8c24143cd2bdb1352e5eafd0fd7df37eb9cf168bb"
+  },
+  {
+    "origen": "/Users/antoniomanuelruizespinosa/Documents/Codex/2026-10-26/te/outputs/MyaAcustica/Diseno/control-revision-integral.txt",
+    "copia": "Documentacion/05_Referencia_tecnica/control-revision-integral.txt",
+    "sha256": "820c5087446f48a1685c3ce91f14190b1878e42eae798ea70ff899d5dae8cbc7"
+  },
+  {
+    "origen": "/Users/antoniomanuelruizespinosa/Documents/Codex/2026-10-26/te/outputs/MyaAcustica/Diseno/catalogo-filtros.txt",
+    "copia": "Documentacion/05_Referencia_tecnica/catalogo-filtros.txt",
+    "sha256": "649915f8f6b9bbc5440b4b43bc8a4d79eca651448dae7ccbca1aa1c63baa18aa"
+  },
+  {
+    "origen": "/Users/antoniomanuelruizespinosa/Documents/Codex/2026-10-26/te/outputs/MyaAcustica/Diseno/revision-excel-arreglos.txt",
+    "copia": "Documentacion/05_Referencia_tecnica/revision-excel-arreglos.txt",
+    "sha256": "8463a22b8f13cfd87898995891fb47940c8ba8739d471af09cb72160c6765388"
+  },
+  {
+    "origen": "/Users/antoniomanuelruizespinosa/Documents/Codex/2026-10-26/te/outputs/MyaAcustica/Diseno/revision-manual-smaart-completa.txt",
+    "copia": "Documentacion/05_Referencia_tecnica/revision-manual-smaart-completa.txt",
+    "sha256": "7f1d4831cd63de6b06be6902341389745e1807fce6af28a2df71f7fa70a17f03"
+  },
+  {
+    "origen": "/Users/antoniomanuelruizespinosa/Documents/Codex/2026-10-26/te/outputs/MyaAcustica/Diseno/control-directividad-allpass.txt",
+    "copia": "Documentacion/05_Referencia_tecnica/control-directividad-allpass.txt",
+    "sha256": "53ecdf2a289d042e6131abb2db40f231ae0c5a7600e2eb8fcadeb4aecbd64b79"
+  },
+  {
+    "origen": "/Users/antoniomanuelruizespinosa/Documents/Codex/2026-10-26/te/outputs/MyaAcustica/Diseno/revision-arquitectura-mac-windows.txt",
+    "copia": "Documentacion/05_Referencia_tecnica/revision-arquitectura-mac-windows.txt",
+    "sha256": "71036f55f969c399737acf79c58439b6b850b01adf1c7f1fa463c8fa81bbe511"
+  },
+  {
+    "origen": "/Users/antoniomanuelruizespinosa/Documents/Codex/2026-10-26/te/outputs/MyaAcustica/Referencias/AEQ (ES).pdf",
+    "copia": "Documentacion/08_Fuentes/RiTA/AEQ (ES).pdf",
+    "sha256": "0f0a987e87b5b3ae8f9db4e8ead63e1ea8735514c32c548c226129a4544f6fd1"
+  },
+  {
+    "origen": "/Users/antoniomanuelruizespinosa/Documents/Codex/2026-10-26/te/outputs/MyaAcustica/Referencias/Auto Align (ES).pdf",
+    "copia": "Documentacion/08_Fuentes/RiTA/Auto Align (ES).pdf",
+    "sha256": "92cac7a953f2751ad3d25c95da656889d38f436078846bae0a66867663e30b69"
+  },
+  {
+    "origen": "/Users/antoniomanuelruizespinosa/Documents/Codex/2026-10-26/te/outputs/MyaAcustica/Referencias/RiTA - Manual de usuario.pdf",
+    "copia": "Documentacion/08_Fuentes/RiTA/RiTA - Manual de usuario.pdf",
+    "sha256": "4693b02fc0d7b1a47a39c813fb28574aa51a46d5d00f5c10bb9bdb7450f062d5"
+  }
+]

@@ -1,0 +1,158 @@
+MYA ACUSTICA — CONTROL DE REVISIÓN INTEGRAL
+26/10/2026
+
+Objetivo: revisar por apartados completos, implementar y verificar sin pedir al usuario cada detalle. Las decisiones explícitas del usuario prevalecen sobre la referencia Smaart.
+
+ESTADO COMPROBADO EN EL CÓDIGO ACTUAL
+Medición: selección y colores TF, visibilidad, selectores por gráfico, suavizado, zoom y paneles presentes. Curvas de demostración.
+Suavizado: cálculo duplicado entre cursor y dibujo; usa 17 muestras y media de amplitud para magnitud. Requiere corrección y comparación sobre los mismos datos.
+Audio: catálogo de dispositivos y asignación de canales; adquisición y generación todavía pendientes.
+TF: Find, Track, inicio, parada y pausa muestran aviso de función pendiente. No equivalen a motores de medición.
+Configuración avanzada TF: ocho controles deshabilitados por falta de motor.
+Promedios en directo: pendientes.
+SPL: ventana y selectores presentes; lectura física y calibración pendientes.
+DSP y 3D: no considerar terminados por disponer de una pantalla. Requieren auditoría matemática y funcional propia.
+
+ORDEN DE TRABAJO Y CRITERIO DE CIERRE
+1. Gráficos TF: magnitud, fase, IR, suavizado, coherencia, cursores, escalas y atajos. Verificar valores y dibujo con una misma captura.
+2. Motores y configuración: selección, nombres, colores, M/R, delay, controles globales e individuales y audio. Separar funcionamiento visual de adquisición.
+3. RTA, espectrograma y SPL: rangos, bandas, ponderaciones, tiempos, calibración y ventanas independientes.
+4. Archivo y capturas: carpetas, metadatos, importación, persistencia, exportación y recuperación de sesiones.
+5. Menús: Archivo, Configuración, Opciones, Vista, Comandos, Ventanas y Ayuda. Comprobar estado habilitado, diálogo, efecto, cierre y persistencia.
+6. DSP offline: filtros IIR/FIR/all-pass, pendientes/Q, gain, delay, polaridad, sumas, targets, bypass y comparación. Validar cálculos antes de optimización.
+7. Arreglos y Mya Mapp Vision 3D: geometría, modelos disponibles, mapa de predicción y transferencia de ajustes. No presentar predicción absoluta sin datos acústicos adecuados.
+8. Integración: español/inglés, rendimiento, redimensionado, macOS/Windows y perfiles de procesadores.
+
+PRUEBA POR APARTADO
+Referencia observada/documentada → diferencia identificada → implementación → prueba numérica cuando corresponda → prueba visual/interacción → estado registrado.
+Estados: pendiente, documentado, implementado sin verificar, verificado, bloqueado por hardware/datos.
+Inventariar ayuda no implica haber probado el programa.
+Mantener los atajos solicitados por Antonio aunque difieran del perfil original de Smaart.
+
+INVENTARIO DE REFERENCIA — REVISIÓN INTERACTIVA PENDIENTE
+[Pendiente de verificación interactiva] Menus > File Menu > About | about-smaart.html
+[Pendiente de verificación interactiva] Menus > Command Menu > Activate Delay Finder | activate-delay-finder.html
+[Pendiente de verificación interactiva] Menus > Options Menu > Preferences > Advanced | advanced-preferences.html
+[Pendiente de verificación interactiva] Menus > Config Menu > Amplitude Calibration | amplitude-calibration.html
+[Pendiente de verificación interactiva] Menus > Options Menu > Preferences > API | api-preferences.html
+[Pendiente de verificación interactiva] Menus > Options Menu > Preferences > Audio | audio-preferences.html
+[Pendiente de verificación interactiva] Menus > Window Menu > Bring All to Front | bring-all-to-front.html
+[Pendiente de verificación interactiva] Menus > Command Menu > Stored Data Traces > Capture All | capture-all.html
+[Pendiente de verificación interactiva] Menus > Command Menu > Stored Data Traces > Capture | capture.html
+[Pendiente de verificación interactiva] Menus > File Menu > Check for Updates | check-for-updates.html
+[Pendiente de verificación interactiva] Menus > Command Menu > Clear/Clear All dB Offsets | clear-db-offsets.html
+[Pendiente de verificación interactiva] Menus > View Menu > Client Window | client-window-command.html
+[Pendiente de verificación interactiva] Menus > Window Menu > Close Window | close-window.html
+[Pendiente de verificación interactiva] Menus > Config Menu > Command Bar Config | command-bar-config.html
+[Pendiente de verificación interactiva] Menus > View Menu > Command Bar | command-bar-show.html
+[Pendiente de verificación interactiva] Menus > View Menu > Compact Signal Generator | compact-signal-generator.html
+[Pendiente de verificación interactiva] Menus > View Menu > Control Bar | control-bar-show.html
+[Pendiente de verificación interactiva] Menus > Command Menu > Stored Data Traces > Copy to ASCII | copy-to-ascii.html
+[Pendiente de verificación interactiva] Menus > Command Menu > Cursor | cursor-commands.html
+[Pendiente de verificación interactiva] Menus > Options Menu > Preferences > Cursor | cursor-preferences.html
+[Pendiente de verificación interactiva] Menus > Command Menu > Cycle Z Order (Forward/Reverse) | cycle-forward-reverse.html
+[Pendiente de verificación interactiva] Menus > Command Menu > Cycle Preferred Plot | cycle-preferred-plot.html
+[Pendiente de verificación interactiva] Menus > Command Menu > Cycle Skin | cycle-skin.html
+[Pendiente de verificación interactiva] Menus > View Menu > Data Bar | data-bar-show.html
+[Pendiente de verificación interactiva] Menus > Command Menu > Decrease Generator | decrease-generator.html
+[Pendiente de verificación interactiva] Menus > Command Menu > Stored Data Traces > Delete Selected Trace | delete-selected-trace.html
+[Pendiente de verificación interactiva] Menus > Config Menu > Delete Tab | delete-tab.html
+[Pendiente de verificación interactiva] Menus > Config Menu > Duplicate Tab | duplicate-tab.html
+[Pendiente de verificación interactiva] Menus > Command Menu > Front Trace Up/Down | front-trace-up-down.html
+[Pendiente de verificación interactiva] Menus > Options Menu > Preferences > General | general-preferences.html
+[Pendiente de verificación interactiva] Menus > Options Menu > Graph Settings | graph-settings.html
+[Pendiente de verificación interactiva] Menus > Help Menu > Help | help.html
+[Pendiente de verificación interactiva] Menus > Command Menu > Stored Data Traces > Hide All | hide-all.html
+[Pendiente de verificación interactiva] Menus > Command Menu > Stored Data Traces > Hide Trace | hide-trace.html
+[Pendiente de verificación interactiva] Menus > Config Menu > I-O Config | i-o-config-command.html
+[Pendiente de verificación interactiva] Menus > File Menu > Import > Import ASCII | import-ascii.html
+[Pendiente de verificación interactiva] Menus > Options Menu > Graph Settings > Impulse Response | impulse-response-graph-settings.html
+[Pendiente de verificación interactiva] Menus > Command Menu > Increase Generator | increase-generator.html
+[Pendiente de verificación interactiva] Menus > Command Menu > Increase/Decrease Delay | increase_decrease-delay.html
+[Pendiente de verificación interactiva] Menus > Config Menu > I-O Config > Input Configuration | input-config.html
+[Pendiente de verificación interactiva] Menus > View Menu > Input Meters | input-meters.html
+[Pendiente de verificación interactiva] Menus > Config Menu > Measurement Config > Live Average Measurement Settings | live-average-settings.html
+[Pendiente de verificación interactiva] Menus > Config Menu > Manage Configurations | manage-configurations.html
+[Pendiente de verificación interactiva] Menus > View Menu > View Presets > Manage View Presets | manage-views.html
+[Pendiente de verificación interactiva] Menus > Config Menu > Measurement Config | measurement-config.html
+[Pendiente de verificación interactiva] Menus > Options Menu > Measurement Settings | measurement-settings.html
+[Pendiente de verificación interactiva] Menus > File Menu > Import > Mic Correction Curve | mic-correction-curve-import.html
+[Pendiente de verificación interactiva] Menus > Options Menu > Mic Correction Curves | mic-correction-curve.html
+[Pendiente de verificación interactiva] Menus > Window Menu > Minimize | minimize-window.html
+[Pendiente de verificación interactiva] Menus > Config Menu > Move Tab | move-tab.html
+[Pendiente de verificación interactiva] Menus > View Menu > View Presets > Multi-Spectrum View | multi-spectrum-view.html
+[Pendiente de verificación interactiva] Menus > Config Menu > New Spectrum Avg | new-spec-avg.html
+[Pendiente de verificación interactiva] Menus > Config Menu > New Spectrum | new-spectrum.html
+[Pendiente de verificación interactiva] Menus > Config Menu > New Tab | new-tab.html
+[Pendiente de verificación interactiva] Menus > Config Menu > New TF Avg | new-tf-avg.html
+[Pendiente de verificación interactiva] Menus > Config Menu > New TF | new-tf.html
+[Pendiente de verificación interactiva] Menus > Window Menu > New Window | new-window.html
+[Pendiente de verificación interactiva] Menus > Window Menu > Open Windows List | open-windows-list.html
+[Pendiente de verificación interactiva] Menus > Config Menu > I-O Config > Output Config | output-config.html
+[Pendiente de verificación interactiva] Menus > Options Menu > Preferences | preferences-dialog.html
+[Pendiente de verificación interactiva] Menus > Command Menu > Capture/Toggle Quick Compare | quick-compare.html
+[Pendiente de verificación interactiva] Menus > File Menu > Quit | quit.html
+[Pendiente de verificación interactiva] Menus > View Menu > Real-Time, Impulse Response, and SPL Modes | realtime-and-ir-modes.html
+[Pendiente de verificación interactiva] Menus > Command Menu > Stored Data Traces > Recapture | recapture.html
+[Pendiente de verificación interactiva] Menus > Window Menu > Rename Window | rename-window.html
+[Pendiente de verificación interactiva] Menus > Command Menu > Reset Averager | reset-averager.html
+[Pendiente de verificación interactiva] Menus > View Menu > Reset / Reset All Decay Markers | reset-decay-markers.html
+[Pendiente de verificación interactiva] Menus > Command Menu > Scroll (Up, Down, Left, Right) | scroll-up-down-left-right.html
+[Pendiente de verificación interactiva] Menus > Options Menu > Signal Generator | signal-generator-settings.html
+[Pendiente de verificación interactiva] Menus > Options Menu > Preferences > Skins | skin-preferences.html
+[Pendiente de verificación interactiva] Menus > View Menu > Skins | skins-menu.html
+[Pendiente de verificación interactiva] Menus > Config Menu > I-O Config > Output Config > Smaart Loopback | smaart-loopback.html
+[Pendiente de verificación interactiva] Menus > View Menu > View Presets > Spectrum and Transfer | spectrum-and-transfer-function-views.html
+[Pendiente de verificación interactiva] Menus > Options Menu > Graph Settings > Spectrum | spectrum-graph-settings.html
+[Pendiente de verificación interactiva] Menus > Options Menu > Measurement Settings > Spectrum | spectrum-measurement-settings.html
+[Pendiente de verificación interactiva] Menus > Config Menu > Measurement Config > Spectrum Measurement Settings | spectrum-settings.html
+[Pendiente de verificación interactiva] Menus > Config Menu > SPL Config > SPL Compensation | spl-compensation.html
+[Pendiente de verificación interactiva] Menus > Config Menu > SPL Config > Alarms | spl-config-alarms.html
+[Pendiente de verificación interactiva] Menus > Config Menu > SPL Config > Custom Metrics | spl-config-custom-metrics.html
+[Pendiente de verificación interactiva] Menus > Config Menu > SPL Config > Display | spl-config-display.html
+[Pendiente de verificación interactiva] Menus > Config Menu > SPL Config > Logging | spl-config-logging.html
+[Pendiente de verificación interactiva] Menus > Config Menu > SPL Config | spl-config-stspl.html
+[Pendiente de verificación interactiva] Menus > View Menu > SPL Meter | spl-meter-show.html
+[Pendiente de verificación interactiva] Menus > View Menu > SPL Meters | spl-meters-show.html
+[Pendiente de verificación interactiva] Menus > View Menu > Tab Bar | tab-bar-hide-show.html
+[Pendiente de verificación interactiva] Menus > File Menu > Import > Target Curve | target-curve-import.html
+[Pendiente de verificación interactiva] Menus > Options Menu > Target Curves | target-curves-dialog.html
+[Pendiente de verificación interactiva] Menus > View Menu > Show Target Curves | target-curves-show.html
+[Pendiente de verificación interactiva] Menus > View Menu > Toggle Coherence | toggle-coherence-trace.html
+[Pendiente de verificación interactiva] Menus > Command Menu > Toggle Delay Tracking | toggle-delay-tracking.html
+[Pendiente de verificación interactiva] Menus > View Menu > Toggle Live IR | toggle-live-ir.html
+[Pendiente de verificación interactiva] Menus > View Menu > Toggle Peak Hold | toggle-peak-hold.html
+[Pendiente de verificación interactiva] Menus > Command Menu > Toggle Signal Generator | toggle-signal-generator.html
+[Pendiente de verificación interactiva] Menus > View Menu > Toggle SPL/Clock | toggle-spl_clock.html
+[Pendiente de verificación interactiva] Menus > File Menu > Import > Trace Folder | trace-folder-import.html
+[Pendiente de verificación interactiva] Menus > File Menu > Import > Trace Data File | trace-import.html
+[Pendiente de verificación interactiva] Menus > Command Menu > Track All | track-all.html
+[Pendiente de verificación interactiva] Menus > Options Menu > Graph Settings > Transfer Function | transfer-function-graph-settings.html
+[Pendiente de verificación interactiva] Menus > Options Menu > Measurement Settings > Transfer Function | transfer-function-measurement-settings.html
+[Pendiente de verificación interactiva] Menus > Config Menu > Measurement Config > Transfer Function Measurement Settings | transfer-function-settings.html
+[Pendiente de verificación interactiva] Menus > View Menu > View Presets > Capture View Preset | view-capture.html
+[Pendiente de verificación interactiva] Menus > View Menu > View Presets > View Presets (1-9) | view-presets-1-9.html
+[Pendiente de verificación interactiva] Menus > File Menu > Import > Weighting Curve | weighting-curve-import.html
+[Pendiente de verificación interactiva] Menus > Options Menu > Weighting Curves | weighting-curves.html
+[Pendiente de verificación interactiva] Menus > Command Menu > Zoom > Zoom (In, Out, X, Y, X/Y) | zoom-in-out-x-y.html
+[Pendiente de verificación interactiva] Menus > Options Menu > Preferences > Zoom | zoom-preferences.html
+[Pendiente de verificación interactiva] Menus > Command Menu > Zoom > Zoom 1-4 and Default Zoom | zoom.html
+
+AVANCE IMPLEMENTADO — 26/10/2026
+• Suavizado de magnitud: integración en dB. Fase: integración compleja. 32.769 muestras uniformes de frecuencia de la demo, integral acumulada e interpolación de límites de banda. Datos sintéticos; no es todavía el importador de capturas ni una reproducción verificada del algoritmo interno de Smaart.
+• Cursor y trazos comparten cálculo. No Smoothing conserva la respuesta original; el dibujo adapta el número de puntos al ancho del gráfico.
+• Coherencia roja: trazo de la TF seleccionada; porcentaje incluido en lectura de cursor. Atajo C.
+• Corrección de distribución al ocultar Live IR.
+• Guardar/abrir conserva selección TF, selecciones de trazos, suavizados, enlace, coherencia/umbral, barras, proporciones, zoom y desplazamiento.
+• Menús nativos Archivo, Configuración, Opciones, Vista, Comandos, Ventanas, Ayuda. Conexión a acciones existentes; funciones futuras explícitamente deshabilitadas. No implica cobertura de los 107 apartados.
+
+VERIFICACIONES DE ESTA ENTREGA
+• Prueba C++: ganancia/fase constantes, seis anchos de suavizado, extremos de banda, fase +179/-179, promedio en dB. Correcta.
+• Compilación macOS: correcta, sin avisos en última compilación.
+• UI: Opciones cambia a 1/3 y No Smoothing en ambas gráficas enlazadas; verificado.
+• UI: guardar a 1/3, cambiar a No Smoothing, abrir proyecto restaura 1/3; verificado.
+• UI: Vista/Live IR elimina el selector IR y cambia a 2 Plots; verificado.
+• Inspección: DSP muestra ganancia, delay, polaridad y bypass; 3D muestra 12 stacks de 2 cajas y separación. No se han validado predicciones acústicas.
+• Comparación numérica contra Smaart usando la misma captura: pendiente.
+• Hardware, ASIO y Windows: no probados en esta entrega.
+• RTA, IR real, SPL/calibración, promedios, filtros DSP, FIR, optimización, importación y predicción: continúan pendientes. Revisión integral en curso, no terminada.

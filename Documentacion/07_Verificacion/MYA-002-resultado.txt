@@ -1,0 +1,163 @@
+MYA-002 — Interfaz integrada: menús y estados — 26/10/2026
+Estado: implementación terminada; compilación y pruebas automáticas superadas.
+Revisión visual/interactiva pendiente. MYA-001 conserva su aceptación visual pendiente.
+
+ENTREGA Y RUTAS
+Raíz: /Users/antoniomanuelruizespinosa/Documents/ChatGPT/Mya Acústica
+Aplicacion/src/Commands.h: catálogo independiente de JUCE, 95 IDs/claves únicos,
+ES/EN, atajos, capacidad real/demo/pendiente, razones, estado contextual y despacho.
+Aplicacion/src/CommandUI.h: menús, botones, nombres, tooltips, habilitación y marcas
+consumen ese mismo catálogo. Alias de ubicación reutilizan el ID original.
+Aplicacion/src/WorkstationCommands.inc: acciones existentes y enlaces de controles
+extraídos de Main.cpp. Main.cpp pasa de 593 a 546 líneas, sin ampliar motores.
+Aplicacion/tests/commands.cpp y CMakeLists.txt: prueba del registro/despacho.
+Build: work/mya-cpp-build
+App: work/mya-cpp-build/MyaAcustica_artefacts/Debug/Mya Acustica.app
+
+COMPORTAMIENTO
+Siete menús Archivo / Configuración / Opciones / Vista / Comandos / Ventanas / Ayuda.
+Archivo, captura, rutas, ajustes TF, medidores demo, vistas, barras, coherencia,
+suavizado, zoom, delay manual TF y polaridad/bypass DSP demo reutilizan acciones.
+Configuración → Procesadores contiene modelo/firmware/capacidades, conexión API,
+archivo por modelo y ficha manual, todos pendientes; Prodigy/Galaxy/Marani no se
+presentan como compatibles. Sin red, exportaciones ni conexiones ficticias.
+Vista → DSP reúne fase/cruce/EQ/FIR/targets/tabla/variantes y puentes con Diseño:
+pendientes y deshabilitados. Se retiraron los antiguos avisos/acciones que fingían
+vincular DSP y geometría. La edición demo de ganancia/delay/polaridad sigue disponible.
+46 comandos pendientes bloqueados tanto en UI como en despacho programático.
+Los motivos se ven en menú/tooltip. Averaging Depth también queda deshabilitado.
+ES/EN afecta menús, comandos, tooltips y guía de atajos generada del catálogo;
+no se declara traducida la totalidad de etiquetas, paneles ni mensajes heredados.
+Idioma de comandos persistido en el proyecto; carga de proyectos antiguos admitida.
+B/O, L/F, G/S, Espacio, E,E y Option5 conservados; Find/generadores no actúan aún,
+y su atajo comunica el motivo sin abrir avisos de éxito. Track global separado de
+Track individual. D/V conservan la navegación demo previa, documentada como tal;
+no se adoptó la tabla de otra aplicación ni se habilitó adquisición por esos atajos.
+Zoom y flechas usan despacho común. Atajos de la ventana requieren foco de gráfica/
+espacio de trabajo: campos, combos, sliders y botones conservan su teclado propio.
+Conmutadores sin doble inversión ni reentrada: el comando cambia el estado una vez,
+y la UI lo refleja sin notificaciones recursivas. Botones estrechos conservan
+iconos/abreviaturas y muestran nombre completo/estado en tooltip.
+
+VERIFICACIÓN
+Build incremental Debug macOS / AppleClang 21 / JUCE8.0.12: PASS, sin avisos nuevos.
+CTest: 3/3 PASS (smoothing, presentation, commands); aserciones activas en Release.
+Commands: 95 IDs/claves únicos y textos ES/EN presentes; 46 pendientes rechazados;
+582 despachos permitidos comprobados en matriz de idioma/modo/TF; también se
+comprueba rechazo contextual/ID desconocido/sin acción, enlaces de botones,
+marcas de estado, atajos con modificadores/edición y secuencia temporal E,E.
+No se ejecutó la app: las pruebas son del catálogo/políticas y regresión matemática,
+no verificación de eventos, renderizado, teclado físico o diálogos JUCE.
+Evidencia: work/MYA-002/{compilacion.log,pruebas.log,matriz-comandos.tsv,
+entrega-sha256.txt,cambios-main.diff,Main-antes.cpp,CMakeLists-antes.txt}.
+No cambios en AudioRouting.h, Meters.h, FractionalSmoothing.h ni PlotPresentation.h.
+No audio, API ni motor3D nuevos; no se abrió/cerró/reinició ninguna aplicación.
+
+PENDIENTES PARA ACEPTACIÓN
+Revisar visualmente ES/EN, tamaño de menús/tooltips, estados de botones/checks,
+Guardar/Abrir idioma, foco de controles, E,E y teclados ES/EN/keypad en una apertura
+coordinada de esta compilación. MYA-001 sigue pendiente de su comprobación visual.
+Las funciones pendientes precisan sus motores/perfiles y pruebas de otra fase.
+
+MATRIZ MENÚ → ACCIÓN → ESTADO
+Contexto inicial: Medición, TF1, sin panel abierto, ES. Habilitación y marcas se
+recalculan al consultar; DSP/bypass, captura/AVG y cierre dependen del contexto.
+ID repetido significa otra ubicación de la misma acción, no un comando distinto.
+Archivo/ | 101 Abrir demo → project.open | ready enabled
+Archivo/ | 102 Guardar demo → project.save | ready enabled
+Archivo/ | 103 Capturar TF → trace.capture | demo enabled
+Archivo/ | 190 Importar medidas / IR / carpetas → blocked | pending disabled | Importador y procedencia pendientes
+Archivo/ | 192 Exportar informe → blocked | pending disabled | Generación de informes pendiente
+Configuración/ | 201 Audio / E-S → config.audio | demo enabled
+Configuración/ | 202 Ajustes TF seleccionada → config.tf | demo enabled
+Configuración/ | 290 Calibración SPL / micrófono → blocked | pending disabled | Calibración física y metadatos pendientes
+Configuración/ | 292 Calibración de loop → blocked | pending disabled | Adquisición e invalidación por ruta pendientes
+Configuración/ | 293 Ajustes de generador → blocked | pending disabled | Motor de audio pendiente
+Configuración/ | 291 Promedios en directo → blocked | pending disabled | Motor de audio pendiente
+Opciones/ | 301 Vincular suavizado fase / magnitud → plot.smoothing.link | demo enabled
+Opciones/Suavizado / fase | 310 Sin suavizado → plot.smoothing.phase.0 | demo enabled
+Opciones/Suavizado / fase | 311 1/48 oct → plot.smoothing.phase.1 | demo enabled
+Opciones/Suavizado / fase | 312 1/24 oct → plot.smoothing.phase.2 | demo enabled
+Opciones/Suavizado / fase | 313 1/12 oct → plot.smoothing.phase.3 | demo enabled
+Opciones/Suavizado / fase | 314 1/6 oct → plot.smoothing.phase.4 | demo enabled
+Opciones/Suavizado / fase | 315 1/3 oct → plot.smoothing.phase.5 | demo enabled
+Opciones/Suavizado / fase | 316 1 octava → plot.smoothing.phase.6 | demo enabled
+Opciones/Suavizado / magnitud | 320 Sin suavizado → plot.smoothing.magnitude.0 | demo enabled
+Opciones/Suavizado / magnitud | 321 1/48 oct → plot.smoothing.magnitude.1 | demo enabled
+Opciones/Suavizado / magnitud | 322 1/24 oct → plot.smoothing.magnitude.2 | demo enabled
+Opciones/Suavizado / magnitud | 323 1/12 oct → plot.smoothing.magnitude.3 | demo enabled
+Opciones/Suavizado / magnitud | 324 1/6 oct → plot.smoothing.magnitude.4 | demo enabled
+Opciones/Suavizado / magnitud | 325 1/3 oct → plot.smoothing.magnitude.5 | demo enabled
+Opciones/Suavizado / magnitud | 326 1 octava → plot.smoothing.magnitude.6 | demo enabled
+Opciones/Idioma de menús y comandos | 380 Español → language.es | ready enabled
+Opciones/Idioma de menús y comandos | 381 Inglés → language.en | ready enabled
+Opciones/ | 391 Ventanas FFT / FTW → blocked | pending disabled | Motor y datos complejos compatibles pendientes
+Opciones/ | 392 Cursor bloqueado / deltas → blocked | pending disabled | Interacción y deltas pendientes
+Opciones/ | 393 Tema / grosor de trazos → blocked | pending disabled | Preferencias de apariencia pendientes
+Vista/ | 401 Medición → view.measurement | demo enabled
+Vista/ | 402 DSP / Ajuste → view.dsp | demo enabled
+Vista/ | 403 Mya Mapp Vision 3D → view.design | demo enabled
+Vista/ | 404 Laboratorio → view.lab | demo enabled
+Vista/ | 405 Barra izquierda → view.left | ready enabled
+Vista/ | 406 Barra derecha → view.right | ready enabled
+Vista/ | 407 Mostrar IR demo → view.ir | demo enabled
+Vista/ | 408 Coherencia demo → view.coherence | demo enabled
+Vista/ | 409 Restaurar vista → view.reset | ready enabled
+Vista/ | 420 Espectro RTA → blocked | pending disabled | Motor de audio pendiente
+Vista/ | 421 Espectrograma → blocked | pending disabled | Motor de audio pendiente
+Vista/ | 422 RT60 por bandas → blocked | pending disabled | Motor de audio pendiente
+Comandos/ | 502 Buscar retardo TF → blocked | pending disabled | Motor de audio pendiente
+Comandos/ | 503 Track global → blocked | pending disabled | Motor de audio pendiente
+Comandos/ | 504 Ruido rosa → blocked | pending disabled | Motor de audio pendiente
+Comandos/ | 505 Sweep → blocked | pending disabled | Motor de audio pendiente
+Comandos/ | 506 Iniciar todos → blocked | pending disabled | Motor de audio pendiente
+Comandos/ | 507 Detener todos → blocked | pending disabled | Motor de audio pendiente
+Comandos/ | 508 Pausar todos → blocked | pending disabled | Motor de audio pendiente
+Comandos/ | 509 Crear TF → blocked | pending disabled | Motor de audio pendiente
+Comandos/ | 510 Crear promedio → blocked | pending disabled | Motor de audio pendiente
+Comandos/ | 511 Temporizador → blocked | pending disabled | Motor de audio pendiente
+Comandos/ | 512 Loop interno → blocked | pending disabled | Motor de audio pendiente
+Comandos/ | 513 Seguimiento de ganancia → blocked | pending disabled | Motor de audio pendiente
+Comandos/ | 514 Track individual → blocked | pending disabled | Motor de audio pendiente
+Comandos/ | 515 Iniciar TF → blocked | pending disabled | Motor de audio pendiente
+Comandos/ | 516 Buscador avanzado → blocked | pending disabled | Motor de audio pendiente
+Comandos/ | 517 Ajustes de ruido rosa → blocked | pending disabled | Motor de audio pendiente
+Comandos/ | 518 Ajustes de sweep → blocked | pending disabled | Motor de audio pendiente
+Comandos/ | 519 Resultados de fase automática → blocked | pending disabled | Motor de audio pendiente
+Comandos/ | 520 Restaurar delay manual TF → measurement.delay.reset | demo enabled
+Comandos/ | 521 Polaridad de medición → blocked | pending disabled | Inversión de adquisición pendiente; distinta de DSP
+Ventanas/ | 203 Medidores → window.meters | demo enabled
+Ventanas/ | 602 Cerrar panel de ajustes → window.drawer.close | ready disabled | No hay panel abierto
+Ayuda/ | 701 Atajos y manejo → help.shortcuts | ready enabled
+Ayuda/ | 702 Estado del prototipo → help.status | ready enabled
+Ayuda/ | 703 Acerca de Mya Acústica → help.about | ready enabled
+Ayuda/ | 790 Buscar actualizaciones → blocked | pending disabled | Servicio de actualizaciones pendiente
+Vista/DSP | 801 Polaridad DSP → dsp.polarity | demo disabled | Disponible en DSP
+Vista/DSP | 802 Bypass visual DSP → dsp.bypass | demo disabled | Disponible en DSP
+Vista/DSP | 810 Proponer alineación de fase → blocked | pending disabled | Modelo, cálculo o historial DSP pendiente
+Vista/DSP | 811 Proponer cruce → blocked | pending disabled | Modelo, cálculo o historial DSP pendiente
+Vista/DSP | 812 Auto EQ → blocked | pending disabled | Modelo, cálculo o historial DSP pendiente
+Vista/DSP | 813 Auto FIR → blocked | pending disabled | Modelo, cálculo o historial DSP pendiente
+Vista/DSP | 814 Targets → blocked | pending disabled | Modelo, cálculo o historial DSP pendiente
+Vista/DSP | 815 Filtros / tabla DSP → blocked | pending disabled | Modelo, cálculo o historial DSP pendiente
+Vista/DSP | 816 Crear variante / deshacer → blocked | pending disabled | Modelo, cálculo o historial DSP pendiente
+Vista/DSP | 817 Diseño → DSP → blocked | pending disabled | Modelo, cálculo o historial DSP pendiente
+Vista/DSP | 818 DSP → Diseño → blocked | pending disabled | Modelo, cálculo o historial DSP pendiente
+Configuración/Procesadores | 830 Modelo / firmware y capacidades → blocked | pending disabled | Perfiles y compatibilidad sin validar; Prodigy
+Configuración/Procesadores | 831 Conexión API por modelo → blocked | pending disabled | Perfiles y compatibilidad sin validar; Prodigy
+Configuración/Procesadores | 832 Exportar archivo por modelo → blocked | pending disabled | Perfiles y compatibilidad sin validar; Prodigy
+Configuración/Procesadores | 833 Ficha de introducción manual → blocked | pending disabled | Perfiles y compatibilidad sin validar; Prodigy
+Configuración/ | 840 Control remoto LAN / API → blocked | pending disabled | Servidor no implementado; sin servicio activo
+Comandos/Gráfica activa | 850 Ampliar Y → plot.zoom.in.y | demo enabled
+Comandos/Gráfica activa | 851 Reducir Y → plot.zoom.out.y | demo enabled
+Comandos/Gráfica activa | 852 Ampliar XY → plot.zoom.in.xy | demo enabled
+Comandos/Gráfica activa | 853 Reducir XY → plot.zoom.out.xy | demo enabled
+Comandos/Gráfica activa | 854 Ampliar X → plot.zoom.in.x | demo enabled
+Comandos/Gráfica activa | 855 Reducir X → plot.zoom.out.x | demo enabled
+Comandos/Gráfica activa | 856 Desplazar izquierda → plot.pan.left | demo enabled
+Comandos/Gráfica activa | 857 Desplazar derecha → plot.pan.right | demo enabled
+Comandos/Gráfica activa | 858 Desplazar arriba → plot.pan.up | demo enabled
+Comandos/Gráfica activa | 859 Desplazar abajo → plot.pan.down | demo enabled
+Comandos/ | 103 Capturar TF → trace.capture | demo enabled
+Configuración/ | 203 Medidores → window.meters | demo enabled
+Ventanas/ | 409 Restaurar vista → view.reset | ready enabled

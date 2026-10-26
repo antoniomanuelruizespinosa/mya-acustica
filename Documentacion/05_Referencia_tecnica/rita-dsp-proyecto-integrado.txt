@@ -1,0 +1,60 @@
+MYA — DSP Y DISEÑO INTEGRADOS
+26/10/2026. Dirección de Antonio: un Propi más avanzado e inteligente, con medición familiar de Smaart, DSP offline inspirado en RiTA y diseño/predicción dentro de Mya Mapp Vision3D. Una aplicación y un proyecto común. No varios programas ni intercambio manual entre módulos internos.
+
+EVIDENCIA CONSULTADA
+Manual local RiTA2.8.0: capítulos4–6 (motores, tablaDSP, copiar/enlazar, ecualizador e import/export),8–14 (capturas, corrección, AutoAlign, AutoEQ, promedios, polar y proyectos), secciones de16 sobre modelosDSP y17 control externo. Consultados los pasajes pertinentes en extracción textual; no se afirma lectura completa del manual ni verificación física. Figuras/dialogos pendientes de revisión visual. Fuentes: Documentacion/08_Fuentes/RiTA/RiTA - Manual de usuario.pdf. No copiar marcas/nombres de herramientas como nombres propios de Mya.
+
+APORTACIONES DE RITA
+• Tabla por motor: nombre, ganancia, polaridad, delay, HP/LP tipo/frecuencia/orden/Q y EQ; suma y promedio distintos.
+• EQ: paramétricos/shelves/allpass, APF de alineación separados, FIR de cruce/corrección/importación; diseño taps/Fs/ventana y aceptar/cancelar.
+• Copiar grupos una vez y enlazarlos permanentemente son operaciones distintas; parámetros enlazados bloqueados y desvincular conserva valores. Evitar ciclos.
+• AutoEQ previsualiza IIR/FIR/mixto, rango, target, límites, suavizado, filtros, taps/latencia y ponderación por coherencia; intensidad parcial de corrección.
+• AutoAlign contempla LF+HF, HF+HF, gradiente y end-fire. Según manual aplica directamente valores absolutos y sustituye APF de alineación. En Mya será propuesta previa con alternativa manual y diferencias visibles.
+• Biblioteca de medidas por recinto; proyecto y configuración de tarjeta separados. Promedios requieren conservar referencias relativas; no adoptar límite fijo de8 capturas de RiTA como límite del modelo de Mya.
+• Bypass de EQ RiTA documentado solo visual, mientras export lleva filtros activos: en Mya indicar expresamente «comparación visual» y mostrar exactamente el estado que se exportará.
+• Tipo de procesador altera ecuaciones/Q/BW/shelf/límites; misma cifraQ no asegura misma respuesta. Manual distingue validación con audio de comparación gráfica y extrapolación entre modelos. Mya debe mantener igual separación de evidencia.
+• Envío/archivo por modelo y capacidad; Prodigy/Globcon no se deduce como conexión directa de una exportación específica. No declarar compatibilidad universal.
+
+CONTRATO COMÚN — UNA FUENTE DE DATOS
+Project contiene fuentes acústicas, geometría, receptores/zonas, canalesDSP, mediciones inmutables, targets, variantes y perfiles de procesador.
+PhysicalInput, MeasurementEngine, AcousticSource y DspChannel tienen IDs distintos. Un micrófono puede medir muchas fuentes; un canalDSP alimentar varias cajas; una fuente tener medidas en múltiples posiciones. No equiparar los cuatro micros a cuatro canales de sistema.
+Cada medición conserva posición, fuente/estado de otras fuentes, referencia temporal, ganancia, cadenaDSP vigente durante captura, calibración, ventana y calidad. Si falta algo, etiquetar como desconocido.
+Cada variante tiene copia lógica de geometría/DSP/target y origen. Aceptar propuesta crea revisión reversible; nunca sustituye originales. Optimizar en segundo plano, cancelable, con snapshot de entrada. Resultado obsoleto si cambian datos mientras calcula.
+
+RECORRIDO DENTRO DE MYA
+1 Diseño: elegir cajas/arreglo/posiciones/orientaciones y receptores; perfil de procesador. Asignar canales, cantidades y modelo acústico.
+2 Pasar a DSP: crear o vincular canales del mismo proyecto; precargar propuestas geométricas de delay/polaridad/cruce, identificadas como predicción, no medida.
+3 Medir: sweep oTF y capturas por recinto/fuente/posición con referencia compatible. Emitir solo durante adquisición y verificación; trabajooffline sin señal.
+4 Ajustar: cargar capturas en canalesDSP; editar filtros/delay/polaridad o comparar propuestas. Mostrar original, procesado, suma, fase/retardo grupal e impulso cuando los datos lo permitan.
+5 Ver diseño actualizado: misma cadenaDSP alimenta predicción en malla de receptores; geometría no cambia por editar EQ. Mostrar modelo, supuestos y zonas medidas frente a extrapoladas.
+6 Exportar/reproducir parámetros: comprobar capacidades, convertir, recalcular respuesta realmente realizable, comparar y aprobar. Envío a equipo externo es acción independiente de aceptar simulación.
+7 Volver a medir: comparar predicción con resultado físico y registrar diferencias.
+
+MATEMÁTICA Y LÍMITES
+DSP en cascada: D(f)=g·p·exp(−j2πfτ)·ΠFk(f); g=10^(G/20), p=±1. CascadaFIR equivale a convolución de coeficientes, no suma literal de coeficientes. Composición precisa de las filasFIR de RiTA no se deduce de «se suman» del manual; validar diseño propio.
+Respuesta en receptor r: Hpred(r,f)=Σs Hmodelo(s,r,f)·Dcanal(s,f), para señales coherentes y modelo lineal con referencia temporal común. Fuentes no correlacionadas requieren suma energética apropiada, no la misma suma compleja.
+Captura con cadena conocida B: proyectar nueva cadena N requiere separar respuesta base o aplicar N/B solo donde B sea invertible y bien condicionado. Nunca multiplicar por toda la cadena nueva sobre captura que ya incorpora la antigua sin corregir doble procesado. Si B desconocida, permitir explícitamente solo ajuste incremental o pedir nueva captura.
+No invertir nulos profundos ni zonas sin señal para reconstruir respuesta. Promediar espacialmente no convierte una curva en mapa3D. Una IR medida contiene sala/posición; no reutilizar como directividad anecoica ni añadir de nuevo propagación ya incluida.
+Mover cajas cambia camino/directividad y exige recalcular el modelo; una captura anterior no se transforma en medida válida de geometría nueva. Para predicción real hacen falta modelos de fuentes, directividad compleja cuando esté disponible, referencia/normalización, distancias, condiciones y límites del modelo.
+FIR causal: presupuesto de latencia y taps, Fs, ringing/pre-ringing, cuantización y respuesta realizada. La propuesta no promete corregir todas las reflexiones o todo el recinto con un filtro.
+
+INTERFAZ PROPUESTA
+Una ventana Mya con espacios Medición | DSP | Diseño3D, desacoplables si se desea, misma biblioteca de proyecto.
+Aspecto/compactación Propi y operación de medición Smaart; ningún rediseño borra las decisiones previas de Antonio.
+DSP: tabla de canales, editor de filtros, capturas/posiciones asociadas, panel de alternativas, original/procesado/suma y cambios detallados. ModeloDSP activo y presupuesto de recursos siempre identificables.
+Acciones: Crear variante, Calcular propuestas, Comparar, Aceptar en proyecto, Deshacer, Ver en3D, Preparar exportación. No mezclar aceptar con enviar.
+Opciones de propuesta: pocos filtros/baja latencia, equilibrio, ajuste más preciso dentro de límites. Comparar error porposición/banda, peorposición, boost, taps/latencia y restricciones. Nombres son objetivos, no garantías de superioridad.
+
+FASES Y ACEPTACIÓN
+A) CadenaDSP local con filtros probados y visor sobre datos sintéticos; prueba identidad/bypass, delay, polaridad, allpass, LR y FIR; undo determinista.
+B) Capturas reales con procedencia, referencias y estadoDSP; suma repetible en misma posición; validación en posiciones no usadas para ajustar.
+C) Puente interno diseño↔DSP: canal compartido, cambios actualizan respuesta y mapa, no duplicación de delays ni pérdida de originales. Identificar modeloideal frente a validado.
+D) Optimización restringida y alternativas; modificar criterio no destruye variante previa; límites porprocesador desde el cálculo.
+E) Export/import por modelo probado: round-trip y comparación eléctrica; no truncar filtros/taps silenciosamente ni presentar como equivalente una aproximación.
+Este documento amplía la especificación; no cambia el alcance de MYA-001 ni ordena construir todo en paralelo.
+
+CONECTIVIDAD — REQUISITO EXPLÍCITO DE ANTONIO
+Módulo Procesadores con tres vías: conexión API/protocolo documentado disponible, exportación de archivo compatible y ficha para introducción manual. Prioridad Prodigy, Galaxy y Marani, identificando modelo/firmware. Ninguna conexión se presupone disponible por marca.
+Ficha por canal: destino, ganancia, delay enms, polaridad, HP/LP tipo/frecuencia/orden, PEQ/shelf/allpass con definiciónQ/BW/pendiente, FIR Fs/taps/latencia/archivo. Indicar unidades, redondeos, parámetros no representables y orden. Un FIR arbitrario requiere transferencia de coeficientes; no sustituirlo por unos números manuales.
+Conexión: desconectado/conectando/conectado/error, capacidades leídas o perfil identificado, asignación canalMya→equipo, lectura de estado si existeAPI, comparación de diferencias y envío explícito. Aceptar propuesta o cambiar simulación nunca envía automáticamente. Confirmar respuesta y lectura posterior cuando el protocolo permita; error parcial no se presenta como éxito. Preservar copia del estado previo cuando sea posible.
+Perfiles separados por modelo: número de filtros, ecuaciones, rangos, resolución, Fs/FIR. Vista de lo realizable antes de exportar/enviar. Registro de fecha, destino, revisión y resultado. API no implementada debe mostrarse como pendiente, sin conexión ficticia.

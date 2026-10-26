@@ -1,0 +1,1 @@
+English manual: pending. Use the same M00–M21 topic IDs as Spanish. Translate verified procedures after terminology and controls are settled; do not create a separate specification.

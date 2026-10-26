@@ -1,0 +1,98 @@
+MYA ACUSTICA — REVISIÓN FUNCIONAL Y CRITERIOS DE DISEÑO
+26 de octubre de 2026 · Especificación propuesta, no funciones ya implementadas
+
+OBJETIVO
+Familiaridad de operación con Smaart Suite, organización compacta inspirada en Propi y ajuste virtual sobre capturas inspirado en RiTA. Español e inglés como idiomas iniciales completos. Medir, conservar evidencia, simular, comparar propuestas, decidir, exportar y verificar.
+
+ALCANCE Y EVIDENCIA
+Se ha inventariado la documentación de los menús de Smaart instalada en este Mac y contrastado sus páginas de atajos, FFT, TF, IR, FTW, audio, loopback, generador, targets y medidores. Se han consultado fuentes oficiales de Rational Acoustics y REW en la web y las secciones pertinentes del manual local RiTA 2.8.0. Inventariar una página no equivale a verificar toda su conducta en la aplicación. No se afirma haber revisado toda Internet, probado todas las funciones ni disponer de especificaciones internas de estos productos.
+La web comercial consultada de RiTA aún anuncia 2.6; para la versión 2.8 se toma como referencia el manual descargado por el usuario. La web de Propi no respondió a la consulta web de esta revisión; su comparación permanece basada en la ayuda observada anteriormente. No se ha comprobado estadísticamente la cuota de mercado de los programas.
+
+CORRECCIONES QUE AFECTAN AL DISEÑO
+• Smaart también genera sweeps y dispone de mediciones IR y de fuente síncrona. La diferencia buscada para Mya es la integración del flujo de captura con el DSP virtual y la evaluación de alternativas.
+• Un sweep emite sonido. Se reduce el tiempo de emisión mediante capturas planificadas y ajuste posterior en silencio. La comprobación física final vuelve a requerir una medición.
+• El retardo de referencia del analizador no es el delay del procesador. El loopback de software puede incluir latencia de buffers; no debe interpretarse automáticamente como distancia acústica.
+• RTA con barras y líneas y espectrograma son vistas distintas. Se deben poder combinar, pero no etiquetar como si fueran lo mismo.
+• Ponderación, target, corrección de micrófono, suavizado y EQ aplicada al sistema son operaciones diferentes y deben conservarse por separado.
+
+MAPA DE MENÚS PROPUESTO, ES / EN
+1. Archivo / File
+   Nuevo, abrir, recientes, guardar proyecto, guardar como, empaquetar sesión para otro ingeniero, importar medidas/IR/audio/ASCII/carpetas, importar calibración y targets, exportar medidas, exportar informe, cerrar y salir.
+   Conservar originales y derivados. Un archivo de configuración del puesto no sustituye al proyecto con medidas. Los formatos propietarios requieren un importador verificado; mientras tanto usar exportaciones documentadas. Acerca de y Buscar actualizaciones accesibles también desde Ayuda; adaptación al menú de aplicación de macOS.
+2. Configuración / Config
+   Entradas y salidas; dispositivo, controlador, frecuencia de muestreo, buffer solicitado y real; nombres de canales; referencia física o virtual; calibración SPL; curva de micrófono por entrada; motores TF/RTA/IR; promedios; generador y ruteo; medidores, alarmas y registro; pestañas; barra de comandos; perfiles del puesto.
+   Cada TF muestra medidor M y R, clipping, estado de referencia, delay de medición y Find/Track. Los ajustes globales y las excepciones por motor deben ser visibles.
+3. Opciones / Options
+   Preferencias generales, audio, cursores, zoom, tema, idioma, atajos, rendimiento y red; gráficas TF/RTA/IR; ponderaciones e inversas; biblioteca de targets y tolerancias; biblioteca de correcciones; ventanas de análisis y presentación.
+4. Vista / View
+   Tiempo real, IR, SPL y nueva vista DSP; barras de datos, control, pestañas y comandos; medidores de entrada y rejilla SPL; Live IR, coherencia, peak hold, targets; presets 1–9; multiespectro; gráficas compactas; modo claro/oscuro.
+   Mantener el acceso rápido a las gráficas y permitir que DSP ocupe una segunda ventana. Conservar la preferencia del usuario por gráficas compactas.
+5. Comandos / Command
+   Ejecutar/parar motor o grupo, generador, nivel de generador, Find, Track, Track All, ajustes finos de referencia, reiniciar promedio, capturar/recapturar/capturar todos, comparar, ocultar, ordenar trazos, offsets visuales, cursores, zoom, temporizador y macros.
+   Los comandos nuevos de DSP incluyen simular, comparar alternativas, aplicar al modelo, deshacer, rehacer, bloquear parámetros y preparar exportación. Aplicar al modelo y enviar al hardware son acciones distintas.
+6. Ventanas / Window
+   Nueva, renombrar, cerrar, minimizar, traer al frente y lista de ventanas abiertas; separar/unir medición, DSP, SPL e historial; restaurar disposición multimonitor. Recuperar ventanas cuando desaparece un monitor.
+7. Ayuda / Help
+   Manual contextual ES/EN, buscador de comandos, glosario, tutoriales, ejemplos de gira, guía de toma de datos para trabajo remoto, diagnóstico exportable, versiones, novedades, comprobar actualizaciones y acerca de. Una consulta fallida de actualizaciones no se presenta como «estás actualizado».
+8. DSP / DSP — ampliación de Mya
+   Ruteo y buses; ganancia; polaridad; delay; PEQ/GEQ; shelves; HP/LP y cruces; all-pass; FIR; bypass individual/global; enlaces y copias; sumas; targets; optimización y perfiles de procesador.
+   Mostrar orden de filtros, frecuencia, ganancia, Q/ancho de banda, pendiente, tipo, coeficientes cuando proceda, taps, Fs, latencia y cambios antes/después. Catálogo condicionado a cada modelo de Prodigy, Galaxy y Marani; todavía no se declara compatibilidad de exportación verificada.
+
+VENTANADO: CINCO CONTROLES DIFERENTES
+A. Registro de adquisición: N muestras y Fs. Duración T=N/Fs; separación de bins Δf=Fs/N. Zero-padding densifica la representación, no crea resolución física.
+B. Ventana de datos FFT: forma y normalización de amplitud/potencia. La ayuda de Smaart documenta Hann por defecto y Hann para espectro por bandas. Cualquier catálogo adicional de Mya debe probar amplitud de tonos, ruido y ancho de banda equivalente, no limitarse a cambiar una etiqueta.
+C. Ventana de la IR: anclaje temporal explícito, tramo izquierdo y derecho, forma y respuesta resultante. Conservar IR original y vista procesada. Una ventana corta puede excluir reflexiones, pero reduce la resolución útil en graves. Mostrar la limitación en la gráfica y en el optimizador.
+D. FTW: operación compleja en frecuencia equivalente a cierto ventanado temporal. En Smaart se limita a promedios de magnitud complejos; el valor mostrado es una semiventana nominal. No usar sin más 1/T con esa etiqueta: la documentación da 100 Hz como límite efectivo para un ajuste de 20 ms. Mya debe publicar la convención exacta y validar su límite según su propia ventana.
+E. FDW: anchura que depende de la frecuencia, expresada por ciclos u octavas. No es el FTW de anchura temporal fija. Propuesta de Mya: control avanzado con ventana efectiva visible. No confundir tampoco el MTW de adquisición multi-FFT de Smaart con cualquier otro algoritmo denominado MTW.
+El suavizado de magnitud/fase se configura aparte. Para optimizar se deben usar datos complejos válidos y una política explícita de ventanas; no invertir directamente una curva suavizada para dibujar. Guardar la receta de análisis con cada captura y permitir comparar sin ventana/con ventana. Evitar aplicar dos veces una ventana al importar datos ya procesados.
+
+FLUJO DE GIRA CON MENOR TIEMPO DE EMISIÓN
+1. Seleccionar entradas, referencias, micrófonos, posiciones, vías y estado inicial del DSP. Comprobar clipping, ruido de fondo, reloj y calibración.
+2. Definir captura: sweep, duración, banda útil, nivel, repeticiones, pre/post silencio, salidas y parada automática. Mostrar cuánto tiempo emitirá sonido; parada accesible.
+3. Capturar cada vía y posiciones con referencia temporal común. Guardar señal, IR/TF compleja cuando estén disponibles, configuración y calidad por banda. Registrar si se movió el micrófono o cambió Find.
+4. Apagar el generador y pasar a DSP offline. Comparar original, contribuciones y suma compleja bajo cambios de ganancia, delay, polaridad, IIR y FIR.
+5. Proponer varias soluciones: intervención mínima, IIR, híbrida o FIR cuando el destino lo permita. Evaluar error respecto al target, dispersión entre posiciones, latencia, refuerzo máximo y robustez. El ingeniero puede bloquear o editar cada decisión.
+6. Exportar receta verificable y realizar medición final del sistema físico. Comparar predicción y medida sin ocultar discrepancias.
+Una suma compleja requiere fase, escala y tiempo compatibles. Para Mediterránea Festival 2026 el usuario no recuerda micrófono/Find; mantener condición «referencia temporal sin confirmar». No presentar un delay calculado como recomendación validada para el recinto.
+
+MEDIDORES COMPLETOS
+Separar entrada, tipo de magnitud, ponderación frecuencial, detector temporal y periodo de acumulación.
+SPL A/C/sin ponderar; Fast/Slow; Leq con periodo configurable; pico A/C/Z y opciones por octava documentadas por el proveedor; dBFS para entrada digital; C−A; L10/L50/L90; exposición N/O; máximos, clipping, historial, notas, alarmas y reset por entrada. Las métricas de exposición requieren su propia especificación y validación, no solo una etiqueta en pantalla.
+A/C/X/Pink y sus inversas y curvas propias pertenecen también a la biblioteca de ponderaciones de las gráficas. Los targets propios/default son otra biblioteca. SPL sin calibrar debe aparecer como no disponible, no como valor acústico inventado. La demo no es un sonómetro certificado.
+
+IDIOMAS DESDE LA ARQUITECTURA
+Español e inglés completos: menús, paneles, mensajes de error, ayuda, informes, exportación legible, accesibilidad y actualización. Nada de traducir únicamente el menú principal.
+Identificadores internos estables, independientes del idioma; catálogos es/en con las mismas claves; formatos numéricos adaptados al usuario, formato de intercambio inequívoco y versionado. Admitir coma decimal en edición española sin romper el separador CSV.
+Conservar Hz, dB, dBFS, ms, FFT, FIR, IIR, RTA, TF, SPL y Q; ofrecer «Buscar retardo / Find delay» y «Seguimiento / Track» para facilitar transición. Los atajos de compatibilidad no cambian al traducir las etiquetas. No interceptar letras o Espacio mientras se escribe en campos de texto.
+Diseñar espacio para traducciones más largas, usar pluralización y evitar texto incrustado en imágenes. Preparar idiomas adicionales mediante catálogos, sin anunciar soporte antes de traducir y revisar.
+
+ATAJOS: PERFIL FAMILIAR A SMAART
+T TF; S RTA único; 0 multiespectro; 1–9 vistas configurables (3 por defecto RTA/RTA).
+B barra de datos; O control; U comandos; A pestañas; E rejilla SPL; Shift+E medidores de entrada; K SPL/reloj.
+L abre buscador de retardo. La tabla general describe D simple como Find y D doble como activar/desactivar Track; una página individual lo resume distinto. Verificar comportamiento de la versión instalada antes de cerrar este contrato. Shift+D Track All; coma/punto decremento/incremento de retardo de medición.
+Espacio captura; Shift+Espacio captura todos; Ctrl/Cmd+Shift+Espacio recaptura según tabla general (la página individual de recaptura discrepa). No usar el atajo contradictorio sin prueba.
+Ctrl/Cmd+T crea TF; Ctrl/Cmd+Shift+T promedio TF; Ctrl/Cmd+S espectro; Ctrl/Cmd+Shift+S promedio espectro. Por tanto, guardar proyecto necesita otra asignación en este perfil.
+G generador; V reinicia promedio; C coherencia; P peak hold; X targets; I modo IR; R tiempo real; Option/Alt+H modo SPL; Ctrl/Cmd+I Live IR.
+Ctrl/Cmd+Y limpia offsets y Z ordena trazos: no reutilizarlos sin distinguir el contexto DSP. Atajos de edición de texto deben seguir el comportamiento del sistema operativo.
+La tabla completa de atajos de la ayuda se ha consultado; estos son los grupos prioritarios, no un anuncio de que ya estén implementados.
+
+CRITERIOS DE ACEPTACIÓN ANTES DE LLAMARLO MEDIDOR FUNCIONAL
+• Loopback conocido: amplitud, fase, signo de delay y estabilidad tras reiniciar audio.
+• Respuestas sintéticas y medidas de referencia para cada filtro y suma; conservar escala compleja.
+• Ventanas: tonos entre bins, ruido, impulso, reflexiones y límites de graves; comprobar normalización.
+• Sweep: separación de señal y ruido, recorte, repetibilidad, referencia temporal y fin de cola IR.
+• Promedios: distinguir temporal/espacial y complejo/potencia; no confundir promedio de audiencias con suma de fuentes.
+• DSP: undo/redo, bypass, bloqueos, presupuesto de latencia, validación en posiciones no usadas para ajustar.
+• Exportación: recalcular respuesta del formato exportado y comparar con el modelo; probar cada modelo/firmware.
+• ES/EN: mismas claves y funciones, nombres largos, decimales, teclado macOS/Windows, informes.
+• Una captura sin referencia suficiente no habilita una recomendación automática de alineación como resultado validado.
+
+FUENTES PRINCIPALES
+Ayuda instalada Smaart: /Applications/Smaart Suite.app/Contents/Resources/Help/
+Páginas clave: keyboard-shortcuts.html; view-presets-1-9.html; transfer-function-settings.html; spectrum-measurement-settings.html; impulse-response-graph-settings.html; advanced-preferences.html; control-bar-ftw.html; audio-preferences.html; smaart-loopback.html; signal-generator-settings.html; manage-configurations.html; target-curves-dialog.html; spl-config-custom-metrics.html; weighting-curves.html.
+https://www.rationalacoustics.com/pages/smaart-suite-features
+https://support.rationalacoustics.com/support/solutions/articles/150000186279-what-is-ftw-smoothing-
+https://www.gaudiosolutions.com/en/producto/rita-2/
+Manual local RiTA 2.8.0: Referencias/RiTA - Manual de usuario.pdf; especialmente motores, DSP, FIR, Auto Align y ajuste por promedios.
+https://www.roomeqwizard.com/help/help_en-GB/html/graph_impulse.html
+https://www.roomeqwizard.com/betahelp/help/html/impulseresponse.html

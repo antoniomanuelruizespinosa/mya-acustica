@@ -1,0 +1,26 @@
+GUÍA EDITORIAL
+Referencia de organización: Smaart separa operación, controles y conceptos; RiTA 2.8.0 organiza el recorrido entre primeros pasos, DSP, medición, herramientas, proyectos y exportación. Adoptamos ambos accesos: por tarea y por control. Texto y capturas propios de Mya, sin copiar extensamente manuales ajenos.
+
+Mejoras propuestas:
+• Inicio rápido por objetivo, con enlace a explicación técnica opcional.
+• Cada procedimiento muestra requisitos, resultado esperado y cómo deshacer.
+• Diferenciar adquirir, mostrar, simular, proponer y aplicar al procesador.
+• Identificar versión, plataforma e idioma de cada captura; datos demo siempre etiquetados.
+• Mostrar limitaciones junto a la función, no esconderlas al final.
+• Ayuda breve desde el control y enlace al procedimiento completo.
+• Diagnóstico por síntoma y ejemplos de resultado válido/inválido.
+• Misma fuente e ID para manual y ayuda; traducciones revisadas por cambios.
+
+Plantilla de tema:
+ID / título / versión / estado / plataforma / objetivo.
+Antes de empezar: dispositivos, datos y condiciones necesarias.
+Dónde está: menú > apartado, control y atajo del perfil vigente.
+Pasos numerados con una acción por paso.
+Qué debe verse y qué significa.
+Qué cambia: datos originales, presentación, DSP simulado o equipo externo.
+Cómo cancelar, deshacer y recuperar.
+Errores frecuentes y casos límite.
+Ejemplo reproducible y captura de la versión cubierta.
+Temas relacionados / fuente técnica / prueba y fecha de verificación.
+
+Estados: DISEÑO, PROTOTIPO, IMPLEMENTADO, VERIFICADO. Añadir evidencia independiente por plataforma. No elevar estado por tener botón o menú. El ejecutor actualiza matriz y notas; este chat revisa con Antonio.

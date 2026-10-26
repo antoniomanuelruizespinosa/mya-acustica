@@ -1,0 +1,9 @@
+BIBLIOTECA DE CAJAS — INVESTIGACIÓN INICIAL
+Consulta26/10/2026. Catálogo parcial enJSON; no están descargadas ni decodificadas las bibliotecas acústicas. No contiene datos de predicción equivalentes a simuladores oficiales.
+Meyer: https://docs.meyersound.com/products/en/user-guide---mapp-3d.html — datos de cajas y rigging descargables desdeMAPP3D, separados del instalador. Investigar acceso/formato/condiciones de integración; no asumir importación directa .mapp.
+L-Acoustics: https://www.l-acoustics.com/result-documentation-center/?choice=L2-BAR — archivosEASE/CATT, manuales, presets y configuraciones publicados. https://www.l-acoustics.com/products/soundvision/ — simulador oficial. Identificar datos de cada modelo, no extrapolar bibliotecaL2 aK2.
+d&b: https://www.dbaudio.com/global/en/service-and-support/downloads/ — filtros EASE/CLF, CAD, manuales y ArrayCalc. Obtener dataset específico antes de habilitar predicción por modelo.
+
+Campos obligatorios: marca/modelo/revisión, preset/amplificador/modo, bandas y condiciones de medida, polarH/V o esfera completa, fase y origen temporal si existen, normalización, sensibilidad/SPL con método, dimensiones/centros acústicos, puntos de giro y ángulos discretos, bumper/accesorios y referencia a límites mecánicos, procedencia/licencia/fecha, estado de validación.
+No mezclar SPLpico, RMS y distintas excitaciones como si fueran comparables. No convertir potencia eléctrica en salida acústica sin sensibilidad/condiciones.
+Próximas familias a catalogar: Meyer PANTHER/LEOPARD/LINA y1100-LFC; L-Acoustics K2/KaraII/A15/KS28; d&b KSL/V/Y ysubs asociados. Selección inicial técnica, no inventario confirmado del usuario.

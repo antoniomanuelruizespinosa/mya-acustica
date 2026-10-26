@@ -1,0 +1,9 @@
+Arranque GitHub — 26/10/2026
+Repositorio privado independiente: antoniomanuelruizespinosa/mya-acustica.
+Se preserva el estado actual de trabajo; no se reconstruye una historia ficticia de commits anteriores.
+MYA-004: 7/7 pruebas declaradas en informe, aceptación visual pendiente.
+MYA-005 terminado: 8/8 pruebas declaradas, con capturas de componentes offline. Aceptación visual en aplicación pendiente. Desarrollo confirmó código detenido para este respaldo.
+Audio real/DSP/IA/exportación a procesadores: pendientes de implementación/validación según informes.
+No se incluyen manuales externos ni sus extracciones, sesiones, preferencias locales, builds ni vendor.
+No hay licencia de código abierto concedida con este arranque. Dependencias sujetas a sus licencias.
+Mejoras posteriores: build reproducible y CI macOS/Windows, protección técnica de main según disponibilidad del plan, pruebas hardware separadas de tests demo. No habilitar gastos de CI sin revisar cuota.

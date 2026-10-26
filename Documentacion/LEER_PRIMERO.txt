@@ -1,0 +1,40 @@
+MYA ACUSTICA — BASE DOCUMENTAL
+Creada el 26/10/2026. Responsable de decisiones: Antonio. Chat 1: revisión y control. Chat 2: desarrollo y ejecución.
+
+Objetivo: mantener una única base para manual, ayuda contextual y formación en español e inglés. Esta carpeta es documentación preparatoria; no declara terminadas funciones del prototipo.
+
+RECORRIDO
+00_Guia_y_control: índice, reglas editoriales y decisiones.
+01_Manual_ES: contenido original en español, idioma maestro inicial.
+02_Manual_EN: traducciones revisadas con los mismos identificadores de tema.
+03_Ayuda_contextual: temas enlazables desde controles y errores.
+04_Tutoriales_y_practicas: procedimientos y ejercicios reproducibles.
+05_Referencia_tecnica: análisis previos copiados, fórmulas y requisitos.
+06_Capturas_y_recursos: futuras capturas de Mya con versión, idioma y origen de datos.
+07_Verificacion: matriz de funciones y pruebas antes de publicar instrucciones.
+08_Fuentes: material local de consulta, no destinado a redistribuir dentro de Mya.
+
+Los originales anteriores permanecen intactos. procedencia.json registra copias y hashes de análisis/PDF. La aplicación y su entorno de compilación no se han trasladado.
+Los documentos técnicos copiados son antecedentes fechados, no una certificación de implementación. El manual se actualizará cuando el chat ejecutor entregue cambios comprobados.
+
+ACTUALIZACIÓN MYA-001 — 26/10/2026
+Se ha creado una copia de desarrollo en ../Aplicacion y un build nuevo en ../work/mya-cpp-build.
+La aplicación original y el vendor siguen en su ubicación anterior, intactos.
+Estado y validación: 07_Verificacion/MYA-001-resultado.txt. Apertura interactiva pendiente.
+
+ACTUALIZACIÓN MYA-003 — 26/10/2026
+Biblioteca persistente por carpetas, clasificación TF/IR/RTA, ejes y selectores.
+Informe: 07_Verificacion/MYA-003-resultado.txt. Contrato y límites:
+05_Referencia_tecnica/biblioteca-tipos-y-vinculos-dsp.txt.
+Build preparado; apertura y aceptación visual pendientes de coordinación.
+
+ACTUALIZACIÓN MYA-003-R1 — 26/10/2026
+Corrección compacta de suavizado/16k, cuarta TF y UTF-8 de tooltips.
+Informe: 07_Verificacion/MYA-003-R1-resultado.txt. Nueva revisión visual pendiente.
+
+ACTUALIZACIÓN MYA-004 — 26/10/2026
+Barra Trazos/dB Meter, medidores persistentes, alarmas visuales demo y Graph Settings.
+Informe: 07_Verificacion/MYA-004-resultado.txt. Matriz y contrato en05_Referencia_tecnica.
+Las flechas horizontales ahora amplían/reducen intervalo X, sin pan; enlace de
+suavizado se configura en Ajustes gráficos y no implica enlace de zoom.
+Build listo; apertura y aceptación visual pendientes de coordinación.

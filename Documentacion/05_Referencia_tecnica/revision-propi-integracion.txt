@@ -1,0 +1,40 @@
+PROPI + SMAART → MYA — REVISIÓN 26/10/2026
+Evidencia: aplicación Propi instalada, consulta visual de Basic User Guide (apartados1–23), guía de atajos y menús superiores. No se activaron generadores, mediciones, red ni cambios de configuración. Ventana principal titulada «Pro π - ASIO Error»: no se ha diagnosticado su causa; no representa una medición funcional. Versión exacta pendiente. Lectura documental e inventario no equivalen a ensayos de algoritmos ni a revisión de cada diálogo avanzado.
+
+MENÚS OBSERVADOS
+File: Import Data, Check For Update.
+Config: I-O Config, Audio Settings, Signal Generator.
+Option: Trace Width, Theme (subopciones pendientes).
+View: Sub Map3D, Drum Kit, Media Player, Line Array Coverage, pantalla completa.
+Hotkey: guía de atajos.
+Remote: iniciar LAN, QR/IP, página remota, detener y estado. Estaba Off; no activado.
+Help: User Guide, activar licencia y quitar clave. Solo se abrió ayuda.
+
+FLUJO DOCUMENTADO Y ADAPTACIÓN
+1–2 Configuración: dispositivo, Mea/Ref/output y Fs compatibles, niveles sin clip. Mya debe mostrar MR en cadaTF y datos del dispositivo real, no solo medidores globales.
+3 Internal Loop/Loop Cal: calibrar latencia fija de ruta, guardar compensación, repetir al cambiar dispositivo/driver/Fs/ruteo. En Mya invalidar calibración de loop cuando cambie la ruta; separar esto de sensibilidad SPL y delay acústico.
+4–7 TF, Pink, Sweep, Find: múltiplesTF, captura sweep en lista; Find detecta y solo pasa a vigente al insertar. Mya conservará estados encontrado/aplicado y referencia temporal original. No convertir toda latencia a distancia física.
+8–9 Trazos/AVG: selección distinta de visibilidad, nombres/exportación y trazos para promedio; IR/fase/mag/coherencia y suavizado. Sum visible en pantalla; comprobar cálculo antes de equivalencia.
+10–12 AutoPhase, polaridad/Restore, AutoXOver: dos trazos, banda de interés, propuesta delay/cruce/filtros/pendiente, inspección de suma y fase, exportación de parámetros y nueva medida. Mya debe conservar original y registrar cada operación; evaluar banda completa y múltiples posiciones.
+13 AutoFIR: trazo/banda, taps y Fs según DSP. Mostrar latencia, normalización, restricciones y respuesta realizada; exportación validada por modelo, no solo archivo generado.
+14 AutoEQ PEQ/GEQ: target, frecuencia/ganancia/Q o bandas fijas; evitar corrección agresiva en baja coherencia y cancelaciones geométricas. Mya mostrará restricciones, alternativas y tabla de filtros editable.
+15 Target/HPF/LPF: Flat/House/EqualLoudness, crear desde trazo y guardarCRV; HPF/LPF puede formar target. En Mya separar filtro de target de filtro aplicado a cadenaDSP; no confundir referencia visual con EQ real.
+16–21 RTA, espectrograma, Decibel Z/A/C, RT60 por banda, Timer y exportacionesTXT/CRV/Xov/FIR/EQ. Todos requieren contratos de unidades/procedencia; no asumir compatibilidad del formato propietario.
+22–23 Flujo: configurar→medir→Find→guardar por fuente→alinear→cruce→EQ/FIR→volver a medir. Mantener posición en comparación y comprobar calidad. Es base del asistente guiado, no automatismo que sustituya comprobación física.
+
+ATAJOS DOCUMENTADOS
+T TF; R RTA; P/G rosa; S sweep; F Find; V refresco/reset promedio; C coherencia; Espacio captura; Delete/Backspace borrar. +/-Y (faseY bloqueada en Propi); Ctrl+/-X; flechas desplazan; Esc restaura gráfica bajo ratón. Ctrl izquierda/derecha cambia delay0,1ms y conShift0,01ms; cambia sentido/objeto según Pink activo o no. Z/X Q del PEQ y Shift paso mayor; Ctrl rueda delay sobre fase.
+DECISIÓN MYA: conservar perfil de Antonio (B/O, L/F, G/S, E,E, Option5, etc.). No adoptar bloqueo de zoom fase ni cambio implícito del objeto delay según generador. Mostrar «Referencia de medición» o «Delay DSP» explícitamente. Resolver atajos por contexto sin interceptar edición de texto.
+
+MAPA DE INTEGRACIÓN PARA DESARROLLO
+• Archivo: estructura amplia de Smaart/proyectosMya, incorporar resultadosDSP e informes con procedencia. No limitarse a los2elementos de Propi.
+• Configuración: dispositivo/motores Smaart y separación I-O/Audio/Generador Propi; loopCal y calibraciónmic claramente distintos.
+• Opciones: controles de gráfica/cursores/promedios de Smaart, organización compacta y tema Propi; local/global visible.
+• Medición: IR/fase/mag, paneles estrechos, TF/AVG y engranajes Propi; MR porTF y estados/transportes acordados. Botón principal ejecuta, engranaje configura; abrir ajustes nunca genera audio.
+• DSP: accesos AutoPhase/XOver/FIR/EQ/Target visibles, pero reunidos en espacioDSP con cadena completa al estilo RiTA. Selección de capturas, antes/después/suma, tabla frecuencia/Q/orden/ganancia/delay/polaridad, bypass/undo y exportar. No duplicar estimadores en cada botón.
+• Vista: RTA/espectrograma/medidores y futuro3D. SubMap y LineArrayCoverage pasan a MyaMappVision3D con modelo acústico explícito. DrumKit/MediaPlayer quedan fuera de prioridad0.1.
+• Ayuda: por tarea y por control, guías propias ES/EN; menú de atajos único. Remote opcional futuro, sin servicio activo por defecto.
+
+PENDIENTES CONCRETOS
+Abrir sin aplicar: I-O, AudioSettings, generador, submenús Theme/TraceWidth, diálogos AutoEQ/FIR/Phase/XOver, SubMap y Coverage; registrar campos, unidades, rangos y dependencias. Revisar algoritmos/formatos mediante datos conocidos cuando corresponda. No se declara esta matriz como auditoría completa de todas las opciones avanzadas.
+ACEPTACIÓN: cada comando tiene ID único y misma acción en botón/menú; ajustes no ejecutan; pendientes deshabilitados; capturas originales intactas; todo resultado identifica fuente/banda/receta; mismos estadosES/EN; ninguna exportación promete soporte no probado.

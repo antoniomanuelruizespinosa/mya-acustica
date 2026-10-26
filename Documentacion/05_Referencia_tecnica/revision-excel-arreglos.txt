@@ -1,0 +1,25 @@
+REVISIÓN DEL LIBRO S.A.D. — 26-10-2026
+Corrección: 12 stacks de dos subgraves en gradiente = 24 recintos físicos. Confirmación del usuario. Las 12 fuentes cardioides del modelo representan stacks, no 12 cajas físicas.
+
+Se recorrieron las fórmulas y valores guardados de las ocho hojas, incluidas las ocultas, agrupando fórmulas repetidas y trazando las rutas principales. No se ejecutaron macros ni se recalculó íntegramente el libro. Esto es una inspección de fórmulas, no una certificación acústica.
+Dashboard: controles y salidas, 197 fórmulas.
+Setups: geometría, selección de arreglo, micros virtuales y taper, 1592 fórmulas.
+Calc_Transfer: propagación, suma compleja y trazas frecuenciales, 67431 fórmulas.
+Calc_2D: malla espacial de 32×32 puntos, 141986 fórmulas.
+Calc_Polar: suma a 360 ángulos y siete frecuencias, 137056 fórmulas.
+Plot & Label: coordenadas de gráficos e indicadores, 160 fórmulas.
+MAPP_prep: preparación de escenario/XML, 714 fórmulas.
+Copy Me: ensamblado del XML, 638 fórmulas.
+
+HALLAZGOS
+1. Arco externo: 12 stacks separados 2.5 m, arco virtual 120 grados, temperatura 14 C. Delays reproducidos independientemente con error menor que 1e-9 ms. Ver verificacion-arco-subs.json.
+2. La rama Gradient de Setups!B47:K50 es una alternativa de dos fuentes: segunda fuente a -H4, delay H4/c e inversión. No está seleccionada y sus 7.355 ms no son el delay interno confirmado de los stacks actuales. No exportar ese valor como tal.
+3. Calc_2D!J5 ya convierte G5=-3 dB a amplitud 0.7079458; D27 vuelve a multiplicar por 10^(G5/20), resultando 0.5011872 (-6 dB). Se repite para los 12 elementos. Calc_Transfer aplica la ganancia una vez. Discrepancia de implementación entre vistas; cuantificar su efecto antes de reutilizar resultados.
+4. Filtro de magnitud: LP(f)=1/(1+(f/fc)^n); a fc entrega 0.5 (-6.0206 dB). La transferencia aplica este factor real después de la suma; no representa una cadena DSP compleja completa con fase de filtro. No basta para reproducir un crossover real en Mya.
+5. Los patrones usan ABS(a+b*cos(theta)). El cardioide actual a=b=0.5 no tiene lóbulo negativo; otros patrones pierden el signo del lóbulo con esa operación. Mya debe conservar la respuesta compleja y la fase correspondiente.
+6. Muchos #N/A sirven para ocultar trazas. Dashboard de -6 dB/max angle también recibe #N/A: Calc_Transfer!RJ23 usa MATCH(6,RK41:RK217,1), devuelve #N/A y propaga a RJ24 y RJ7. Esos indicadores no son resultados válidos en este estado; se debe revisar el criterio de búsqueda/cruce.
+7. Copy Me contiene 12 entradas loudspeaker, no 24 cajas desglosadas. Exporta delay y ganancia; el ejemplo MAPP_prep!J217 conserva <polarityReversed>falso</polarityReversed> en el valor guardado, incompatible con el literal booleano XML habitual false. No se ha probado su importación. El bloque LP contiene frecuencia fija 100.0; no asumir equivalencia con el LP de 80 Hz del dashboard.
+8. Créditos del libro: copyright 2018 Merlijn van Veen; inspirado por Mauricio Ramirez y Bob McCarthy. Mantener atribución correcta al describir esta referencia.
+
+REQUISITO MYA
+Jerarquía explícita arreglo > 12 stacks > 2 cajas por stack > salidas DSP. Delay total por caja = delay común del stack + delay relativo interno + compensación común de sistema cuando proceda. Ganancias se suman en dB y polaridades se componen por signos. Mostrar cada contribución y recursos físicos de salida. El modelo cardioide ideal sirve para exploración, pero el cálculo detallado debe poder expandir las 24 cajas con posiciones, filtros y respuesta medida.

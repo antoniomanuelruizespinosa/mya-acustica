@@ -1,0 +1,1 @@
+Guardar capturas reales de Mya con nombre ID-version-plataforma-idioma.png y ficha de origen. Datos demo visibles. No usar captura de Smaart/RiTA como si fuera Mya. No preparar capturas definitivas hasta estabilizar la interfaz.

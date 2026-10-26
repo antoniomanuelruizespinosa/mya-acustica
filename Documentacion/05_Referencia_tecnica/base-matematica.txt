@@ -1,0 +1,103 @@
+MYA ACUSTICA — BASE MATEMATICA Y DISEÑO FUNCIONAL
+Propuesta de ingeniería, 26 octubre 2026. No es un medidor homologado ni un motor de audio terminado.
+
+ALCANCE Y EVIDENCIA
+RiTA: leído el manual 2.8.0 completo (51 páginas) y suplementos Auto EQ / Auto Align 2.7.1. Propi: leídos los 23 apartados de su guía básica integrada. Smaart Suite: disponible la ayuda instalada (161 archivos HTML); revisados los apartados funcionales de TF, FFT/ventanas, Find/Track, espectro, coherencia, promedios, calibración, capturas/exportación y SPL. No se declara una auditoría completa de sus algoritmos internos ni lectura exhaustiva de todas las páginas. Los fabricantes no publican en estos manuales todos sus algoritmos.
+La implementación se diseña de forma independiente a partir de teoría DSP y requisitos del ingeniero. Ni las marcas ni los manuales prueban compatibilidad de Mya con equipos reales.
+
+1. CONTRATO DE DATOS
+Guardar H compleja, frecuencia, espectros promediados Gxx/Gyy/Gyx si existen, coherencia, IR original si existe, Fs, FFT/MTW, ventana, suavizado, ganancia y offsets visuales, compensación de delay, referencia eléctrica/acústica/interna, calibración de loop, micrófono, orientación/corrección, entrada/salida, fecha, posición, vía, preset de DSP activo durante la toma y unidades. Retener originales inmutables; cambios en escenarios derivados.
+No reconstruir una IR fiable a partir de una TF suavizada, recortada o con rejilla MTW sin declarar las limitaciones. No sustituir una coherencia ausente por 100 %. Coherencia de una sola FFT sin promediado no es un test de fiabilidad.
+Las mediciones de Mediterránea se han copiado sin modificar. El usuario no recuerda posición común ni Find entre vías: estado EXPLORATORIO. No se ha descodificado su formato TRF ni calculado un delay real. Importar ASCII mediante Smaart, conservando metadatos y sin suavizado adicional cuando sea posible, es el paso pendiente.
+
+2. MEDICION DE DOBLE CANAL
+Convención explícita: x referencia, y medida, G_yx = media(Y · conjugado(X)); G_xx = media(|X|²), G_yy = media(|Y|²).
+H1(f) = G_yx(f) / G_xx(f).
+gamma²(f) = |G_yx(f)|² / [G_xx(f) G_yy(f)].
+Se exige referencia por encima del umbral de energía. Frecuencias inválidas quedan enmascaradas, no divididas por cero ni rellenadas. H1 presupone ruido de salida no correlacionado con x; errores de reloj y ruido en referencia requieren diagnóstico.
+Magnitud = 20 log10|H|; fase = arg(H); retardo de grupo = -(1/2π) d unwrap(arg H) / df. Suavizado de visualización separado del utilizado por el optimizador.
+Estimación espectral con bloques solapados y normalización de energía de ventana; declarar duración de adquisición y número efectivo de promedios.
+
+3. SWEEP ESS
+s(t) = sin[2π f1 T / ln(f2/f1) · (exp(t ln(f2/f1)/T) - 1)], 0≤t≤T.
+Usar fades y cola de grabación. Deconvolución regularizada H = Y conjugado(X) / (|X|² + λ(f)); X debe representar el estímulo/referencia correcto, con alineación y relleno suficientes para evitar alias circular. La técnica ESS permite separar respuestas de distorsión; su implementación exige ventanas temporales específicas y no se deduce de la fórmula de inversión sola.
+Repetir barridos para comprobar repetibilidad; no inventar coherencia de ruido estacionario a partir de un solo barrido.
+
+4. LOOP, FIND Y TRACK
+Referencia eléctrica: captura física coherente con la salida. Referencia interna: estímulo digital con latencia de ruta calibrada; una calibración constante no corrige deriva de relojes independientes. Referencia acústica: conservar evento de sincronismo y su incertidumbre.
+Find: localizar llegada mediante IR/correlación en banda válida, discriminar reflexión dominante y permitir elección manual. τ = (índice_pico + interpolación_submuestra) / Fs. Registrar estimación, confianza, rango y delta frente al valor activo; insertar explícitamente.
+Track: seguimiento acotado con histéresis, control de coherencia/repetibilidad y rechazo de saltos; congelar en captura. Nunca mover el delay físico del procesador para seguir el movimiento de un micrófono.
+Convención: un retardo físico positivo τ introduce exp(-j2πfτ). Si Hguardada = Hfisica exp(+j2πfτcomp), recuperar Hfisica = Hguardada exp(-j2πfτcomp). Verificar convención del importador con un loop de delay conocido. Una referencia global puede quitarse solo a efectos de visualización.
+
+5. DSP Y SUMA
+Para vía i, C_i(f;θ) = p_i · 10^(g_i/20) · exp(-j2πf d_i) · producto(B_ik(f)) · F_i(f), p_i ∈ {-1,+1}.
+En posición p: S_p(f) = suma_i H_pi(f) C_i(f).
+No sumar dB ni fases aritméticamente. Dos señales iguales en fase dan +6,0206 dB respecto de una; en oposición se cancelan idealmente. Una suma de señales no correlacionadas se trata en potencia y no predice interferencia coherente.
+Solo sumar respuestas referidas al mismo estímulo, posición y reloj/tiempo. Al promediar varias posiciones conservar la pareja de vías y sus retardos relativos por posición. El cero temporal de cada vía no se puede elegir por separado para justificar una suma física.
+Distinguir corrección adicional frente a preset existente: una medida ya contiene el DSP aplicado en el recinto. No volver a insertarlo accidentalmente.
+
+6. FILTROS IIR
+B(z)=(b0+b1 z^-1+b2 z^-2)/(a0+a1 z^-1+a2 z^-2).
+Normalizar por a0; estabilidad: polos estrictamente dentro del círculo unidad. Implementación en secciones de segundo orden.
+PEQ estándar: ω0=2πf0/Fs, A=10^(G/40), α=sin(ω0)/(2Q).
+b=(1+αA, -2cosω0, 1-αA); a=(1+α/A, -2cosω0, 1-α/A).
+APF segundo orden: mismo denominador (1+α, -2cosω0, 1-α) y numerador invertido. Su módulo es uno, pero su fase no equivale a un delay constante.
+HPF/LPF, shelving, notch y APF se construyen con prototipos documentados; LR4 es cascada de dos Butterworth de segundo orden Q=1/√2. No usar Q=.707 en todas las secciones de cualquier orden. Bessel requiere declarar normalización.
+Q/BW, frecuencia de shelf, pendiente, cuantización y ganancia pueden variar por fabricante. Cada adaptador debe modelar y medir la respuesta real del equipo; un CSV genérico no demuestra compatibilidad.
+
+7. PROMEDIOS
+Temporal: promediar espectros antes de H1/coherencia; polar/complex de presentación son opciones diferentes.
+Espacial en dB: Lavg(f)=Σ_p w_p(f) L_p(f)/Σ_p w_p(f).
+Espacial potencia: Lpow(f)=10log10[Σ_p w_p(f)10^(L_p/10)/Σ_p w_p(f)].
+Complejo: Havg=Σ_p w_p H_p/Σ_p w_p; puede cancelar por diferencias temporales. Requiere intención y alineación documentadas; no reemplaza la evaluación de cada posición.
+Los pesos combinan prioridad de zona y calidad independiente, y pueden usar coherencia cuando sea aplicable. Cero soporte válido implica dato no evaluable. La normalización de nivel es opcional y se registra; nunca borra la diferencia real de cobertura sin avisar.
+
+8. OPTIMIZACION CON RESTRICCIONES
+Variables discretas: polaridad, tipos de filtros, cantidad de bandas, uso FIR, taps y topología. Continuas: gain, delay, frecuencia, Q, amplitud y coeficientes. Los bloqueos del ingeniero se convierten en restricciones duras.
+Error magnitud eM_pf = 20log10|S_p| - T_p(f).
+Error fase por parejas en la zona de solape: eφ_pij = 1 - cos(arg[(H_pi C_i) conjugado(H_pj C_j)] - φobjetivo_pij).
+Para suma constructiva φobjetivo=0; un arreglo de cancelación exige un objetivo espacial distinto. No pedir fase cero absoluta en todas las posiciones ni eliminar el tiempo de propagación físico.
+Objetivo propuesto: J = aM Σ W ρ(eM) + aφ Σ V eφ + aZ Var_p(eM) + aC coste_filtros + aL latencia + aB penalizacion_refuerzos.
+ρ puede ser Huber: evita que pocos valores extremos dominen, sin ocultarlos en el informe. W y V son pesos normalizados en una rejilla logarítmica; V requiere energía suficiente de ambas vías, solape y datos válidos. El score no se convierte en un porcentaje inventado de certeza.
+Restricciones: límites reales de hardware; boost/cut independiente; Q/frecuencia/pendiente; d≥0 fijando una vía de referencia; latencia máxima; FIR finito causal; estabilidad; presupuesto de headroom; bandas protegidas y límites de excursión si existen modelos. No compensar cancelaciones profundas con boost ilimitado.
+Buscar varias inicializaciones y soluciones no dominadas (frontera Pareto). Recomendar según criterio elegido, no afirmar óptimo global garantizado. Ajustar cruces/EQ y alineación iterativamente: la EQ IIR cambia fase.
+Validar fuera de las posiciones de entrenamiento. Si solo hay una posición, declarar esa limitación. Guardar algoritmo/versión, parámetros, semilla, entradas, residuos y causa de cada cambio.
+
+9. FIR CAUSAL
+F(f)=Σ_{n=0}^{L-1} h[n] exp(-j2πfn/Fs), con h real.
+Resolver min_h Σ_{p,k} W_pk |H_pk F_k - D_pk exp(-jωk D)|² + λ||h-href||², con restricciones sobre boost, energía previa, latencia y recursos del dispositivo. Elegir un objetivo alcanzable y ajustar D, nunca invertir sin límite una respuesta con ceros o baja calidad.
+FIR de fase lineal simétrico: delay exacto (L-1)/(2Fs). Para FIR general no simétrico, ese valor no describe su retardo: informar el delay de diseño y el retardo de grupo resultante por banda, más el buffering/procesado del equipo.
+La longitud L/Fs no garantiza corrección por debajo de una frecuencia universal. Evaluar el error y la resolución lograda. Cascadas FIR se convolucionan, no se suman sus coeficientes como si fueran paralelas; comprobar longitud total final, respuesta cuantizada y formato.
+
+10. VENTANADO Y NIVEL
+IR: h_w[n]=h[n] w[n-n0]; ventana referida a llegada, con límites izquierdo/derecho y unidades ms/ciclos. Guardar IR original y ventana aplicada. Más corta mejora aislamiento temporal y empeora resolución LF; no atribuir precisión LF ausente.
+Ventana de análisis FFT y ventanado acústico IR son controles separados. FTW/FDW requiere un algoritmo consistente por frecuencia y marca de banda fiable.
+SPL: Lp=10log10(media(p²)/(20 µPa)²). Calibrar sensibilidad de toda la cadena; corrección frecuencial del micrófono y calibración absoluta son pasos distintos.
+Leq,T=10log10[(1/T)∫pW(t)²dt/p0²]. Fast/Slow: promedio exponencial de pW² con constantes 0,125/1 s; no promedio aritmético de dB. Peak, Max, RMS y Leq se etiquetan por separado.
+Ponderaciones A/C/Z mediante filtros verificados; implementación y tolerancias deben comprobarse antes de afirmar cumplimiento de norma. Sin calibración válida, mostrar dBFS y estado no calibrado.
+RTA: bandas energéticas, línea/barras/ambas. Espectrograma: PSD/energía frente a tiempo y frecuencia; ventana, overlap, escala y rango declarados.
+RT: integración de Schroeder E(t)=∫_t^fin h² / ∫_0^fin h², con control de ruido; EDT/T20/T30 solo si existe rango suficiente y ajuste válido. No extrapolar automáticamente curvas malas.
+
+11. MAPA DE PANTALLAS Y CONTROLES
+Archivo/proyecto: Nuevo, abrir, guardar, guardar como, autosave/recuperación, importar capturas/carpeta, exportar paquete portátil, informe, historial/deshacer/rehacer.
+Medición: Audio I/O; driver/dispositivo/Fs/buffer; entrada por TF y referencia; clock/drift; loop eléctrico/interno/acústico y Loop Cal; matriz de salida; generador pink/ESS/external/sine; nivel/mute; inicio/parada/pause; añadir TF/AVG; M/R por motor; Find/insertar/Track; FFT, promedio temporal, suavizado mag/fase, coherencia; capturar/capturar todos; timer; posiciones/carpetas; notas.
+Gráficas: IR LIN/LOG/ETC; fase wrap/unwrap; magnitud/coherencia; RTA líneas/barras/ambas/peak hold; espectrograma; SPL A/C/Z Fast/Slow/Leq/Peak; acústica EDT/T20/T30. Cursor y zoom enlazado; referencia temporal visible; guardar disposición, desacoplar/restaurar paneles; vista compacta.
+DSP: asignar captura a vía; original/propuesta/aplicada; suma y AVG separados; objetivo editable; rango y zonas; tabla filtros por vía: estado, tipo, f, G, Q/BW/orden, pendiente, delay, polaridad, taps, latencia; bloqueos por parámetro; cadena y curva de filtro; comparación Antes/Después; copiar/enlazar; bypass SOLO previsualización; Auto EQ/FIR/Fase/X-over o conjunto; propuestas; aplicar parcial; historial.
+Verificación: predicción y medida real, delta, coherencia, mismas condiciones, comparación por posición; discrepancias, repetir medidas; registro y reporte. No marcar verificado pulsando un botón sin datos.
+Procesadores: marca/modelo/firmware/Fs/canal, capacidad validada; simulación del DSP de destino; diff de parámetros; preflight; fichero y/o conexión según adaptador; backup y lectura posterior cuando estén disponibles. No envío silencioso al seleccionar una propuesta.
+Ajustes: audio, loop, perfiles de micro y SPL, ventana FFT/IR/FDW, unidades, idioma, tema, atajos, proyectos, actualizaciones, acerca de y diagnóstico. Actualizaciones: comprobar versión, canal estable/beta, notas, descarga verificada, instalar con sesión detenida; no inventar servidor ni versión disponible.
+Modo sin conexión: importar paquete recibido del recinto; validar manifiesto; resolver canales y posiciones; optimizar, comparar y exportar propuesta/informe. Revisión acústica final a cargo del técnico con nueva captura; datos faltantes no se inventan.
+
+12. EJEMPLO IMPLEMENTADO Y LIMITES
+calculo_demo.py genera 4 posiciones sintéticas, optimiza sobre 3 y reserva 1. Búsqueda en rejilla de delay/polaridad, PEQ inverso y FIR real causal de 128 taps mediante mínimos cuadrados. Nueve comprobaciones numéricas. No es IA entrenada, optimizador general ni integración hardware.
+Los resultados calculados se muestran en la maqueta. La maqueta representa el resto de controles y señala los que requieren motor real. No lee audio, no actualiza software ni envía DSP.
+Caso real Mediterránea: copias TRF preservadas; falta exportación numérica documentada y referencia temporal/posición confirmada. Ninguna cifra de la demo corresponde a ese festival.
+
+FUENTES PRIMARIAS
+RiTA Manual de usuario 2.8.0, capítulos 4-18, copia local en ../Referencias/.
+Propi Basic User Guide, apartados 1-23, ayuda integrada versión observada 1.0.9.3.
+Smaart Suite ayuda instalada: Transfer Function Settings; Spatial Averaging; Live Average Settings; Activate Delay Finder; Toggle Delay Tracking; Sound Level Calibration; Spectrum Options; SPL Custom Metrics; Data Bar Menus.
+Estimador H1: https://www.mathworks.com/help/signal/ref/tfestimate.html
+Biquads: https://www.w3.org/TR/audio-eq-cookbook/
+ESS: Angelo Farina, Simultaneous measurement of impulse response and distortion with a swept-sine technique, AES 2000: https://angelofarina.it/Public/Papers/134-AES00.PDF
+Las ecuaciones de optimización conjunta, pesos, interfaz, trazabilidad y flujo son propuesta propia de Mya; necesitan validación experimental.

@@ -1,0 +1,318 @@
+MYA ACUSTICA — REVISIÓN DOCUMENTAL SMAART — LECTURA COMPLETADA
+Registro iniciado: 26/10/2026, revisión nocturna autorizada por Antonio.
+
+ALCANCE Y ESTADO
+Lectura íntegra del texto extraído, no certificación del software ni verificación interactiva. Las figuras y los controles deben verificarse por separado. Las afirmaciones sobre Smaart describen esta documentación local; no son promesas de Mya. No se ha cambiado configuración, emitido audio ni reiniciado Mya en esta revisión.
+Bloques leídos íntegramente: 00–19 (20/20).
+La primera salida conjunta se truncó; se recuperó expresamente audio-preferences, bring-all-to-front y calculating-sti para completar la lectura.
+Lectura y síntesis terminadas el 26/10/2026. Pendientes: verificaciones interactivas, matemáticas y físicas señaladas. Los estados históricos de progreso se conservan debajo.
+Referencia: work/manuales/smaart-chunk-NN.txt; originales /Applications/Smaart Suite.app/Contents/Resources/Help.
+Contraste de código: Main.cpp y AudioRouting.h; estado previo en control-revision-integral.txt. No confundir revisión de código con prueba de ejecución.
+
+BLOQUE 00 — LEÍDO
+Secciones: about-smaart; activate-delay-finder; advanced-preferences; all-bands-table; amplitude-calibration; api-preferences; audio-preferences; bring-all-to-front.
+
+Requisitos extraídos y propuesta para Mya:
+1. Find mide el desfase entre medición y referencia mediante una IR. Requiere motor activo, señal y niveles válidos. Mostrar resultado, delay vigente y diferencia; Insert aplica, Cancel no altera. ETC y pico IR pueden dar resultados distintos. No insertar silenciosamente el pico máximo como si fuera necesariamente llegada directa.
+2. Advanced Find: ventana no modal, Lin/Log/ETC, cursor fijo editable, filtro de una octava configurable, tabla de tiempos con referencia T0, deltas de tiempo/distancia, almacenar/borrar/reordenar y selector TF con medidores M/R. Cambiar TF relanza medición en la referencia; Mya debe definir explícitamente esa transición.
+3. FFT del buscador independiente de FFT TF. Documentación: 64K sin promedio por defecto, T=N/Fs; a 48 kHz T≈1,365 s. Regla orientativa T≥3·retardo esperado, no garantía física. Umbral opcional −80 dBFS puede perjudicar señales débiles. Pruebas: delays conocidos positivos/negativos, reflexiones más fuertes que el directo, niveles bajos y Fs distintos.
+4. Preferencias avanzadas: modos en ventanas separadas; parar motores al cambiar pestaña o mantenerlos en segundo plano. La política debe ser explícita para rendimiento y promedios. TF entre dispositivos necesita reloj sincronizado; no basta con igual Fs. Comprobar saltos de delay al reabrir audio.
+5. FTW: procesamiento complejo global condicionado al tipo de promedio. Excepciones locales polar no deben aparentar procesarse. Sync-source vincula longitud periódica y FFT. L-IFFT y Plot Time Reference son funciones distintas de Live IR y del delay del procesador; completar con bloques posteriores.
+6. Tabla All Bands: análisis del trazo frontal, octavas/tercios, métricas de decaimiento/energía e inteligibilidad, exportación tabular. Cambiar trazo debe recalcular. No dar STI/RT por implementado con una etiqueta o gráfico vacío.
+7. Calibración de amplitud pertenece a la entrada física y cadena de ganancia. Un nombre TF o color no constituye calibración.
+8. Audio: Fs común compatible, tamaño de buffer solicitado y real separados. Un controlador ASIO puede ignorar la petición. Preferencia para filtrar backends antes del sondeo; evitar enumerar agresivamente drivers problemáticos. CoreAudio/ASIO no son equivalentes ni se validan sin hardware.
+9. API y cliente: funciones opcionales futuras, separadas del motor. Activación explícita, autenticación, límites de tráfico, tiempo de espera y rango IR. No activar red durante revisión. Identidad de aplicación/versiones y gestión de ventanas independientes del análisis.
+
+Diferencias actuales: Find/Track son avisos; AudioRouting enumera canales pero no abre adquisición; EnginePanel presenta FFT/promedios deshabilitados. Mya carece de Advanced Find, calibración real, tabla IR y API. Prioridad P0: estados de adquisición y referencia, Find fiable; P1: presentación avanzada; red P3.
+
+BLOQUE 01 — LEÍDO
+Secciones: calculating-sti; capture-all; capture; check-for-updates; clear-db-offsets; client-window-command; client-window-overview; close-window.
+
+1. STI indirecto exige protocolo de medida y metadatos. El manual cita duración mínima 1,6 s y recomienda mayor duración por resolución de modulación; su opción 5 s no es requisito universal inventado. Antes de implementar una métrica normativa, contrastar la norma aplicable, versión y validación independiente.
+2. Diferenciar presencia de ruido en servicio (excitación y calibración específicas, sin promedio) y medida con bajo ruido (niveles operativos y ruido por banda aportados aparte). No inferir inteligibilidad fiable de cualquier sweep recibido. Para el segundo caso documenta SNR≥20 dB por octava 125 Hz–8 kHz. Tratar estas condiciones como procedencia necesaria, no asumirlas por el formato WAV.
+3. Guardar parámetros STI sin alterar las muestras; conservar original y compatibilidad BWAV. Prueba: igualdad de muestras antes/después y recuperación de metadatos. Mya no necesita STI para terminar su primer medidor; posponer antes que mostrar números no validados.
+4. Captura individual: instantánea del motor activo, nombre y carpeta de sesión. Captura múltiple: motores en marcha, carpeta contenedora, nombres/colores conservados; la ayuda v9.5 incluye motores ocultos, manteniéndolos ocultos. Detenido, pausado y oculto no son el mismo estado.
+5. Actualizador: distinguir disponible, actualizado, sin red y error. Descargar/instalar es un flujo posterior, no un mensaje de éxito ficticio.
+6. Offset visual de trazo: reset frontal o todos. Debe separarse de ganancia DSP y calibración; nunca exportar un offset como EQ física sin acción explícita.
+7. Cliente remoto: documentación limita tipos/operaciones y coherencia entre clientes. Promedio se realiza en servidor; banding/smoothing de presentación pueden realizarse en cliente. Mya debe separar modelo de adquisición, presentación y órdenes, y publicar capacidades en lugar de duplicar estas limitaciones de forma accidental.
+8. Captura remota produce copias en ambos extremos. Si se incorpora, resolver identidad, reintentos y duplicados. Cerrar ventana no debe perder pestañas sin una política de traslado/guardado.
+
+Diferencias: captureTrace escribe 701 puntos sintéticos JSON; no captura audio, no biblioteca real ni Capture All. Save/Load guarda parte del estado pero no una sesión medible completa. Prioridad P0: formato de sesión y captura inmutable con metadatos; P2: actualización; P3: cliente remoto/STI.
+
+BLOQUE 02 — LEÍDO
+Secciones: command-bar-config; command-bar-show; command-bar; compact-signal-generator; control-bar-and-clock; control-bar-ftw; control-bar-show; control-bar-sync-source; copy-to-ascii; cursor-commands; cursor-preferences.
+
+1. Barra de diez comandos configurable, perfiles separados RT/IR, asignación y nombre editables, ocultar/recuperar con acceso persistente. El menú no basta: estado, atajo, botón y acción deben usar el mismo comando. Respetar B/O, L/F, G/S, Espacio y E,E pedidos por Antonio; no sobrescribirlos por la tabla Smaart.
+2. Generador compacto conserva tipo, on/off y nivel; incremento configurable. La generación de Mya sigue pendiente, no habilitar salida por abrir un panel.
+3. SPL: inicio/parada de logging, notas, selección de entradas, informes de sesión o rango; máximos, percentiles, alarmas, overload y procedencia. Resets Max/Leq/Exposure/All afectan métricas configuradas aunque no visibles y deben quedar registrados en logs.
+4. FTW aplica solo a datos compatibles complejos, conserva originales y señala límite inferior no resoluble. No confundir con suavizado fraccional de dibujo. Aclarar convención temporal en la especificación matemática final.
+5. Sync-source: periodo de excitación=periodo FFT; no necesita ventana de datos convencional, pero exige coherencia entre ruta de generación y motor. La ayuda deshabilita motores con FFT local distinta. Coherencia MTW concurrente es opción separada; no mezclar estimadores sin indicarlo.
+6. Riesgo crítico de importación: ASCII de Smaart refleja banding/smoothing de visualización; en TF las muestras bajo umbral de coherencia se exportan como asteriscos. No interpretar esos huecos como ceros ni considerar una exportación suavizada igual a datos crudos. Solicitar o registrar receta de exportación; importador debe preservar máscara de validez. Las exportaciones multitrazo sin banding requieren rejillas compatibles.
+7. Cursor libre sigue el dato del trazo frontal por defecto, opción para movimiento libre. Cursor bloqueado tiene control separado, selección con Cmd/Ctrl+clic, búsqueda pico, movimiento y borrado. Lecturas Hz, longitud de onda/nota; ms, distancia/muestras dependen de Fs y velocidad de sonido.
+
+Diferencias: Mya tiene cruces sobre respuesta sintética y frecuencia compartida, pero no modo libre configurable, cursor bloqueado ni deltas. Comportamiento entre paneles está basado además en captura del usuario, no en una supuesta prueba interactiva nocturna. No equivalencia integral. Funciones de barra configurable, FTW, Sync-source, logging y exportación ASCII pendientes.
+
+BLOQUE 03 — LEÍDO
+Secciones: cursor-readout; cycle-forward-reverse; cycle-preferred-plot; cycle-skin; data-archive; data-bar-menus.
+
+1. Cruz completa: líneas hasta límites de gráfica; intersección y lectura numérica deben coincidir. Seguimiento vertical del trazo frontal; cursor libre desacoplado del dato como opción. Spectrograph siempre representa coordenadas reales de tiempo/frecuencia. Cursor bloqueado no aplica a todos los paneles: documentación excluye Live IR, espectrograma y navegador IR. Bloqueado+libre requieren ambos valores y deltas con unidades correctas.
+2. Orden Z es estado por gráfico: Z/Shift+Z rota; seleccionar leyenda/motor/archivo trae trazo al frente. La selección, orden de pintado, coherencia y cursor deben compartir la misma fuente frontal. Mya actualmente pinta TF en orden fijo; seleccionar TF no necesariamente la pone visualmente delante. Defecto P1 a corregir, sin modificar código esta noche.
+3. Dos paneles del mismo tipo: asignación Plot 1/2 por trazo, con memoria al cerrar/reabrir. No confundir selector de fuente con mover trazo de panel. Los presets deben conservar estas asignaciones.
+4. Archivo separado del directorio activo mejora organización y carga de bibliotecas; restauración recuperable. En Mya usar IDs estables y rutas portables, no deducir la identidad de un trazo por nombre/color.
+5. Biblioteca: orden, búsqueda, sesión fijada como destino, carpeta nueva o desde selección, selección múltiple, renombrar, colores, info, copia/exportación, importar, promediar, raíz, refrescar, archivar/restaurar. Disponibilidad contextual según datos y gráfico. La lista actual de Mya es dibujo/texto demo, no árbol funcional.
+6. La ayuda describe borrado permanente; Mya no necesita replicar esa decisión. Preferir recuperación y confirmar acciones irreversibles según alcance.
+7. Hallazgo para la arquitectura: esta ayuda incluye “Create DSP Channel from Selected” hacia Data Modeler, con proyecto existente/nuevo, Filter Reference Mode y Fs de destino. No describir Smaart como carente de cualquier puente de modelado offline. Esto no demuestra que Data Modeler esté instalado, ni valida interoperabilidad de Mya. Debe revisarse como referencia adicional antes de cerrar especificación de enlace captura→DSP.
+8. Targets derivados de TF pueden heredar offset, color y suavizado, con tolerancia inicial 0; el suavizado queda fijado en la conversión descrita. Diferenciar curva objetivo, ponderación y EQ. En Mya conservar procedencia y receta explícita, sin aplicar dos veces el suavizado.
+
+PRUEBAS DE ACEPTACIÓN ACUMULADAS (DISEÑO, NO EJECUTADAS AQUÍ)
+A. Cursor: misma frecuencia en magnitud/fase, cada horizontal en valor propio; lectura coherente con fuente/suavizado/zoom; cambiar trazo frontal cambia todas las dependencias; ocultar frontal resuelve selección; cursor bloqueado conserva frecuencia y delta correcto; probar salida del área y cambio de panel.
+B. Retardo: loopback conocido, unidades, signo, latencia de driver y delay de referencia diferenciados; Cancel deja estado intacto; medición fallida no inserta un valor; cambiar Fs/reabrir dispositivo invalida referencias cuando proceda.
+C. Capturas: instantánea coherente multicanal, captura múltiple por estado, originales inmutables, nombres duplicados sin sobrescritura, reconstrucción de metadatos. JSON actual identificado siempre como sintético.
+D. Importación: rejillas distintas, asteriscos, NaN, coherencia ausente, smoothing previo, unidades y referencia temporal desconocida; ninguna suma/autoalineación validada sin condiciones suficientes.
+E. Configuración: preferencias globales y excepciones locales visibles; guardar/reabrir preserva semántica; cerrar ventanas y desconectar dispositivos sin perder asignaciones ni generar audio accidental.
+
+REGLAS PARA LA SÍNTESIS FINAL
+Separar cuatro capas: adquisición y estimadores; datos y procedencia; presentación; DSP/predicción. La optimización opera sobre datos válidos y límites del procesador, no sobre píxeles o curvas suavizadas sin procedencia. RiTA, exportadores Prodigy/Galaxy/Marani, arreglos y simulador 3D requieren su revisión y pruebas propias. No afirmar que esta lectura implementa ni valida esas funciones.
+Estado al cerrar la primera ejecución: 4/20. Sustituido por el progreso actualizado al final del documento.
+
+BLOQUE 04 — LEÍDO (segunda ejecución nocturna)
+Secciones: data-bar-overview; data-bar-show; decrease-generator; delete-selected-trace; delete-tab; docked-spl-meter-grid; duplicate-tab; front-trace-up-down; general-preferences; graph-legends; graph-settings; gui-overview; help; hide-all.
+
+Requisitos y diferencias:
+1. Biblioteca dependiente del tipo de gráfico activo: espectro, TF o IR. Buscar mientras se escribe, estado visible/X, drag entre carpetas y hacia gráficos compatibles. Crear sesión cambia destinos espectro/TF conjuntamente; promover carpeta existente puede afectar solo al tipo actual. Mya debe adoptar una política de sesión explícita y visible, sin que un cambio de gráfico mande capturas a una carpeta inesperada.
+2. Duplicar pestaña incluye gráficos, asignaciones, trazos y controles. Borrar la última puede cerrar ventana. En Mya son necesarios identificadores propios para evitar compartir inadvertidamente estado mutable entre clones.
+3. Alternativa de barra izquierda como rejilla SPL acoplada, además de ventana flotante; métrica, entrada y alias por medidor. No confundir los medidores M/R por motor, medidores de entrada dBFS y rejilla SPL calibrada.
+4. Offset visual dB del trazo frontal, con incremento configurable, se muestra en leyenda y en la gráfica; reset no cambia datos originales ni filtros. Las flechas de Mya desplazan el eje, no implementan ese offset de trazo. Conservar ambas funciones separadas.
+5. Preferencias generales: unidades, temperatura/velocidad de sonido vinculadas, reloj, separador decimal en logs, actualización, color de captura, incremento de movimiento y de generador, cierre de flyouts al clicar fuera. Mya carece de estas preferencias completas; el idioma requiere algo más que traducir menús.
+6. Leyenda: distinguir motor/captura por icono, selección frontal, motor activo, ponderación, inversión de magnitud visual y offset. Selección múltiple, ocultación, reset y mover entre paneles del mismo tipo. La inversión visual no equivale a invertir polaridad.
+7. Referencia temporal: MTR pertenece a la medida; TO es offset de presentación y PTR=MTR+TO firmado. Modificar PTR de captura no reescribe el delay original ni el procesador. Deben preservarse los tres conceptos en modelo/archivo y en cualquier paso a DSP. Prueba: ida y vuelta de archivo conserva MTR; reset TO restaura fase previa sin cambiar ganancia o polaridad.
+8. Ajustes por tipo de gráfico accesibles desde menú y engranaje del panel. El esquema de menús añadido en Mya aún no es un diálogo completo de preferencias.
+9. Hide All, ocultar individual y parada son operaciones diferentes. No implementar borrado irreversible como sustituto de ocultar. El manual describe borrado sin deshacer; Mya puede mejorar recuperabilidad sin alterar el flujo de medición.
+
+BLOQUE 05 — LEÍDO
+Secciones: hide-trace; hmftsearch; i-o-config-command; import-ascii; impulse-response-graph-settings; impulse-response-mode-ui; increase-generator; increase_decrease-delay; index. Las páginas hmftsearch/index son envoltorios de navegación, no capítulos técnicos pendientes.
+
+1. Ocultar un motor en marcha mantiene procesamiento; detener lo oculta según Smaart. El modelo de estados de Mya debe separar running/paused/stopped, visible y selected.
+2. I/O selecciona canales, alias y calibración; crea motores de espectro para verificar contenido. La tabla actual de entradas disponibles en Mya no equivale a crear un motor RTA ni a medir su nivel.
+3. ASCII: frecuencia Hz, magnitud dB, opcional fase grados/coherencia 0–1. Ignorar comentarios iniciales * o ; según formato; aceptar CSV/tab y resolver coma decimal sin ambigüedad. FFT/Fs de destino determinan rejilla; interpolación lineal o spline no añade resolución medida. Si falta fase, Mya no debe habilitar suma compleja ni autoalineación como si fuera cero.
+4. Importación SIM en la referencia usa binario+XML y transforma coherencia. Hallazgo: la ayuda explica que Smaart usa una convención no cuadrática por defecto y dispone de Squared Coh. Mya debe almacenar explícitamente tipo de coherencia y normalizar al comparar umbrales. La función demoCoherence no debe declararse idéntica a Smaart por tener escala 0–100. Completar esta cuestión con bloque 18 antes de definir contrato.
+5. IR: Show Peak; dibujo optimizado frente a min/max por píxel; espesor frontal/fondo global. El min/max conserva extremos; dibujar un punto por píxel puede ocultarlos. Probar impulsos estrechos y señales bipolares, no solo suavidad estética.
+6. Solape de registros para promedios IR distinto del solape STFT. Umbral de magnitud actúa sobre referencia antes de IFFT; no es umbral de coherencia ni máscara visual. A cero se desactiva según la referencia.
+7. Filtros IR de análisis no destructivos, broadband HP/LP con bypass al seleccionar bandas. No enviarlos a DSP físico por interpretar que son filtros de ajuste.
+8. Vista Frequency IR: suavizado y suma por bandas producen representaciones distintas; no etiquetar banding como smoothing. Rejilla decade/octave/tercio. Spectrograph: escala dinámica, ventana y gris/color. Histogram: barras/líneas para métricas por banda.
+9. IR inicial debe estar vacío sin datos; la onda sintética actual de Mya solo es demo. Gráficos IR no son el modo TF con otra etiqueta.
+10. ERRATA VERIFICADA EN HTML ORIGINAL increase_decrease-delay.html: el ejemplo indica 0,21 ms por muestra a 48 kHz, pero 1000/48000=0,0208333 ms. Usar la fórmula correcta y no copiar el decimal incorrecto. Incremento se define en muestras y depende de Fs.
+11. INCONSISTENCIA VERIFICADA EN HTML ORIGINAL impulse-response-graph-settings.html: describe límite como mitad de Nyquist y a la vez mitad de Fs. No son iguales: Nyquist=Fs/2. Registrar ambigüedad del texto y verificar el control real antes de atribuir un rango exacto a Smaart. Para Mya un filtro digital debe validar frecuencia contra Fs/2 y su diseño efectivo.
+
+BLOQUE 06 — LEÍDO
+Secciones: input-config; input-meters-window; input-meters; ir-graph-legend; ir-main-graph-area.
+
+1. Entradas: dispositivos con Use/API/nombre oficial/alias/estado; canales habilitados con nombre oficial separado de alias, calibración, corrección de micro y nivel. N/C puede significar ausente o inaccesible. Conservar asignaciones de dispositivos desconectados; no reciclar silenciosamente por índice.
+2. La ayuda desactiva hot-plug automático en Windows por problemas de drivers y ofrece Refresh; macOS mantiene notificaciones. No prometer detectar cualquier tarjeta sin driver adecuado. Mya AudioRouting sondea todos los tipos, crea objetos temporalmente y usa listeners: falta filtro por backend, estado explícito, identidad robusta y prueba Windows/ASIO. La detección no significa adquisición abierta.
+3. Relevante para el equipo del usuario: Smaart documenta Gain Tracking para OCTA-CAPTURE y ciertos EVO, ajustando calibración ante ganancia reportada; advierte que depende de la precisión de pasos del hardware. No implica que JUCE proporcione esa integración ni que Mya la tenga. Planificar prueba propia de gain/phantom/ganancia efectiva y marcar calibración como inválida si no se puede seguir un cambio. No modificar phantom durante esta revisión.
+4. Medidores de entrada: pico normalizado dBFS con 0 como techo, rangos de color, indicador de clip, orientación horizontal/vertical, escalado. Inversión de polaridad de entrada y control hardware son funciones separadas de inversión DSP y de inversión visual del trazo.
+5. Meters.h de Mya contiene nombres de métricas pero pinta --; usa fuentes TF y no un modelo de canales físicos calibrados. No implementa medición dBFS, Max, calibración, Gain Tracking ni persistencia de rejilla. Evitar mostrar una TF sin referencia como medidor SPL válido.
+6. IR leyenda: selección frontal, visible, move y Sync Ld (alineación visual de picos). Esa normalización no conserva por sí sola las distancias relativas originales: registrar desplazamiento de presentación y conservar t0 original.
+7. IR admite Lin/Log/ETC, espectrograma, Frequency e Histogram en hasta dos paneles, con controles específicos; espectrograma requiere FFT, intervalo, duración, banding y recálculo. Archivos WAV/AIFF no necesariamente contienen una IR válida ni metadatos de medición. No inferir análisis de sala correcto solo porque un audio se abre.
+
+BLOQUE 07 — LEÍDO
+Secciones: ir-mode-control-bar; ir-mode-data-bar; keyboard-shortcuts; live-average-settings.
+
+1. IR dual: FFT+Fs determinan periodo; número de promedios y solape condicionan duración y reducción de ruido. Más promedios solapados no equivalen a igual número de realizaciones independientes. Selección de motores determina qué pares M/R se capturan.
+2. Distinguir medición IR dual calculada de grabación monocanal: botón record cambia modo; run dispara y stop cancela/termina según modo. Continuous repite y muestra último resultado mientras adquiere el siguiente. Mostrar estados inequívocos y permitir parada.
+3. Nuevas IR inicialmente en memoria; siguiente adquisición reemplaza la anterior no guardada. Mya debe ofrecer guardado y estado de modificación claros; no perder resultados por un clic de repetición. Guardar muestras, tiempo, calibración, FFT, rutas y receta.
+4. Filtros IR de banda: la referencia atribuye conformidad IEC a sus diseños, no a cualquier Butterworth genérico. HP/LP personalizados con fase lineal y respuesta aproximada no equivalen a un IIR causal de sexto orden. Mya no debe atribuir cumplimiento normativo sin diseño y pruebas correspondientes; mantener este catálogo separado de crossover DSP.
+5. All Bands, T60 y Schroeder son vistas/análisis distintos. RT requiere decaimiento y dinámica válidos; implementación matemática posterior debe incorporar ruido de fondo y rango de regresión, no una cifra de un pico.
+6. Metadatos de posiciones de marcadores de decaimiento pueden estar en WAV; versiones anteriores CSV. Importar no debe alterar las muestras originales. Preservar metadatos desconocidos cuando sea viable.
+7. Tabla de atajos leída íntegra. Conflictos actuales detectados en Main.cpp: D abre DSP y V abre 3D, mientras Smaart usa D para Find/Track y V para reset promedio. Antonio sí especificó L/F, Track global, G pink, S sweep, E,E, B/O, Espacio y Option5: mantener esas decisiones; D/V no fueron decisiones expresas y deben resolverse en un perfil de comandos antes de habilitar motores. Smaart +/− es zoom Y y modificadores X/XY; Mya actual usa una sola escala para ambos ejes. No llamar a eso equivalencia exacta. Separar zoomX y zoomY.
+8. La captura de teclado debe respetar edición y foco de combos/sliders; revisar que E con modificadores no dispare accidentalmente medidores. Option5 en Mya restaura también barras/distribución, más que un zoom por defecto; documentar perfil personalizado.
+9. Promedios live: potencia, dB y TF dB ponderado por coherencia; normalización espectral con referencia explícita; tabla de contribuyentes directos, excluyendo otros promedios. Peso por coherencia no equivale a suma acústica de fuentes ni es garantía de representatividad espacial.
+10. Ajustes promedio: nombre/color/destino, ponderación, suavizado local o Follow Plot. La configuración no se reduce al desplegable Averaging Depth. Promedio temporal, espacial, suma compleja y suma de potencia deben ser tipos distintos con unidades y denominador correctos. Completar fórmulas con bloque 12.
+
+PRIORIDADES AÑADIDAS Y PRUEBAS (NO EJECUTADAS)
+P0: unidad de delay en muestras; importador con metadatos/máscara; cadena de calibración física y estados de referencia; coherencia con convención explícita.
+P1: orden Z/leyenda/cursor coherentes; ejes X/Y separados; referencia MTR/TO/PTR; documento de comandos sin colisiones; alias de dispositivos/canales persistentes.
+P2: IR offline real, ventanas/filtros no destructivos, navegación y métricas con condiciones de validez; biblioteca recuperable; rejilla SPL acoplada.
+Pruebas: 1 muestra a 48/96 kHz; cursor tras zoom independiente y selección; ocultar no detiene; reinicio/hot-plug conserva rutas; cambio de preamp invalida/recalibra; ganancia visual no altera filtro exportado; PTR no altera MTR; promedio rechaza ciclos; importación sin fase no habilita sumas.
+Cálculos dimensionales comprobados: Ts_ms=1000/Fs; Nyquist=Fs/2; T=N/Fs. Documentación de terceros puede contener erratas: contrastar con matemáticas y pruebas, sin reproducirlas mecánicamente.
+
+PROGRESO ACTUALIZADO
+Leídos íntegramente 00–07 (8/20); siguiente 08. Pendientes 08–19 y síntesis global. Ninguna interacción con audio o aplicaciones durante esta ejecución.
+
+BLOQUE 08 — LEÍDO (tercera ejecución nocturna)
+Secciones: live-inverse-fourier-transform; main-graph-area; manage-configurations; manage-views; measurement-config; measurement-settings; mic-correction-curve-import; mic-correction-curve; minimize-window; move-tab; multi-spectrum-view; navigation-pane.
+
+1. L-IFFT requiere datos complejos de un único registro temporal; una TF MTW sin esa representación no se convierte legítimamente en IR mediante una IFFT directa de puntos heterogéneos. La referencia calcula representaciones simultáneas y deshabilita L-IFFT cuando el trazo no tiene datos compatibles. Mya debe registrar el tipo de rejilla/FFT y capacidades por captura, no habilitar IR a partir de cualquier curva importada.
+2. Lin/Log/ETC y filtro por banda son opciones de representación de L-IFFT; referencia temporal absoluta no es simplemente centrar el pico de Live IR. Una captura debe conservar registro temporal y compensación aplicada.
+3. Gráfico activo gobierna controles, biblioteca y comandos; trazo frontal no es necesariamente motor activo. Un cuadro de selección no puede sustituir esas identidades. Diseñar ActivePaneId, FrontTraceId y ActiveEngineId separados.
+4. Umbral de coherencia afecta muestras visibles en magnitud y fase; espectrograma tiene dos umbrales de color diferentes. No reutilizar un único slider genérico con semántica implícita.
+5. Configuración de puesto (ventanas, rutas, calibración, preferencias) distinta de proyecto de datos portable. El manual desaconseja mover configuraciones entre máquinas por identidad de dispositivos. Mya debe separar WorkspaceProfile local y Project portable, con remapeo de dispositivos explícito. Restaurar perfil no restaura archivos borrados.
+6. Presets: capturar/aplicar/renombrar/vaciar/reordenar, sin alterar datos originales. Hay referencias a 10 slots aquí y 1–9 en otras páginas; resolver versión instalada antes de prometer igualdad. No inferir que tecla 0 es un décimo preset ordinario: tiene función multiespectro documentada.
+7. Measurement Config administra todos los motores y asignación a pestañas; crear, inspeccionar, quitar y arrastrar al control. El código actual tiene cuatro TF fijas; +TF/+AVG no equivale a un catálogo dinámico real. La página genérica measurement-settings contiene solo un placeholder: no contar como especificación técnica, acudir a capítulos específicos.
+8. Curva de micro: importación ASCII y asignación por canal físico. Conservar serial del EMX-7150, archivo original, orientación/calibración de fabricante si consta y convención de signo. Una respuesta de micro medida no es necesariamente un archivo de corrección ya invertido; impedir doble compensación. No confundir curva frecuencial con offset SPL.
+9. Multi-spectrum crea un gráfico por motor espectral activo, permite expandir/restaurar uno y reconstruir al cambiar motores. Considerar coste gráfico y no duplicar adquisición por panel.
+10. Navegador IR mantiene registro completo, selección temporal, zoom y t0; crop reversible en memoria pero guardar puede escribir solo el segmento recortado. Mya debe distinguir guardar original de exportar recorte, con offset temporal y origen conservados. No destruir cola IR al hacer zoom.
+
+BLOQUE 09 — LEÍDO
+Secciones: new-spec-avg; new-spectrum; new-tab; new-tf-avg; new-tf; new-window; notational_conventions; open-windows-list; output-config; preferences-dialog.
+
+1. Creación de espectro: una entrada habilitada, alias y color; TF: par M/R de dispositivo/canales habilitados. Nombre de motor separado de alias físico para permitir múltiples mediciones del mismo canal.
+2. Promedio dB de magnitudes L_i: Lavg=ΣL_i/N. Promedio de potencia: Lavg=10 log10(Σ10^(L_i/10)/N), equivalente a RMS de amplitudes seguido de 20log10. No usar 20log10 de la potencia ni confundir promedio con suma de fuentes. Validar con dos niveles idénticos (promedio conserva nivel) y 0/20 dB (dB medio 10; potencia media≈17,03 dB).
+3. Normalización de espectro opcional y referencia elegida. TF potencia en esta documentación normaliza contribuyentes con promedio de nivel entre 225 Hz y 8,8 kHz. Este comportamiento es específico de la referencia; si Mya ofrece otras bandas debe mostrarlas y guardar receta. No aplicar esa normalización a suma acústica PA+SUB: eliminaría diferencias físicas de nivel necesarias.
+4. TF dB ponderado por coherencia exige definir peso exacto y casos sin datos/pesos cero. Falta aún bloque spatial-averaging para cerrar contrato; no inventar exponente del peso.
+5. Ventanas/pestañas: contexto propio con ajustes globales compartidos; nombres y lista de ventanas. Quitar ventana/pestaña no debería borrar mediciones guardadas. Proyecto y configuración son niveles distintos.
+6. Unidades: k decimal para frecuencia, K binario para FFT en la referencia. Mostrar N exacto además de etiqueta. dBFS normalizado: seno de pico 1 tiene RMS 1/sqrt(2) y nivel RMS −3,0103 dBFS. No adoptar a la vez referencia AES 0 dB RMS y pico normalizado sin etiquetarlo; pruebas de seno y ruido deben fijar convención.
+7. Salidas: Use, backend, alias, estado; canales, trim atenuador, presets. Previsualizar un preset no aplica el ruteo hasta Make Active. La ruta vigente debe permanecer inequívoca mientras se edita. Salida actual de Mya es un único outputKey/channel, no matriz multisalida ni presets/trims.
+8. Refrescar dispositivos Windows explícitamente; backend/driver accesible no implica abierto. Comandos de Clear Settings y Reset Trims son distintos.
+9. Preferencias por General/Skins/Cursor/Zoom/API/Audio/Advanced; los menús de Mya son base estructural y no cubren estas páginas.
+
+BLOQUE 10 — LEÍDO
+Secciones: quick-compare; quit; real-time-control-bar; real-time-mode-ui; realtime-and-ir-modes; recapture; remote_web_browser_client; rename-window; reset-averager; reset-decay-markers; scroll-up-down-left-right.
+
+1. Quick Compare captura una referencia temporal en memoria y aplica una comparación inversa a mediciones live; no debe confundirse con EQ física o suma. Debe mostrarse si está activo, la fuente, fecha y receta. Conservar datos originales y posibilitar quitarlo sin recapturar.
+2. Semántica transportes: Run All/Stop All son acciones idempotentes; Pause All es un estado conmutado. Pausar debe conservar última respuesta y distinguirse de captura almacenada. Un promedio activo sin contribuyentes activos no produce una respuesta válida nueva.
+3. Tabla de controles TF confirma dos niveles M/R, delay editable, indicador Track clicable, fila Find/Track/± para motor activo. ± se expresa en muestras (aprox. 21 µs a 48 kHz), lo cual confirma la errata 0,21 ms detectada en bloque 05. Track global afecta todos los motores pertinentes; controles individuales no deben llamar por error al global.
+4. Promedio/banding/smoothing: selector actúa globalmente solo si motor sigue global; de lo contrario cambia el local. La UI debe mostrar alcance y excepción. Detener oculta el trazo pero volver a mostrarlo enseña el último dato adquirido; no marcarlo como live actualizado.
+5. Quit persiste configuración. Mya requiere hoy Guardar/Abrir manual y ruta fija de proyecto: falta preferencias al cierre y sesión recuperable. No sustituir cierre sin guardar por pérdida silenciosa.
+6. Contradicciones documentales pendientes de prueba: realtime-and-ir-modes asigna Cmd+I a IR, mientras tabla general usa I para IR y Cmd+I para Live IR; recapture asigna Shift+Espacio, mientras tabla general/Capture All asignan ese atajo a captura múltiple y Cmd+Shift+Espacio a recaptura. No implementar ambas acciones sobre una misma combinación. Preferir perfil de Antonio y registrar discrepancias de versión.
+7. Recaptura sobrescribe archivo existente según manual y requiere confirmación. En Mya preferir nueva revisión recuperable, conservando identidad lógica si el ingeniero lo solicita.
+8. Cliente web SPL requiere logging y es distinto del cliente remoto TF. Publica métricas/entradas configuradas, historial acotado y tasa de refresco; no asumir que la API de TF y la web tienen las mismas capacidades o permisos. No activar servidor como parte del prototipo.
+9. Reset averager descarta buffers antiguos y limpia gráfico; importante después de cambios físicos. No sustituirlo por ir a 3D (atajo V actual). Reset de decaimiento por banda vs todas las bandas no equivale a eliminar IR.
+10. Flechas siguen foco: sobre lista cambian selección; sobre gráfica desplazan ejes. Incrementos de Y de magnitud son configurables en unidades dB. La implementación actual usa fracción de altura/zoom, de modo que no es equivalente a un incremento fijo configurado.
+
+BLOQUE 11 — LEÍDO
+Secciones: signal-generator-settings; skin-preferences; skins-menu; smaart-loopback.
+
+1. Generador: ruido aleatorio/pseudoperiódico, contornos, band-limit, seno/dual, sweep log, WAV y opciones de salida. Un control Pink/Sweep sin estado de generación y ruteo no es motor implementado. Stop after Capture debe activarse después de captura completada, definiendo fallos/cancelación, no por pulsar un botón.
+2. Pseudoperiodo y FFT: longitud de ruido al menos compatible con ventana más larga; para IR sincronizada igualar periodo/registro y quitar ventana solo bajo condiciones deterministas. No extrapolar constantes de muestras sin convertir con Fs.
+3. Contornos Pink/Red/Pink-Red/Speech distinguen potencia espectral y presentación por bandas. El manual usa una frase ambigua sobre red por octava: escribir matemáticamente PSD∝1/f²; en bandas log la integración cambia la pendiente. No copiar una pendiente sin indicar PSD/bin/banda. Red con energía dominante LF puede ser mala excitación para localizar delay.
+4. Semillas mono compartidas, estéreo independientes por paridad, multi independientes por salida: correlación importa. El encabezado genérico dice misma señal a todas las salidas, pero las opciones posteriores definen excepciones. Mya debe preservar tipo de correlación y señal de referencia usada; no suponer coherencia entre señales independientes.
+5. Fade-in, cambio de banda sin transitorios y nivel pico/RMS explícitos. La ayuda especifica crest factor 12 dB para pink limitado; Mya deberá medir su propia implementación, no adoptar el número por etiqueta. Seno dual necesita presupuesto de pico para evitar clip al sumarse.
+6. Sweep one-shot: silencios inicial/final y cola suficiente; sincronizado periódico en tiempo real: periodo FFT/sweep igual, sin esos silencios ni ventana de datos. El sweep emite sonido: la ventaja buscada es medir brevemente y ajustar luego offline. Capturar cola truncada no puede producir una corrección fiable.
+7. WAV: cola de reproducción, repeat/prev/next, normalización y ruteo mono/estéreo/multicanal. No normalizar o sumar canales sin mostrarlo; convertir Fs y respetar canales requiere especificación. La referencia carga todo en RAM; Mya puede usar streaming/buffers sin comprometer continuidad.
+8. La ayuda contiene un modo de ruido SMPTE y referencias a borrador. No atribuir cumplimiento a Mya sin versión normativa, espectro/crest factor/periodo ensayados. No es prioridad de primer medidor.
+9. Temas: paleta editable y esquemas guardados independientes del perfil; oscuro/claro para condiciones de trabajo. Mantener preferencia del usuario por aspecto Propi/Smaart. Contraste de cruces, coherencia roja y trazo frontal debe funcionar en ambos temas y con distintas densidades de pantalla.
+10. Loopback virtual de Smaart expone salidas como entradas, pero no compensa delay entre buffers. El tiempo incluye propagación y latencia adicional. Mya debe mostrar referencia física/virtual y latencia de ruta, y guardar el estado con la captura. Probar reinicios, tamaños de buffer y Fs; no convertir a distancia sin separar el retardo electrónico.
+
+CONTRASTE CON CÓDIGO ACTUAL (SOLO LECTURA)
+Main.cpp: cuatro motores fijos; averageChoice sin estimador; selectedDelay/micDelay con paso 0,01 ms fijo; generadores pendientes; salida única; guardado parcial en ruta fija. Cursor gráfico calcula cada valor por tipo pero la lectura superior usa el índice del panel activo para ambos valores: si fase y magnitud seleccionan fuentes distintas, lectura y cruz del otro panel pueden discrepar. Registrar defecto P1, reproducirlo antes de corregir. También faltan máscara de validez del cursor, separación de datos y dibujo, referencias temporales completas y preferencias de estado. No se modificó ni reinició Mya.
+
+PRUEBAS AÑADIDAS
+• TF con fuentes distintas en fase/magnitud: lecturas identifican fuente correcta; no mostrar valores de un micro como si fueran del otro.
+• Promedios: niveles iguales, disparidad 20 dB, referencia de normalización distinta, cero contribuyentes y máscaras de coherencia.
+• Salidas: preview no cambia salida activa; activar preset actualiza rutas de forma coherente; desconexión no redirige audio a altavoces internos.
+• Loopback: repetir con buffers y Fs distintos; separar componente físico y electrónico; capturas mantienen referencia temporal común o se marcan incompatibles.
+• IR: impedir IFFT directa de MTW irregular; guardar original vs crop conserva muestras y tiempo; detector de cola truncada.
+• Generador: pico/RMS, duración/periodo, correlación de semillas, cambio de banda, cancelación y finalización sin salida residual.
+
+PROGRESO ACTUALIZADO
+Leídos íntegramente 00–11 (12/20); siguiente 12. Pendientes 12–19 y síntesis global. Revisión documental, sin pruebas físicas ni acciones sobre aplicaciones.
+
+
+CIERRE DE LECTURA — 26/10/2026
+Los bloques 12–15 fueron leídos íntegros en la ejecución anterior; su registro quedó pendiente y se consolida aquí. En esta ejecución se leyeron íntegros 16–19, sin truncamiento. No se realizaron acciones sobre Smaart ni se reinició Mya.
+
+BLOQUE 12 — LEÍDO
+Secciones: sound-level-calibration; spatial-averaging; spectrum-and-transfer-function-views.
+• Calibración: offset a partir de nivel acústico conocido y lectura digital. Vincular micrófono, entrada, preamplificador, ganancia y fecha; conservar headroom. No basta introducir un número positivo para demostrar calibración. Ganancia modificada invalida la calibración salvo compensación demostrada.
+• OCTA-CAPTURE: la ayuda describe seguimiento de ganancia calibrando a 25 dB; comprobar con calibrador en el rango de uso. No atribuir control de ganancia o precisión a Mya por reconocer el dispositivo.
+• Promedios espaciales: dB, potencia y dB ponderado por coherencia. TF potencia se normaliza a 0 dB usando 225 Hz–8,8 kHz; espectro permite normalización a una referencia entre 125 Hz–4 kHz. No normalizar mediciones destinadas a suma física sin conservar ganancias originales.
+• No se documenta suficientemente el exponente exacto de ponderación por coherencia ni todas las reglas de fase de promedios espaciales: mantener pendiente. No confundir promedio espacial con promedio temporal o suma compleja.
+• Spectrum/TF son vistas, no necesariamente motores de adquisición exclusivos. S=sweep personalizado de Antonio prevalece sobre la vista S de la referencia.
+
+BLOQUE 13 — LEÍDO
+Secciones: spectrum-graph-settings; spectrum-measurement-settings; spectrum-settings; spl-compensation; spl-config-alarms.
+• RTA: escalas lineal/log; década/octava/tercio cambian rejilla logarítmica. Bars, Lines y Both: Both combina barras por bandas y línea de banda estrecha. Peak hold temporal/infinito, FFT instantánea o promediada, reset explícito.
+• Ventana Hann predeterminada estrecha; en espectro por bandas la referencia usa Hann. FFT 16K a 48 kHz y 32K a 96 kHz tienen igual duración y separación entre bins. Parámetros globales con excepciones por motor.
+• THD necesita seno único y resolución adecuada. La redacción de la razón de potencias parece invertida: definir THD=sqrt(ΣP_armónicos/P_fundamental), especificando cuáles armónicos se incluyen; no copiar fórmula ambigua. No presentar como THD general una suma limitada a los siguientes tres armónicos sin etiquetarla.
+• Espectrograma: altura de slice, historia, memoria dependiente de FFT, rango dinámico y grises; negro bajo mínimo y blanco por encima del máximo en referencia. Renderizado no debe bloquear adquisición.
+• Compensación SPL virtual: compara ubicaciones con mismo estímulo/nivel; offsets LAeq/LCeq de 15 s sobre capturas de aproximadamente 20 s. A/C solamente y sin logging en esta función de referencia. Es una estimación condicionada a las mediciones, no predicción 3D ni transferencia universal entre ubicaciones.
+• Alarmas: por entrada y métrica calibrada, umbral, habilitación y permanencia tras bajar nivel. Separar color del medidor de evento de alarma.
+
+BLOQUE 14 — LEÍDO
+Secciones: spl-config-custom-metrics; spl-config-display; spl-config-logging; spl-config-stspl; spl-data-bar.
+• Once métricas base: Fast/Slow A,C,sin ponderar (6), Leq1min A,C,sin ponderar (3), Cpeak y FSpeak. Personalizadas: Leq10min inicial, Exposure N/O, Fast/Slow/Peak/Leq A/C/None, C−A y bandas. Leq10 significa minutos; segundos deben expresarse con s. Periodo configurable 1 s–1440 min según ayuda.
+• None no acredita por sí mismo respuesta Z conforme: depende de cadena y tolerancias. Exposure N/O requiere algoritmo y parámetros explícitos; no supone certificación ni cumplimiento normativo.
+• Logging: intervalo por defecto 3 s, entradas seleccionadas, operador/empresa/recinto; reanudación y rotación diaria. SPL guarda máximo dentro de intervalo; Leq guarda valor al escribir. No calcular un Leq exacto a partir de máximos registrados.
+• Guardar eventos de clip, reset y alarmas; proteger datos ante cierre inesperado con metadatos y checkpoints. Política de reanudación visible y sin activar generador.
+• Biblioteca de logs: selección, fechas, info, copia, renombrado y carga asíncrona. No comprimir huecos temporales como si hubiese datos continuos.
+
+BLOQUE 15 — LEÍDO
+Secciones: spl-history-display; spl-meter-show; spl-meter; spl-meters-show; spl-meters-standalone; spl-mode-gui.
+• Historial: overview de una métrica y detalle multiselección temporal; eventos con hora/tipo, resets y clips. L10 corresponde a percentil 90; L50 mediana; L90 percentil 10. Especificar ponderación temporal y naturaleza de muestras del log (máximos por intervalo no equivalen a señal continua).
+• Métricas calculadas continuamente: cambiar lo mostrado no reinicia Leq. Indicador de llenado antes de ventana completa, luego ventana móvil; reset por entrada o global, exposición independiente.
+• Medidor: valor, máximo desde reset, clip, nivel insuficiente, selección de entrada física/alias y métrica. Sin calibración: FSpeak/reloj, no SPL inventado.
+• Ventana libre con filas/columnas, tamaño, siempre encima opcional y persistencia. Mantener E,E de Antonio. MAM de 10Eazy depende de hardware y condiciones, no ofrecer predicción equivalente sin desarrollo y ensayos.
+• Contraste Meters.h: catálogo fijo de 15 nombres, valores --, sin cálculo/registro/alarma/calibración real. Faltan Leq1, periodos configurables, C−A y bandas. La ventana existente es solo estructura visual.
+
+BLOQUE 16 — LEÍDO
+Secciones: spl-mode-log-info-dialog; t60_rt60-level-markers; tab-bar-hide-show; tab-bar; target-curve-import; target-curves-dialog; target-curves-show; timer-menu; toggle-coherence-trace.
+• Log Info: calibración, driver, comienzo/fin y checksum. Pass/Fail/invalid identifica integridad según versión, no certifica medición ni demuestra autenticidad. Mya conservará original y hash más historial de cambios.
+• Decaimiento: integración inversa de energía IR filtrada por banda; Ld directo, Le−10 dB para EDT, Lr1−5 dB y Lr2 otros20/30 dB para extrapolación T20/T30. Lr2 al menos10 dB sobre ruido. Ln determina truncado/inicio de integración inversa; ruido y artefactos de sweep pueden exigir revisión humana. Guardar marcadores sin alterar muestras. D/R usa frontera Le según esta implementación y no debe confundirse con otras definiciones.
+• Pestaña conserva motores/layout/visibilidad; mover entre ventanas sin duplicar adquisición. A oculta/restaura pestañas.
+• Targets: TF y Spectrum distintos. Target es referencia visual, no EQ. TF admite tolerancia ±dB, offset referido a1kHz, sin suavizado; Spectrum ajusta nivel según ancho de banda y no aparece estrecho en referencia. Crear targets propios de Antonio con puntos, unidades, tipo y receta de interpolación persistidos.
+• Importación target: frecuencias Hz y dB, encabezados tipo/color/espesor/visibilidad/banda o tolerancia/offset; validar duplicados, NaN, orden y al menos2puntos. La página Show Targets antigua dice solo RTA, mientras diálogo documenta TF: discrepancia de documentación, comprobar UI instalada.
+• Timer: cuenta atrás, generador, espera de llenado, Find/Track opcional, captura, apagado y repetición; cancelar/fallo debe abandonar de forma controlada sin captura falsa. Mostrar progreso y número.
+• Coherencia pertenece al trazo frontal, mitad superior o cuarto superior. C muestra/oculta sin alterar datos.
+
+BLOQUE 17 — LEÍDO
+Secciones: toggle-delay-tracking; toggle-live-ir; toggle-peak-hold; toggle-signal-generator; toggle-spl_clock; trace-folder-import; trace-import; trace-info-dialog; track-all.
+• Track: primer accionamiento auto-set (amarillo), termina tras3 resultados de delay idénticos; segundo durante ejecución continuo (rojo), tercero detiene. Stop TF detiene Track. Rango orientativo corto y condicionado; Find dedicado para retardos largos/ruido/reverberación. Track All solo motores pertinentes en ejecución. No trasladar el D/ShiftD de referencia si colisiona con perfil acordado.
+• Importación nativa por tipo activo: srf/trf, ref legado convertido y wav/aiff IR; carpetas recursivas copian datos, no eliminan originales. La referencia no abre rgp. Mya no dispone de importador validado; no inferir formato binario de extensiones.
+• Trace Info: nombre/comentario/color, offset visual, weighting, datos de promedio polar/complejo si presentes, FFT capturada/MTW según versión, destino de plot. Offset visual no viaja necesariamente en archivo Smaart: advertir al transferir comparaciones. Mya guardará receta separada del original.
+• Invert Mag Display invierte dB, deja fase: NO equivale a invertir polaridad ni a inversión compleja. Export ASCII depende de suavizado/banding actuales y puede perder información; mantener original para DSP.
+• Live IR, peak hold, SPL/reloj y generador son toggles distintos con estados persistentes apropiados. Mostrar reloj no suspende métricas.
+
+BLOQUE 18 — LEÍDO
+Secciones: transfer-function-graph-settings; transfer-function-measurement-settings.
+• Suavizado: enlace global entre mismo tipo y enlace fase/magnitud son dos opciones distintas. Zoom enlazado independiente, por defecto desactivado desde v9.5 según ayuda. IR navegación permanece enlazada. Plot instantáneo como puntos sobre promedio. No Smoothing habilitable.
+• Rango, rejilla, paso de desplazamiento y paso de zoom son parámetros separados. +/- modifica Y; Mya actualmente comparte factorXY, diferencia pendiente. Desenrollado de fase con frecuencia centro y máscara de validez; ruido rompe continuidad. Retardo de grupo no es fase/frecuencia: deriva local de fase desenrollada.
+• Coherencia: oculta cuando no hay promedio; modo cuadrado, mitad/cuarto de altura, espesor propio o frontal, blanking sobre mag y fase. Elegir convención gamma o gamma² explícita, incluido umbral; no duplicar cuadrado. Use MTW Coh permite base distinta de la TF y debe constar en metadatos.
+• Promedio complejo promedia Re/Im antes de dB. Página global describe polar como promedio de dB; página individual lo llama RMS: contradicción no resuelta. No etiquetar nuestro estimador como idéntico sin prueba numérica comparativa.
+• Umbral de referencia impide añadir bins nuevos y mantiene último válido: requiere edad/estado stale por bin. Blanking por coherencia solo presentación, no idéntico a rechazar adquisición.
+• LiveIR FFT/average FIFO independientes, Tracker Step5ms y aceptación10muestras por defecto documental; rechazo de bloque si delay varía fuera de ventana y readquisición. Configuración Always Calculate contiene frase repetida contradictoria checked/checked; comprobar UI, no asumir.
+• Find FFT≥aprox3×retardo esperado; paso delay expresado en muestras o ms redondeado a muestra entera en referencia. Umbral opcional−80dBFS solo Find, puede explicar diferencias con Track.
+
+BLOQUE 19 — LEÍDO
+Secciones: transfer-function-settings; view-capture; view-presets-1-9; weighting-curve-import; weighting-curves; welcome-to-smaart; zoom-in-out-x-y; zoom-preferences; zoom.
+• Delay positivo retrasa referencia; negativo retrasa medición. Guardarlo separado de delay físico DSP. Fase siempre promedio complejo según ayuda; excepciones global/local por parámetro y Follow Plot para suavizado/weighting.
+• M/R de dispositivos distintos solo con relojes sincronizados, aun así probar reinicios. Ganancia/calibración y referencia no pertenecen únicamente al nombre TF.
+• Ponderaciones de visualización documentadas: A, C, X y Pink, y sus inversas, más personalizadas. Diferenciar de catálogo SPL A/C/None y ponderación temporal Fast/Slow: no ofrecer X/Pink como si fueran métricas acústicas SPL normalizadas.
+• ASCII ponderación Hz/dB con comentarios * o ; y versión invertida automática; forma espectral no garantiza fase de filtro realizable. No confundir weighting, calibración de micrófono, target y DSP aplicado.
+• Presets1–9 de layout; opción5 en referencia es Mag/Mag, distinta de Option5 default zoom. Respetar reset acordado de Antonio y documentar alcance. +/-Y, Cmd+/-XY, CmdOption+/-X; Option1–4 rangos y Option5 defaultXY. Probar teclados ES/EN y keypad.
+• La propia ayuda se declara referencia concisa compañera de User Guide y portal: completar20bloques NO equivale a revisar todo material existente en internet ni todas las figuras.
+
+SÍNTESIS ACCIONABLE Y ORDEN DE IMPLEMENTACIÓN
+P0 — Datos y medición fiables antes de optimizar:
+1) Separar AudioDevice/PhysicalInput/Calibration/MeasurementEngine/Trace/PlotView/DspChain. Identidades estables; selección/visibilidad/run/pausa no son un mismo booleano. Fuente demo siempre marcada.
+2) Adquisición CoreAudio y ASIO: buffer real, Fs, reloj, estado/desconexión, MR por TF, clipping, permisos y reconexión sin redirigir señal inadvertidamente. No hacer FFT/asignaciones/IO en callback; colas acotadas a workers y snapshots a UI.
+3) FFT/ventanas/normalización, TF y coherencia contrastados con señales conocidas. Para un estimador H1 propuesto (no atribución de implementación Smaart): Sxy=E[X*Y], H1=Sxy/Sxx; gamma²=|Sxy|²/(Sxx Syy). Denominador nulo => inválido, no0dB. N/Fs y Fs/N visibles. Guardar estimador, ventana, overlap, FFT, promedios, máscara y tiempo.
+4) Find/Track separados de delay DSP, confianza y aceptación explícitas. Retardo añadido DSP: H'=H·exp(−j2πfτ); compensación de referencia cambia signo según convención documentada. Polaridad invierte H (fase180°), no magnitud en dB. Retardo grupal τg=−(1/2π)dφ/df, con φ radianes desenrollada en regiones válidas, sin derivar a través de huecos.
+5) Capturas inmutables por recinto/carpeta con posición, fecha, hardware, calibration, referencia temporal, ganancias, FFT/ventana y procedencia. Exportar/importar con verificación, no cambiar archivos originales.
+P1 — Operación y visualización:
+6) Corregir cursor/header de fuentes distintas, z-order, libre/bloqueado y máscara. Cruces en fase/magnitud comparten frecuencia cuando corresponde y cada horizontal usa el valor/fuente de su panel; comprobar interacción real antes de afirmar equivalencia. Cursor libre/bloqueado no es necesariamente modo de seguimiento de trazo: especificar y ensayar cada gesto con Smaart.
+7) RTA/espectrograma/IR reales, escalas y rangos independientes, smoothing local/global, coherencia roja con convención explícita, máximos y controles en estados válidos.
+8) Calibración cuatro EMX-7150 y medidores: Fast/Slow exponencial sobre presión² (constantes a verificar contra definición aplicable); Leq=10log10[(1/T)∫p²dt/p0²], p0=20µPa. Peak no es RMS; buffers Leq conservados al cambiar vista. No declarar clase metrológica sin ensayos.
+9) Menús y comandos con un registro común habilitado/seleccionado/tooltip/atajo. B izquierda, O derecha, L individual, F repetir Find, Track global, Espacio captura, G rosa, S sweep, E,E medidores, Option5 restaurar y colores/X según Antonio. Atajos no se disparan al escribir nombres/números. Resto de conflictos del manual quedan pendientes, no se sobrescriben silenciosamente.
+10) Preferencias, sesiones y archivos portables con schema/versionado/migración. Español e inglés por claves de traducción, no textos incrustados; unidades y parser numérico independientes de idioma, coma decimal probada. Temas, escalado y geometría multi-monitor; actualización con estados reales, sin simular comprobación.
+P2 — RiTA/DSP/optimización (trabajo posterior separado):
+11) Revisar manual RiTA completo por su propio registro. Filtros IIR (Butterworth/LR/Bessel, PEQ/shelf/allpass), FIR, Q/orden/pendiente, latencia y recursos del procesador necesitan diseño y ensayos propios. Mostrar cada cambio, antes/después, bypass y undo, propuestas alternativas y límites de boost/latencia.
+12) Predicción offline Hsalida=Hcapturada·Hdsp solo para condiciones lineales y configuración conocida. Suma PA+SUB =ΣHi complejos, exige referencia temporal común, posición y niveles compatibles. Mediterránea sigue condicionada porque Antonio no recuerda micrófono/Find; no declarar suma/delay óptimos validados. No inventar fase desde magnitud.
+13) Autoajuste debe optimizar múltiples posiciones y robustez, declarar incertidumbre, no prometer superar siempre a un ingeniero. Exportar parámetros solamente tras confirmar capacidades/Q/orden/delay/polaridad/FIR/Fs de Prodigy/Galaxy/Marani mediante round-trip o medición.
+P3 — Mya Mapp Vision3D:
+14) Geometría, directividad dependiente de frecuencia, posición/orientación, suelo, atmósfera y condiciones del modelo. Modelo de fuentes ideal no equivale a predicción de fabricante. Mantener24sub=12stacks×2 en ejemplo gradiente; retardos geométricos/allpass no intercambiables. Import/export con simuladores de terceros pendiente de interfaz y licencia disponibles, no prometido.
+
+MATRIZ DE ACEPTACIÓN PARA LAS SIGUIENTES SESIONES
+A01 Audio: tarjeta con distinto número de canales, desconectar/reconectar, Fs/buffer, sin cruces MR; ejecutar en Mac y Windows por separado.
+A02 FFT: seno coherente/no coherente, ruido, impulso y delay conocido; verificar amplitud, unidades, fase, gamma² y umbrales. No tomar demo como prueba.
+A03 Find/Track: 0, positivos/negativos, reflexión dominante, niveles bajos, deriva y saltos; distinguir idle/auto-set/continuo/fallo/cancelado; stop limpia estado. Cada Track individual debe apuntar a su TF (Main.cpp hoy llama placeholder global).
+A04 Captura/proyecto: reiniciar con copias de trabajo, hash original intacto, metadatos completos, carpetas anidadas y fallos de escritura; número sin fase no admite suma compleja.
+A05 UI: fase y magnitud con TF distintas, curvas ocultas, trazo frontal, cursor libre/bloqueado fuera de rango y huecos, zoom independiente/enlazado, reset; header coincide con cruces y unidades.
+A06 Suavizado: constante, pendiente, pico estrecho, fase±180°, bins irregulares y huecos; distintos anchos y no smoothing. Resultados visuales y numéricos contra referencia, no solo parecido.
+A07 SPL: calibrador por canal/ganancia, seno peak/RMS, escalón Fast/Slow, ventanas Leq y reset, clips, alarma, log irregular y recuperación tras cierre. Etiquetar valores no calibrados.
+A08 Biblioteca/targets: archivos corruptos, duplicados, formatos no soportados, curvaTF/RTA y cambio de banda, offset/tolerancia, persistencia y export sin pérdida silenciosa.
+A09 Interfaz ES/EN/teclado: escribir no dispara audio/captura; botones y menú ejecutan misma acción; todos los controles pendientes deshabilitados o señalados.
+A10 Rendimiento: medir apertura, usoCPU/memoria, pérdidas de bloques y latenciaUI con4TF+AVG+RTA+espectrograma, luego3D independiente. Presupuesto cuantitativo se fijará con medición base; no prometerlo sin profiling.
+
+ESTADO FINAL
+20/20 bloques leídos íntegramente y sintetizados. Contraste documental con control-revision-integral.txt y fuente existente; Main.cpp y Meters.h reconsultados al cierre. No se modificó código ni se ejecutaron pruebas físicas/interactivas en esta revisión. Permanecen abiertas las contradicciones documentales y pruebas señaladas. Revisión RiTA, DSP, predicción3D e importadores/exportadores no completada por este trabajo. La automatización de lectura puede finalizar; continuar desarrollo con esta especificación, evitando declarar funciones operativas antes de probarlas.

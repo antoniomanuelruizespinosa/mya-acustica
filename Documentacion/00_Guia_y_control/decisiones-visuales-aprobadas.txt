@@ -1,0 +1,64 @@
+MYA ACUSTICA — BASE VISUAL ACORDADA CON ANTONIO
+Actualizado: 26/10/2026
+Regla: conservar estas decisiones. Modificar solo lo pedido expresamente después. Una imagen generada es ilustrativa: sus errores NO sustituyen requisitos. No enviar estas propuestas a Desarrollo sin autorización posterior; Antonio pidió trabajarlas aquí sin interrumpirlo.
+
+ESTRUCTURA
+Aspecto moderno en línea Propi/Smaart, organización familiar de Smaart. Grafito, gráficos negros, color por TF. Relieve 3D sutil en botones y vúmetros, sin distorsionar gráficos.
+Laterales ESTRECHOS POR DEFECTO, ancho ajustable arrastrando separadores y persistido. B izquierda, O derecha. Porcentajes de maquetas son propuestas, no valores aprobados.
+Lista de carpetas/capturas izquierda lo más larga posible. Arriba Trazos / dB Meter. Dentro: capturas individuales y AVG en MISMA lista por sesión, segunda sección Sweep/IR. No duplicar listas AVG ni sustituir carpetas por categorías fijas.
+Abajo izquierda botones IA PEQUEÑOS: Target, Auto Delay, Auto Fase, Auto EQ, Auto FIR, comparación/propuestas. Sin botón grande de captura. Espacio mantiene captura.
+IA propone alternativas verificables; ingeniero decide ignorar, modificar o aceptar. FIR con taps, Fs y latencia. Pasar a DSP para verificar y luego transferir al procesador por vía compatible o parámetros manuales. No presentar funciones futuras como implementadas.
+
+GRÁFICOS
+Área útil de retícula máxima, sin márgenes vacíos excesivos ni controles sobre etiquetas.
+Barra central completa de frecuencia, magnitud, fase y coherencia; referencia visual preferida anterior de valores coloreados, no separadores slash. Sin checkbox de vínculo ocupando barra.
+Impulso 0ms centrado, rango por defecto−40..+40ms, marcas5ms. Lin/Log/ETC; log se refiere amplitud, tiempo lineal.
+Fase por defecto−180..+180°, pasos30°. Magnitud pasos3dB.
+Frecuencias por defecto etiquetadas31,5/63/125/250/500/1k/2k/4k/8k/16k; no confundir etiquetas con recorte de datos.
+Selector de tipo arribaizquierda por gráfico; suavizado PEQUEÑO tanto en fase como magnitud y selectorTF, sin ocultar16k. No suavizado octavas enIR.
+Coherencia ROJA ARRIBA en magnitud; ON/OFF, mitad/cuarto, umbral separado de mostrar, grosor configurable. No desplazar coherencia abajo como en maqueta03.
+Engranaje inferior abre ajustes del tipo correspondiente Spectrum/TF/IR. Botón SUMA junto a configuración del gráfico, para comparar suma/cancelación de capturas oIR. Cálculo solo con datos complejos/referencias compatibles; todavía propuesta, no validado.
+Suavizado fase/magnitud vinculado ON por defecto; ajuste en Opciones>Ajustes de gráficos>TF, persistir elección. Zoom es vínculo distinto.
+←/→ zoom horizontal en TODOS gráficos, no pan: derecha más intervalo, izquierda menos. IR anclado0; frecuencia centro apropiado. Option5 restablece predeterminados. No interceptar edicióntexto.
+
+MEDICIÓN / MEDIDORES
+CadaTF conserva color configurable/visibilidadX, nombre, medidoresM/R,delay,Find,Track y ajustes. Selección al pulsar tarjeta; dobleclic ajustes.
+Track individual CIRCULAR, cambia color al activarse. Trackglobal circular junto play/pausa controla todasTF proyectoabierto. Transporte iconos.
+4TF completamente accesibles, sin montarse controles. Listamotores con desplazamiento propio si hacefalta; generador compacto abajo. Herramientas secundarias plegables.
+Vúmetros modernos con relieve; marca de pico retenido configurable ON/OFF y duración. Interpretación de 'último click' como pico comunicada al usuario; no confundir con indicadorclip.
+DobleE medidores flotantes movibles/redimensionables, añadirfilas/columnas, entrada/métrica por tarjeta, persistencia. Alarmas fondo naranja y rojo pulsante, umbrales editables por métrica;105/110 ejemplo no límiteuniversal. Texto legible, sin númerosSPL ficticios.
+Gestorconfiguraciones previsto: perfilesaudio/TF/rutas/calibración/medidores/vista guardables, separados sesionescapturas; tarjetaausente requiere reasignación explícita. Cargar perfil no arranca audio.
+
+CONTROL ANTES DE MOSTRAR OTRA MAQUETA
+Comprobar laterales estrechos; lista larga; IAcompacta; M/R en cadaTF; Trackcircular individual/global; barra completa; fase30°; suavizadoFASE yMAG; coherenciaarriba; SUMAjuntoengranaje; sin duplicarAVG; sin atribuir validez a curvas ilustrativas.
+Cualquier incumplimiento visual debe señalarse y corregirse, nunca convertirse en nueva decisión.
+
+PRECISIONES POSTERIORES DE ANTONIO
+Barra superior frecuencia/magnitud/fase(grados)/coherencia MÁS FINA conservando lectura coloreada y ancho central completo.
+Coherencia superpuesta en parte superior de la MISMA retícula de magnitud: NO reservar franja que reduzca altura útil o comprima escala de magnitud. Eje independiente derecho.
+Vúmetros con relieve3D moderno y marcas de pico; mantener laterales estrechos por defecto. No cambiar otras decisiones al regenerar.
+
+CORRECCIÓN EXPLÍCITA POSTERIOR
+Fase y magnitud deben tener EXACTAMENTE igual altura/área de gráfico por defecto. No alterar proporción por coherencia.
+Eliminar rótulo lateral «Coherencia (%)» y su escala lateral en maqueta, conservando curva roja y lectura superior acordada. Etiquetas de grados pequeñas y legibles.
+Laterales aún más estrechos, abrir/cerrar a gusto (B/O y controles visibles), ancho ajustable con mínimo/máximo para evitar controles rotos. Límites numéricos aún no aprobados.
+
+PALETA CONFIRMADA POR ANTONIO
+TF1 verde, TF2 azul, TF3 rosa, TF4 amarillo, AVG naranja.
+Colores vivos tipo neón/fluorescente, editables por TF. Color sincronizado tarjeta/vúmetros/trazo.
+Relieve3D y brillo suave en vúmetros; trazos nítidos sin halo que reste precisión. Efecto luminoso opcional.
+No sustituir rosa por otra familia ni cambiar orden de colores en futuras maquetas.
+
+ÚLTIMA CORRECCIÓN — PRIORIDAD SOBRE SUMA ANTERIOR
+UN ÚNICO botón Suma abajo del conjunto de gráficos; eliminar duplicados en fase/cabeceras.
+Retícula hasta borde derecho útil de cada panel, sin columna vacía reservada para controles. Preservar igual altura fase/magnitud.
+Vúmetros anteriores segmentados rechazados. Propi inspeccionado: canales finos rectangulares y discretos; proponer barras continuas compactas con relieve sutil, dos M/R porTF, pico retenido y paleta confirmada. Fuente Propi en reposo, sin validar animación.
+
+VÚMETROS — ACABADO ACEPTADO Y CORRECCIÓN
+Antonio acepta detalle ampliado de barras redondeadas con relieve, escala/nivel debajo y pico blanco. Corrección: color verde/naranja/rojo según umbrales correspondientes, NO degradado fijo decorativo que muestre alerta a cualquier nivel. UmbralesdBFS no son los105/110dBSPL. CLIP apagado sin saturación. Mantener compactos al integrar; coloridentificadorTF independiente de coloralarma.
+
+CORRECCIÓN DEFINITIVA VÚMETROS Y AUTORIZACIÓN DE ENVÍO
+El último requisito SUSTITUYE la coloración de barra entera por umbral: cada M/R usa color de suTF (1verde2azul3rosa4amarilloAVGnaranja); SOLO tramos finales naranja/rojo al alcanzar umbrales. Marca blanca de pico configurable.
+Nivel numérico y escala DEBAJO de cada barra, no derecha ni encima; usar ancho liberado para alargarbarra. M/R apilados, extremosredondeados yrelieve.
+Antonio autoriza ahora enviar los cambios confirmados al chat Desarrollo. Se levanta la restricción anterior de no interrumpirlo para este envío.
+Regla reforzada: no cambiar nada no solicitado; requisitosconfirmados se conservan y prevalecen sobre errores de maquetas. En conflictos de este registro cronológico manda última corrección expresa. Concepto08 es referencia de distribución, no contrato de textos incorrectos.

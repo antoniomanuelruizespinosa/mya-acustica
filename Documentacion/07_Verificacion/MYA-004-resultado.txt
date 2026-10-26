@@ -1,0 +1,78 @@
+MYA-004 — Barra izquierda, medidores, alarmas demo y ajustes gráficos
+26/10/2026
+Estado: bloque implementado y compilado; verificación automática superada.
+No se abrió, cerró ni reinició Mya durante el trabajo. Aceptación visual pendiente.
+
+BUILD PARA REVISIÓN COORDINADA
+/Users/antoniomanuelruizespinosa/Documents/ChatGPT/Mya Acústica/work/mya-cpp-build/MyaAcustica_artefacts/Debug/Mya Acustica.app
+Ventana identifica MYA-004. macOS Debug / AppleClang21 / JUCE8.0.12.
+
+IMPLEMENTADO
+• Izquierda: Trazos / dB Meter; dentro, Trazos / Sweep-IR y RTA por menú contextual.
+  Biblioteca persistente conservada, TF/AVG en la misma jerarquía con tipo/insignia.
+  AVG sólo está previsto como tipo: crear/capturar un AVG falso se rechaza. No hay
+  estimador AVG. Captura, Info y papelera al pie; borrado sigue deshabilitado.
+• dB Meter: ventana flotante E,E abre/cierra; movible/redimensionable, tarjetas
+  añadibles/eliminables y reordenables; filas Y columnas elegibles, sin límite de4.
+  Configuración por tarjeta: entrada física/micro, nombre, tipo y ponderación.
+  Persistencia de orden, fuente, fila/columna, página, posición y tamaño. Fuentes
+  ausentes no se reasignan. Sin adquisición: --, Max-- y sin audio/sin calibrar.
+• Alarmas por tarjeta: aviso105 naranja / alarma110 roja como ejemplo editable,
+  no límite universal. Histéresis1 por defecto, editable; fondo pulsante o fijo.
+  Tipo/unidad/ponderación/fuente/calibración validados antes de evaluar. Umbrales
+  SPL no se transfieren a dBFS. Probar aviso es DEMO naranja/rojo/fin con --; no
+  medición ni audio. La lógica numérica existe y se prueba, sin monitoreo real.
+• Ventana Ajustes gráficos: Espectro / TF / IR, acceso por engranaje inferior de
+  cada panel; TF por Option+T, organización ES/EN y ajustes de medición existentes.
+  Inventario completo: 82 entradas, 27 implementadas en su alcance y55 pendientes
+  deshabilitadas. Incluye todas las opciones facilitadas, no sólo las activas.
+• TF: grosor, rango/amplitud visual, retícula, pasos scroll/zoom, escalas log/lineal,
+  IR visible, coherencia ON/OFF, alturas/grosor/umbral y enlaces. No cambia audio.
+  Fase por defecto±180 con paso30°, magnitud3dB; IR−40..40ms. Suavizado pequeño
+  y fuera de etiquetas; retícula ampliada y coordenadas compartidas por dibujo/ratón.
+  TF4 cabe completa; se conserva corrección UTF-8 de tooltips y textos nuevos.
+• Lectura central completa en ancho, dos líneas con Hz/dB/grados/coherencia por
+  fuente; se retira el checkbox de enlace. El comando301 se conserva en Opciones
+  > Ajustes gráficos > Función de transferencia y en el diálogo. ON por defecto,
+  elección posterior persistida. No se confunde con enlace global del mismo tipo.
+• ← reduce intervalo X, → lo amplía; no pan horizontal. IR siempre centrado en0,
+  frecuencia conserva centro log/lineal dentro de20–20000. Enlace X independiente
+  de suavizado. ↑/↓ sigue desplazando Y. No se alteran datos ni delays. Option5
+  restaura vista y−40..40ms conservando preferencias configuradas.
+
+VERIFICACIÓN
+Compilación: PASS, sin avisos nuevos. CTest: 7/7 PASS.
+Preferencias: prueba con21 tarjetas, quitar/reordenar, filas/columnas, fuente estable
+ante ausencia/reordenación, métrica/ponderación y geometría tras reabrir archivo.
+Alarmas: bandas naranja/roja, prioridad, histéresis, sin datos/sin calibración,
+fuente/métrica/ponderación incorrectas y rechazo de105/110 como umbrales dBFS.
+TF: rangos, normalización e inversión, cuatro escalas de frecuencia, validación y
+persistencia; enlaces separados y dependencias de grosor/sin suavizado. Coherencia
+base gamma² del modelo: normal=raíz, cuadrada=base, sin gamma^4; ocultar no desactiva
+máscara. Flechas: acercar/alejar, límites, centro y enlace; no reciben datos/delays.
+Biblioteca: conservación y movimiento de originales, reapertura, tipos/AVG rechazado.
+Layout: alturas900/960/1080/1440/2000, anchos680/1000/1600, TF4 y controles sin
+solapar retícula/etiquetas; UTF-8 contrastado. Son pruebas geométricas, no screenshots.
+Registro: 123 IDs/claves únicos ES/EN, 49 comandos pendientes bloqueados, 1116
+despachos permitidos contrastados con estado; secuencia E,E y edición protegida.
+Evidencia, diferencias, datos de ensayo y hashes: work/MYA-004/.
+
+MATRIZ, ESPECIFICACIÓN Y PREFERENCIAS
+Documentacion/05_Referencia_tecnica/graph-settings-matriz.json y .txt.
+Documentacion/05_Referencia_tecnica/MYA-004-presentacion-y-medidores.txt.
+Aplicacion/medidores.json, tf-graficos.json y vista-graficos.json al utilizar la app.
+
+PENDIENTES / LÍMITES
+No adquisición real, calibración SPL, Leq/Peak medidos ni alarmas de nivel real.
+Spectrum/RTA/espectrograma siguen pendientes; no se presenta una TF como RTA.
+Procesado IR, HPF/LPF, ventanas, overlap, umbrales de adquisición, ponderaciones,
+promedio polar, unwrap/GD, TrackPeak, MTW y enlace global entre ventanas: según matriz.
+IR actual es sintética; las vistas de biblioteca IR/RTA permanecen vacías. No se
+fabrican IR a partir de curvas incompletas ni se habilita carga DSP no implementada.
+No se afirma equivalencia integral de Graph Settings ni de algoritmos con Smaart.
+Referencia documental de SPL Meters leída; el E,E de Smaart no fue verificado
+interactivamente (el intento CUA comunicado desde Revisión terminó en timeout).
+Revisar al abrir esta versión: organización izquierda, medidores flotantes y dock,
+tamaños normales/pequeños, varias filas/columnas, foco de texto, prueba de colores,
+engranajes, lectura completa, etiquetas, fase30°, zoom con flechas y persistencia.
+Las aceptaciones visuales anteriores no se dan por completadas al compilar.

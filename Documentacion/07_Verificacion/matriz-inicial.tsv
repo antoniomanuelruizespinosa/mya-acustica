@@ -1,0 +1,9 @@
+tema	estado	evidencia	pendiente
+TF y cursores	PROTOTIPO	Análisis fuente Main.cpp	Interacción comparativa y adquisición real
+Audio	PROTOTIPO	Enumeración de dispositivos	Abrir audio y validar Mac/Windows
+Suavizado	PROTOTIPO	Pruebas matemáticas previas documentadas	Comparación numérica con datos reales
+SPL y calibración	DISEÑO	Ventana con campos sin lecturas	Motor, calibrador, métricas y logging
+Capturas/carpetas	PROTOTIPO	Export demo parcial	Modelo portable e importación validada
+DSP y optimización	DISEÑO	Controles/demo parcial	Filtros, restricciones y ensayos
+Procesadores	DISEÑO	Requisitos	Compatibilidad por modelo y round-trip
+3D	DISEÑO	Geometría/demo	Modelo acústico y validación

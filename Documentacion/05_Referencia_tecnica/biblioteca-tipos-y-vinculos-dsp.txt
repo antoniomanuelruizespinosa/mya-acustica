@@ -1,0 +1,111 @@
+MYA-003 — Biblioteca, tipos de medición y vínculo futuro con DSP
+26/10/2026 · Decisiones de Antonio y contrato de esta entrega.
+Implementado y previsto se distinguen expresamente a continuación.
+
+REFERENCIAS Y ADAPTACIÓN
+Smaart: smaart-chunk-03.txt, Data Bar Menus; chunk-04, Data Bar Overview;
+chunk-07, biblioteca IR/WAV; chunk-08, Main Graph Area.
+De esa referencia se toman árbol compacto, carpeta de sesión fijada como destino,
+búsqueda al escribir, icono del color del trazo con X al ocultarlo, selección
+Cmd/Ctrl/Shift, mover entre carpetas e información. No se certifica equivalencia.
+La separación RIs/Snap/RTA se incorpora de la aclaración de Antonio sobre Memory
+Bank de RiTA 8.2; aquí no se afirma una nueva auditoría de ese PDF.
+Mejora/decisión Mya: misma sesión y jerarquía para los tres tipos de datos, con
+vistas explícitas; no destinos independientes que cambien inadvertidamente al
+seleccionar un gráfico. IDs estables, originales inmutables, transacciones y
+borrado deshabilitado hasta que sea recuperable. No se replica el borrado permanente.
+
+TIPO Y PROCEDENCIA
+«Foto» significa snapshot de medición, nunca imagen de pantalla.
+Kind interno: Folder=0, SnapshotTF=1, ImpulseResponse=2, RTA=3.
+Vistas de biblioteca: Capturas TF | Sweep / IR | RTA; mismo activeFolderId.
+El tipo de dato y acquisitionMethod son atributos distintos. Una IR puede proceder
+de sweep deconvolucionado, medición impulsiva u otro método documentado. El audio
+de excitación sweep no es la respuesta al impulso. Un WAV arbitrario no certifica
+una IR; una curva incompleta no permite fabricar una IR mediante IFFT.
+Actual: sólo snapshots TF sintéticos propios. IR/RTA no tienen adquisición ni
+importación; sus vistas están vacías y Espacio no crea capturas de esos tipos.
+La IR sintética del gráfico es una demostración separada: no se añade a la biblioteca.
+
+ALMACENAMIENTO IMPLEMENTADO
+Aplicacion/Biblioteca/biblioteca.json, schema=1:
+  libraryId, revision, activeFolderId, view, nodes[].
+Nodo: id UUID, parentId, name, diskName, kind, colour ARGB, visible, expanded,
+acquisitionMethod, origin, derivedFromId, legacyKey.
+Datos físicos: Biblioteca/Datos/<sesión__UUID>/<subcarpetas__UUID>/<capturaUUID>.json.
+La jerarquía física sigue las carpetas. Renombrar carpeta también renombra su
+carpeta física; renombrar captura cambia su nombre de biblioteca, manteniendo
+el nombre físico UUID y el payload original. No se imponen PA/AVG/DSP/Escenas.
+Capture payload propio: schema1, synthetic=true, measurementId, libraryId,
+createdAtUnixMs, muestras frequencyHz/real/imaginary/coherence, ruta M/R, color
+original, measurementDelayMs y metadatos de procedencia. Fs desconocida se guarda
+null; captureDSPState y windowRecipe desconocidos se conservan como unknown.
+La coherencia demo se etiqueta synthetic power ratio; no es un estimador validado.
+Los snapshots antiguos conservan los campos que tenían: lo ausente sigue desconocido.
+Adopción automática, idempotente, de JSON demo propios de Aplicacion/Capturas:
+copia al índice nuevo sin modificar el origen. No importa .trf/.srf/WAV.
+Origin actual: original-demo. derivedFromId está reservado, con referencias válidas
+y sin ciclos; no se generan hoy derivados DSP ni TF desde IR.
+
+INTEGRIDAD IMPLEMENTADA
+Cada cambio se confirma en disco; no depende de cerrar correctamente la app.
+Metadatos por sustitución temporal; diario transaccion.json para movimientos,
+confirmación o retroceso al reabrir. Pendientes/ conserva payloads no confirmados.
+Mover no recalcula ni vuelve a muestrear los originales. Movimientos de grupos
+eliminan duplicidad padre/hijo y rechazan ciclos, destinos ocupados e IDs inexistentes.
+Revisión UUID y bloqueo entre procesos impiden que una instancia antigua pise otra.
+Índice corrupto, ausente con datos existentes o recuperación conflictiva: conservar
+archivos y mostrar error, sin reconstruir una biblioteca vacía silenciosamente.
+Recargar relee el formato propio. No hay vigilancia/adopción automática de movimientos
+hechos con Finder ni reconstrucción general de índices perdidos.
+
+PRESENTACIÓN IMPLEMENTADA
+Buscar no cambia la visibilidad de las curvas. Cmd/Ctrl y Shift seleccionan grupos;
+el menú Mover y arrastrar a carpeta realizan movimientos reales. Los colores y la X
+controlan capturas guardadas, independientemente de los motores TF demo de la derecha.
+Al seleccionar una captura se trae delante en los paneles TF; curvas y lectura se
+obtienen de sus muestras guardadas. Seleccionar la TF live vuelve a esa fuente.
+No se vuelve a generar una captura a partir del demo cambiante. Interpolación compleja
+lineal, sin extrapolar fuera de su rango. Suavizado sólo de presentación.
+Coherencia ausente: no inventar; con umbral >0 el valor queda sin lectura/curva.
+B conserva barra y botón de recuperación; Espacio captura TF demo en el destino
+fijado, incluso desde el árbol, nunca mientras se escribe en el buscador.
+
+EJES Y SELECTORES IMPLEMENTADOS
+Fase/magnitud: eje logarítmico conservado 20–20000 Hz; marcas
+31,5 · 63 · 125 · 250 · 500 · 1k · 2k · 4k · 8k · 16k. Son marcas, no un recorte.
+IR: tiempo lineal, cero centrado, -40..+40 ms por defecto y marcas cada 5 ms.
+Selectores superiores izquierdos por panel: Magnitud/Fase independientes;
+RTA/Espectrograma visibles pero deshabilitados. No se cambia la etiqueta de TF a RTA.
+Lin IR conserva signo; Log usa 20log10(abs(IR)), suelo -120 dB ref1;
+ETC usa magnitud de señal analítica calculada mediante FFT/Hilbert, no abs(IR).
+ETC expresada en dB de envolvente ref1 equivale a 10log10(energía de envolvente).
+Todo esto opera sobre la IR sintética explícitamente rotulada, no sobre una medición.
+Fs física y calibración no se deducen de esa demostración.
+Los tipos y la escala IR se guardan automáticamente en vista-graficos.json y también
+en el proyecto. Guardar/Abrir conserva zoom/pan como antes. Cambio de tipo restablece
+sólo Y del panel; tiempo/frecuencia X se conserva. Option5 restaura tipos Fase/Magnitud,
+IR Lin, zoom/pan, barras y distribución conforme al perfil de Antonio.
+
+DSP FUTURO — CONTRATO, NO MOTOR IMPLEMENTADO
+Acción Cargar en canal DSP… (ID910) deshabilitada con motivo explícito. No hay selector
+funcional de canales ni corrección de estas capturas en DSP en esta entrega.
+El proyecto ya guarda captureLibrary {libraryId, manifest relativo, bindings:[]}.
+Al reabrir se preserva el array opaco sólo para el mismo libraryId; no se ejecuta
+ninguna asignación, cadena ni envío. Nuevas asignaciones no se crean todavía.
+Identidad de referencia: (libraryId, measurementId). Canal, variante y revisión de
+cadena tienen sus propios IDs, distintos del ID de medición y de la entrada física.
+Formato previsto de binding: bindingId, measurementId, channelId, variantId,
+correctionChainRevisionId; la cadena/revisión debe vivir en el proyecto, no reescribir
+el payload. Copiar biblioteca/proyecto debe conservar IDs y rutas relativas.
+Para IR futura: muestras originales, Fs, origen/deconvolución, referencia temporal,
+ventana como receta reversible y DSP vigente en captura, desconocido si falta.
+Una TF derivada debe referir derivedFromId a esa IR y conservar receta de derivación.
+Antes de habilitar carga DSP: validar que hay representación y referencias suficientes.
+Canales con variantes reversibles: EQ/IIR/allpass/FIR/delay/ganancia/polaridad, bypass
+explícito, comparación original/procesado, magnitud/fase/IR; suma compleja sólo con
+referencias compatibles. No aplicar de nuevo el DSP que ya está incluido en captura.
+Si se desconoce el DSP de captura, sólo ajuste incremental explícito o nueva medida;
+no reconstruir una respuesta base invertiendo nulos o datos inválidos.
+Persistencia de cadenas, selector de proyecto/rutas portables y round-trip DSP son
+trabajo futuro, no prestaciones verificadas por los enlaces reservados actuales.

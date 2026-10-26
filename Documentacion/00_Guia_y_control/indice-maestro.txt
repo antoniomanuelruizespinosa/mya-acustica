@@ -1,0 +1,27 @@
+ÍNDICE PROPUESTO — MANUAL Y AYUDA
+Cada capítulo tendrá ID estable, estado y versión mínima comprobada.
+M00 Acerca de Mya: alcance, demo/medición real, requisitos y convenciones.
+M01 Instalación Mac/Windows, permisos, actualización, recuperación y desinstalación.
+M02 Primeros pasos: interfaz, proyecto, tarjeta, entradas/salidas, referencia y nivel.
+M03 Audio: CoreAudio/ASIO, buffers, frecuencia de muestreo, reloj y loopbacks.
+M04 Micrófonos: alias, color, calibración de sensibilidad y corrección frecuencial.
+M05 Espacios de trabajo: ventanas, paneles, pestañas, layouts, idioma y temas.
+M06 Medición TF: señal/referencia, FFT, ventanas, promedios, Find y Track.
+M07 Lectura de gráficas: magnitud, fase, coherencia, cursores, zoom y suavizado.
+M08 Espectro: RTA, líneas/barras, peak hold y espectrograma.
+M09 IR y sweep: adquisición, tiempo cero, ventanas, energía y decaimiento.
+M10 Capturas: carpetas por recinto, metadatos, promedios y compatibilidad temporal.
+M11 Medidores: dBFS/SPL, ponderaciones, Fast/Slow, Leq, alarmas e historial.
+M12 DSP offline: cargar capturas, cadenas, filtros, ganancia, delay, polaridad y bypass.
+M13 Targets: crear, editar, importar, tolerancia y alcance de uso.
+M14 Propuestas de ajuste: auto EQ, fase/FIR, alternativas, límites y decisión del ingeniero.
+M15 Sumas y alineación: PA/sub, arrays, referencias y validación posterior.
+M16 Procesadores: transferencia manual/archivo/conexión, capacidades verificadas por modelo.
+M17 Mya Mapp Vision 3D: geometría, arreglos, modelos, límites y relación con mediciones.
+M18 Formación: filtros, Q, orden, pendientes, allpass, suma y ejercicios guiados.
+M19 Proyectos, informes, portabilidad, copias y recuperación.
+M20 Preferencias, menús, comandos, atajos y ayuda contextual.
+M21 Diagnóstico: síntomas, causas, comprobación y recuperación.
+Apéndices: glosario ES/EN, fórmulas, formatos, compatibilidad, cambios y pruebas.
+
+Publicar solo capítulos de funciones disponibles y verificadas en la versión cubierta. Los restantes se mantienen como diseño interno.

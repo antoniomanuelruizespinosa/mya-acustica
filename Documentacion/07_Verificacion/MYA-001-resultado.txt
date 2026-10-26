@@ -1,0 +1,66 @@
+MYA-001 — 26/10/2026
+Estado: implementación terminada y compilada; verificación automática superada.
+Aceptación visual/interactiva pendiente. No se ha abierto ni reiniciado ninguna app.
+
+RUTAS REALES
+Raíz activa: /Users/antoniomanuelruizespinosa/Documents/ChatGPT/Mya Acústica
+Código: Aplicacion/src (copia de desarrollo realizada en este encargo).
+Original intacto: /Users/antoniomanuelruizespinosa/Documents/Codex/2026-10-26/te/outputs/MyaAcustica/Aplicacion
+Build nuevo: work/mya-cpp-build
+App compilada: work/mya-cpp-build/MyaAcustica_artefacts/Debug/Mya Acustica.app
+Dependencias existentes, solo lectura: /Users/antoniomanuelruizespinosa/Documents/Codex/2026-10-26/te/work/vendor
+CMake: cmake-python/cmake/data/bin/cmake; JUCE: JUCE-8.0.12.
+No se reutilizó ni sobrescribió el build anterior. Se copió también proyecto-demo.json
+(y su única captura sintética); Guardar/Abrir en la nueva compilación apunta a la
+nueva Aplicacion, nunca al proyecto original.
+
+CAMBIOS
+Main.cpp: lectura superior con fuente explícita para magnitud y fase, cada una con
+su propio suavizado. Curva, cruz y lectura obtienen el mismo valor de presentación.
+Frecuencia compartida entre TF; cada horizontal sigue el valor de su panel.
+En All visible, la TF global visible se dibuja última y gobierna cursor/coherencia;
+si está oculta, se elige la última TF visible. Si se oculta una TF explícita, su
+panel permanece sin valor hasta volver a mostrarla o seleccionar otra fuente.
+AVG no es un estimador implementado: se resuelve una TF visible identificada por
+nombre, sin presentar el resultado como un promedio.
+Fuera de 20 Hz–20 kHz, bajo umbral, con NaN/Inf o módulo <=1e-15: sin valor ni
+cruz numérica. Al salir del área se limpian los cursores; no se dibuja horizontal
+si la frecuencia compartida está fuera del rango X visible del otro panel.
+Zoom X/Y separado, persistido; carga compatible con el antiguo campo zoom.
++/-: Y; Cmd/Ctrl +/-: XY; Cmd/Ctrl Option/Alt +/-: X; flechas usan su propio eje.
+Option5 conserva el perfil de Antonio: restablece X/Y, desplazamientos, reparto
+IR/fase, barras y vista IR+TF, y cierra el panel de ajustes. Doble clic centra y
+restablece X/Y solo del panel. Edición de texto conserva el teclado.
+PlotPresentation.h: política común comprobable de selección, orden, validez y zoom.
+FractionalSmoothing.h: banda que toca datos inválidos devuelve inválido; no rellena
+huecos con 0 dB ni contamina bandas lejanas. Solo presentación: media dB para
+magnitud y compleja para fase; integración uniforme en Hz, bordes recortados a
+20–20000 Hz. No smoothing consulta directamente la respuesta sintética. El selector
+y su enlace fase/magnitud no cambian adquisición, averaging ni captura original.
+CMakeLists.txt: directorio propio de proyecto y dos pruebas CTest.
+Sin cambios en AudioRouting.h ni Meters.h. No se implementó audio/calibración/DSP.
+
+VERIFICACIÓN Y EVIDENCIA
+Compilación original en copia: PASS (AppleClang 21 / macOS / JUCE 8.0.12 / Debug).
+Compilación final: PASS. Avisos de deprecación Metal procedentes de JUCE/SDK.
+CTest: 2/2 PASS, con aserciones activas también si se compila Release.
+Presentation: TF distintas por panel, TF oculta explícita, fallback, ninguna
+visible, orden Z sin duplicados, AVG sin suplantación, umbral/rango/NaN, zoom
+Y/X/XY con límites e inversión de coordenadas con zoom/pan independientes.
+Smoothing: constante/ganancia/fase, seis anchos y bordes, fase +/-179°, pendiente
+dB, pico estrecho frente a integración numérica independiente (200000 puntos),
+huecos, NaN/Inf/cero y rango. Error máximo del pico: 0,00261737 dB a 1/48 octava.
+La tolerancia inicial de 0,002 dB falló; se adoptó 0,005 dB (medio incremento de
+lectura de 0,01 dB). No es una certificación general de precisión.
+Evidencia guardada en work/MYA-001: logs, pruebas.log, cambios.diff,
+origen-sha256.txt e integridad-originales.txt. Originales verificados por SHA-256.
+
+PENDIENTES QUE AFECTAN A LA ACEPTACIÓN
+Comprobar en la nueva app, coordinando su apertura: lectura/crosshair al cambiar
+TF o suavizado con ratón fijo, todas ocultas, salida/cambio de panel, X distinto,
+Option5, Guardar/Abrir antiguo/nuevo y teclado español/inglés/keypad. Las pruebas
+automáticas cubren políticas y matemáticas, no eventos JUCE ni píxeles de pantalla.
+El suavizado existente remuestrea una función demo en 32769 puntos uniformes:
+no valida bins irregulares importados ni retardos extremos. No hay adquisición
+real, calibración ni comparación interactiva con Smaart; no se afirma equivalencia.
+Cursores libre/bloqueado y deltas siguen fuera de este ajuste acotado.
