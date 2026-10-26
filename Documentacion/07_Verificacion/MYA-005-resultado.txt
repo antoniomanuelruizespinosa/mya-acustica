@@ -1,0 +1,71 @@
+MYA-005 — ENTREGA DE DESARROLLO
+26/10/2026
+Estado: bloque consistente, compilado y verificado; código detenido a la espera
+del arranque Git/GitHub coordinado por Revisión y Control. Sin más cambios de
+código durante esa preparación. No se crea repositorio ni rama desde este chat.
+
+BUILD
+/Users/antoniomanuelruizespinosa/Documents/ChatGPT/Mya Acústica/work/mya-cpp-build/MyaAcustica_artefacts/Debug/Mya Acustica.app
+Identifica MYA-005. macOS Debug, C++17, JUCE8.0.12. Compilación correcta.
+La instancia que Antonio está revisando no se abrió, cerró ni reinició.
+No se inició adquisición, generador ni audio. Smaart no se ha modificado.
+
+CAMBIOS
+Laterales más estrechos, ajuste por arrastre con límites y persistencia, B/O y
+controles de abrir/cerrar. Lista izquierda alargada, TF+AVG juntos, Sweep/IR
+separado, sin captura grande; Espacio conserva captura y destino.
+IA compacta con siete accesos deshabilitados según capacidad real.
+IR pequeño, fase y magnitud de igual altura exacta por defecto, retícula al
+borde derecho útil. Coherencia roja superpuesta arriba, sin rótulo/escala lateral.
+Barra24px de una línea coloreada con grados, fuentes P1/P2 y coherencia por fuente.
+Un único Suma debajo de todos los gráficos, cálculo aún deshabilitado.
+Dos barras M/R continuas, redondeadas, relieve y brillo opcional. Base por colorTF,
+tramos finales naranja/rojo por umbral dBFS, pico blanco ON/OFF/duración/reset.
+Escala y nivel debajo de cada barra. Sin audio: --dBFS y vacías. Cuatro TF con
+scroll propio para mantener acceso sin solapamientos. Track individual/global
+circular, apagado/deshabilitado hasta existir motor real; global junto a pausa.
+No se ha implementado un promedio o suma falsos. No se han simulado niveles.
+
+ALCANCE SIGUIENTE
+Gestor completo de configuraciones de equipos/TF/rutas/calibración/medidores/vista
+se reserva para el siguiente bloque, como permite la autorización. La persistencia
+de vista de esta entrega NO se presenta como gestor de perfiles terminado.
+IA/FIR y exportación a DSP/procesador siguen pendientes. Contrato documentado:
+ingeniero decide, FIR con taps/Fs/latencia y verificación antes de transferencia.
+
+VALIDACIÓN Y LÍMITES
+8/8 pruebas: smoothing, presentation, commands, library, impulse, ui_layout,
+preferences e input_meters. Se comprueban separación de unidades, límites dBFS,
+retención/expiración/OFF/ausencia de muestras, clip, preferencias y persistencia;
+altura idéntica con tamaños impares; TF4 accesible mediante scroll.
+127 comandos únicos,53 pendientes; dispatcher rechaza todas las funciones
+pendientes. Sin estimador de audio, Track/AVG/IA/Suma no están operativos.
+No se ha compilado Windows ni validado adquisición/animación en tiempo real.
+
+Render de los componentes reales fuera de pantalla, sin ventana nativa ni
+MainWindow, con datos en fixture separado del proyecto del usuario:
+work/MYA-005/visual-final/workspace-1120x900.png
+work/MYA-005/visual-final/workspace-1440x960.png
+work/MYA-005/visual-final/workspace-1760x1080.png
+work/MYA-005/visual-final/workspace-TF4-scroll.png
+work/MYA-005/visual-final/input-meters-DEMO.png
+Se inspeccionaron los tamaños y TF4 desplazada, lectura y barras. La imagen de
+barras con nivel es DEMO explícita, separada de la app. Las imágenes no son una
+captura de la instancia abierta ni sustituyen aceptación visual de Antonio.
+El renderer deja un diagnóstico CoreMIDI al enumerar dispositivos del entorno;
+termina correctamente, sin abrir adquisición. No afecta la lógica de las pruebas.
+
+Documentación:
+Documentacion/07_Verificacion/MYA-005-checklist-antes-despues.txt
+Documentacion/05_Referencia_tecnica/MYA-005-vista-y-entradas.txt
+El registro cronológico decisiones-visuales-aprobadas.txt se conserva intacto.
+
+EVIDENCIA
+work/MYA-005/: antes, diferencias, pruebas.log, compilacion.log, render.log,
+matriz-comandos.tsv, entrega-sha256.txt, build-sha256.txt y visual-sha256.txt.
+alcance-sin-cambios.log verifica hashes frente a MYA-004 de adquisición/rutas,
+biblioteca/datos originales, suavizado, IR/ETC, modelos TF, medidores SPL y
+restantes módulos no solicitados. Sólo se ajustó la cabecera compacta de dB Meter
+para que quepa en el nuevo ancho mínimo; alarmas/cálculo SPL no se modifican.
+
+Aceptación visual por Antonio y Revisión y Control: pendiente.

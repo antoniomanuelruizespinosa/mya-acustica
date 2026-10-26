@@ -1,0 +1,11 @@
+EJERCICIOS A PREPARAR — no son funciones operativas hoy
+T01 Primera medición con referencia eléctrica: MR, clipping, Find, captura.
+T02 Cuatro micrófonos y promedio: posición, exclusiones y elección de estimador.
+T03 Sweep y ajuste offline: original inmutable, DSP propuesto, comparación y verificación.
+T04 PA/sub: suma compleja solo con referencias compatibles; ejemplo incompatible explicado.
+T05 Aprender filtros: HP/LP, Butterworth/LR/Bessel, Q y órdenes; magnitud/fase/retardo grupal.
+T06 Allpass frente a delay y polaridad: diferencias y límites.
+T07 Target propio y propuestas EQ/FIR: coste en ganancia y latencia.
+T08 Calibración SPL y Leq: cadena física y registros.
+T09 Arreglo de 12 stacks de dos subs (24 unidades): geometría y condiciones del modelo.
+Cada ejercicio tendrá archivos propios/licenciados, solución esperada, tolerancias y errores deliberados.

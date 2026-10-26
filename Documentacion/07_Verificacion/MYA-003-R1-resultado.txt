@@ -1,0 +1,37 @@
+MYA-003-R1 — Revisión compacta de distribución y UTF-8
+26/10/2026
+Estado: corregido en código y compilado; aceptación visual pendiente.
+No se abrió, cerró ni reinició la instancia que Antonio está revisando.
+
+INCIDENCIAS CORREGIDAS
+1. No Smoothing tapaba 16k: el selector pasa a la cabecera, separado del selector
+   de tipo, coherencia y TF. La franja inferior queda libre para etiquetas del eje.
+2. Cuarta TF cortada: tarjetas de 56px, con controles/medidores reubicados dentro
+   de 54px útiles; contenido total de 260px, incluidos AVG y margen. Se compacta
+   el bloque superior derecho y el listado empieza en y331. A altura mínima900,
+   hay 265px de viewport y separación de6px respecto de los botones inferiores.
+   Dibujo, controles y zonas de clic comparten las mismas constantes de fila.
+3. Mojibake de tooltips: separadores · y — y ayuda española se convierten
+   explícitamente desde UTF-8. CommandText.h centraliza el texto de menú/tooltip.
+
+ARCHIVOS
+Main.cpp, CommandUI.h, WorkstationCommands.inc y CMakeLists.txt.
+Nuevos CompactLayout.h, CommandText.h y tests/ui_layout.cpp.
+No cambia adquisición, tratamiento acústico ni persistencia de biblioteca.
+
+VERIFICACIÓN
+Compilación Debug macOS: PASS, sin avisos nuevos.
+Suite tras las correcciones: 6/6 PASS. Comprobación específica final ui_layout: PASS.
+Prueba de no solapamiento del suavizado con marcas inferiores y controles de
+cabecera en anchos680/1000/1600 y alturas80/160/400. Las cuatro TF y AVG caben en
+alturas de ventana900/960/1080/1440/2000. Texto ES/EN comparado con Unicode esperado,
+incluidos separadores y acentos; ejecución sin aserciones JUCE.
+Estas comprobaciones son geométricas y de texto, no una captura de pantalla nueva.
+Evidencia, diferencias y hashes: work/MYA-003-R1/.
+
+BUILD
+/Users/antoniomanuelruizespinosa/Documents/ChatGPT/Mya Acústica/work/mya-cpp-build/MyaAcustica_artefacts/Debug/Mya Acustica.app
+Ventana y cabecera identificadas como MYA-003-R1.
+Pendiente: apertura coordinada y comprobar visualmente16k, TF4 completa, texto de
+ayuda/tooltip y legibilidad de las tarjetas compactas. La visualización anterior
+confirmó biblioteca/selectores, pero no constituye aceptación visual completa.

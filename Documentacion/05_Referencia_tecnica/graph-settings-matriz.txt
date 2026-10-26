@@ -1,0 +1,85 @@
+MYA-004 — MATRIZ FUNCIONAL GRAPH SETTINGS
+El alcance forma parte del estado. No implica motores de adquisición.
+
+TF | tf.frequency | Escala y retícula de frecuencia / Frequency scale and grid | implemented | Presentación demo; originales intactos
+TF | tf.globalSmoothing | Vincular suavizado global del mismo tipo / Link global same-type smoothing | pending | Pendiente: enlace global del mismo tipo entre ventanas
+TF | tf.phaseMagSmoothing | Vincular suavizado fase y magnitud / Link phase and magnitude smoothing | implemented | Presentación demo; originales intactos
+TF | tf.liveIR | Mostrar IR / Display live IR | implemented | Presentación demo; originales intactos
+TF | tf.zoom | Vincular zoom de frecuencia X / Link frequency X zoom | implemented | Enlace del eje X común entre paneles; Y conserva sus unidades
+TF | tf.foregroundWidth | Grosor frontal / Foreground width | implemented | Presentación demo; originales intactos
+TF | tf.backgroundWidth | Grosor de fondo / Background width | implemented | Presentación demo; originales intactos
+TF | tf.proportionalIR | IR proporcional / Proportional IR | pending | Pendiente: distribución proporcional del panel IR
+TF | tf.instant | Respuesta instantánea / Instantaneous response | pending | Pendiente: motor, representación o validación
+TF | tf.allowNone | Permitir sin suavizado / Allow no smoothing | implemented | Presentación demo; originales intactos
+TF | tf.magMin | Mínimo magnitud / Magnitude minimum | implemented | Presentación demo; originales intactos
+TF | tf.magMax | Máximo magnitud / Magnitude maximum | implemented | Presentación demo; originales intactos
+TF | tf.magGrid | Paso retícula magnitud / Magnitude grid step | implemented | Presentación demo; originales intactos
+TF | tf.magScroll | Paso desplazar magnitud / Magnitude scroll step | implemented | Presentación demo; originales intactos
+TF | tf.magZoom | Paso zoom magnitud / Magnitude zoom step | implemented | Presentación demo; originales intactos
+TF | tf.trackPeak | Seguimiento de pico / Track peak | pending | Pendiente: motor, representación o validación
+TF | tf.magAveraging | Representación polar del promedio / Polar magnitude averaging display | pending | Pendiente: motor, representación o validación
+TF | tf.weighting | Ponderación visual / Visual weighting | pending | Pendiente: motor, representación o validación
+TF | tf.displayWeighting | Mostrar selector de ponderación / Display weighting selector | pending | Pendiente: motor, representación o validación
+TF | tf.phaseMin | Mínimo fase envuelta / Wrapped phase minimum | implemented | Presentación demo; originales intactos
+TF | tf.phaseMax | Máximo fase envuelta / Wrapped phase maximum | implemented | Presentación demo; originales intactos
+TF | tf.phaseGrid | Paso retícula fase / Phase grid step | implemented | Presentación demo; originales intactos
+TF | tf.phaseScroll | Paso desplazar fase / Phase scroll step | implemented | Presentación demo; originales intactos
+TF | tf.phaseZoom | Paso zoom fase / Phase zoom step | implemented | Presentación demo; originales intactos
+TF | tf.unwrap | Desenrollar fase / Unwrap phase | pending | Pendiente: motor, representación o validación
+TF | tf.unwrapCentre | Frecuencia central de unwrap / Unwrap centre frequency | pending | Pendiente: motor, representación o validación
+TF | tf.unwrapRange | Rango de unwrap / Unwrap range | pending | Pendiente: motor, representación o validación
+TF | tf.groupDelay | Fase como retardo de grupo / Phase as group delay | pending | Pendiente: motor, representación o validación
+TF | tf.coherence | Mostrar coherencia roja / Show red coherence | implemented | Presentación demo; originales intactos
+TF | tf.threshold | Umbral coherencia mag y fase / Magnitude and phase coherence threshold | implemented | Presentación demo; originales intactos
+TF | tf.coherenceHeight | Altura mitad o cuarto / Half or quarter coherence height | implemented | Presentación demo; originales intactos
+TF | tf.mtw | Mostrar siempre coherencia MTW / Always display MTW coherence | pending | Pendiente: motor, representación o validación
+TF | tf.squared | Coherencia normal o cuadrada, base gamma² declarada / Normal or squared coherence, declared gamma-squared base | implemented | Base modelo gamma². Normal=raíz; cuadrada=base, sin volver a cuadrar
+TF | tf.coherenceWidth | Grosor coherencia / Coherence width | implemented | Presentación demo; originales intactos
+TF | tf.coherenceFollow | Coherencia sigue grosor frontal / Coherence follows foreground width | implemented | Presentación demo; originales intactos
+Spectrum | spectrum.banding | Vincular bandas entre gráficos / Link plot banding | pending | Pendiente: Spectrum/espectrograma reales
+Spectrum | spectrum.frequency | Escala de frecuencia / Frequency scale | pending | Pendiente: Spectrum/espectrograma reales
+Spectrum | spectrum.zoom | Vincular zoom / Link plot zoom | pending | Pendiente: Spectrum/espectrograma reales
+Spectrum | spectrum.weight | Ponderación visual / Weighting | pending | Pendiente: Spectrum/espectrograma reales
+Spectrum | spectrum.weightDisplay | Mostrar ponderación / Display weighting | pending | Pendiente: Spectrum/espectrograma reales
+Spectrum | spectrum.bars | Datos por bandas: barras / Banded data: bars | pending | Pendiente: Spectrum/espectrograma reales
+Spectrum | spectrum.peakHold | Retención de pico / Peak hold | pending | Pendiente: Spectrum/espectrograma reales
+Spectrum | spectrum.peakType | Tipo de pico: infinito / Peak type: infinite | pending | Pendiente: Spectrum/espectrograma reales
+Spectrum | spectrum.holdSeconds | Tiempo de retención en segundos / Hold seconds | pending | Pendiente: Spectrum/espectrograma reales
+Spectrum | spectrum.trackPeak | Seguimiento de pico / Track peak | pending | Pendiente: Spectrum/espectrograma reales
+Spectrum | spectrum.thd | Mostrar THD / Show THD | pending | Pendiente: Spectrum/espectrograma reales
+Spectrum | spectrum.calibrated | Nivel calibrado / Plot calibrated level | pending | Pendiente: Spectrum/espectrograma reales
+Spectrum | spectrum.averaged | Promedio / Averaged | pending | Pendiente: Spectrum/espectrograma reales
+Spectrum | spectrum.min | Mínimo RTA / RTA minimum | pending | Pendiente: Spectrum/espectrograma reales
+Spectrum | spectrum.max | Máximo RTA / RTA maximum | pending | Pendiente: Spectrum/espectrograma reales
+Spectrum | spectrum.yZoom | Paso zoom Y / Y zoom step | pending | Pendiente: Spectrum/espectrograma reales
+Spectrum | spectrum.yScroll | Paso desplazar Y / Y scroll step | pending | Pendiente: Spectrum/espectrograma reales
+Spectrum | spectrum.yGrid | Paso retícula Y / Y grid step | pending | Pendiente: Spectrum/espectrograma reales
+Spectrum | spectrum.foregroundWidth | Grosor frontal / Foreground width | pending | Pendiente: Spectrum/espectrograma reales
+Spectrum | spectrum.backgroundWidth | Grosor fondo / Background width | pending | Pendiente: Spectrum/espectrograma reales
+Spectrum | spectrum.sliceHeight | Altura de rebanada / Slice height | pending | Pendiente: Spectrum/espectrograma reales
+Spectrum | spectrum.dynamicMin | Mínimo espectrograma dBFS / Spectrogram minimum dBFS | pending | Pendiente: Spectrum/espectrograma reales
+Spectrum | spectrum.dynamicMax | Máximo espectrograma dBFS / Spectrogram maximum dBFS | pending | Pendiente: Spectrum/espectrograma reales
+Spectrum | spectrum.history | Rebanadas en historial / Slices in history | pending | Pendiente: Spectrum/espectrograma reales
+Spectrum | spectrum.gray | Escala de grises / Grayscale | pending | Pendiente: Spectrum/espectrograma reales
+Spectrum | spectrum.memory | Memoria mínima requerida / Minimum memory required | pending | Pendiente: Spectrum/espectrograma reales
+IR | ir.peak | Mostrar pico IR / Show IR peak | pending | Pendiente: IR de medición y contrato de procesado
+IR | ir.overlap | Solape % / Overlap % | pending | Pendiente: IR de medición y contrato de procesado
+IR | ir.optimize | Optimizar dibujo / Optimize graphing | pending | Pendiente: IR de medición y contrato de procesado
+IR | ir.threshold | Umbral magnitud dBFS / Magnitude threshold dBFS | pending | Pendiente: IR de medición y contrato de procesado
+IR | ir.foregroundWidth | Grosor frontal IR / IR foreground width | implemented | Grosor compartido de presentación TF / IR sintética
+IR | ir.backgroundWidth | Grosor fondo IR / IR background width | implemented | Grosor compartido de presentación TF / IR sintética
+IR | ir.hpfOn | Activar HPF / Enable HPF | pending | Pendiente: IR de medición y contrato de procesado
+IR | ir.hpfHz | Frecuencia HPF Hz / HPF frequency Hz | pending | Pendiente: IR de medición y contrato de procesado
+IR | ir.lpfOn | Activar LPF / Enable LPF | pending | Pendiente: IR de medición y contrato de procesado
+IR | ir.lpfHz | Frecuencia LPF Hz / LPF frequency Hz | pending | Pendiente: IR de medición y contrato de procesado
+IR | ir.min | Mínimo magnitud IR / IR magnitude minimum | pending | Pendiente: IR de medición y contrato de procesado
+IR | ir.max | Máximo magnitud IR / IR magnitude maximum | pending | Pendiente: IR de medición y contrato de procesado
+IR | ir.trace | Controles suavizado o bandas / Trace controls smoothing or banding | pending | Pendiente: IR de medición y contrato de procesado
+IR | ir.frequency | Escala de frecuencia / Frequency scale | pending | Pendiente: IR de medición y contrato de procesado
+IR | ir.gray | Escala de grises / Grayscale | pending | Pendiente: IR de medición y contrato de procesado
+IR | ir.dynamicMin | Mínimo rango dinámico IR / IR dynamic range minimum | pending | Pendiente: representación IR
+IR | ir.dynamicMax | Máximo rango dinámico IR / IR dynamic range maximum | pending | Pendiente: representación IR
+IR | ir.window | Ventana de datos (Hann) / Data window (Hann) | pending | Pendiente: IR de medición y contrato de procesado
+IR | ir.plot | Representar barras o líneas / Plot bars or lines | pending | Pendiente: IR de medición y contrato de procesado
+IR | ir.amplitude | Escala Lin / Log / ETC / Lin / Log / ETC scale | implemented | IR sintética: ETC con señal analítica probada
+IR | ir.timeZoom | Zoom temporal anclado a cero / Time zoom anchored at zero | implemented | Flechas; no altera muestras ni delays

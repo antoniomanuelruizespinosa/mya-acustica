@@ -1,0 +1,89 @@
+MYA ACUSTICA — CATÁLOGO DE FILTROS PROPUESTO
+Revisión 26-10-2026. Requisitos, no catálogo ya implementado.
+
+1. Filtros elementales
+HPF/LPF de primer orden: frecuencia; pendiente asintótica aproximada 6 dB/oct; sin Q independiente.
+HPF/LPF de segundo orden: frecuencia y Q; pendiente asintótica aproximada 12 dB/oct. Q regula amortiguamiento/resonancia, no el orden.
+PEQ/bell: frecuencia, ganancia, Q o ancho de banda con convención explícita. Una PEQ biquad sigue siendo segundo orden al variar Q.
+Low/high shelf: frecuencia, ganancia y pendiente S o Q según diseño. No equiparar S con orden ni con dB/oct sin conversión.
+Band-pass/notch/band-stop: frecuencia central y Q/ancho, o bordes de banda; indicar orden final, que puede diferir del orden del prototipo usado para diseñarlo.
+Tilt: combinación de shelves, identificada como bloque compuesto.
+All-pass de primer orden: frecuencia, sin Q independiente; magnitud unitaria y fase variable.
+All-pass de segundo orden: frecuencia y Q; magnitud unitaria, control de transición de fase/retardo de grupo. Permitir cascadas.
+Ganancia, inversión de polaridad y delay puro/fraccional: bloques separados de EQ/APF.
+
+2. Familias de crossover
+Butterworth: orden y frecuencia; Q por sección determinada por la familia. Segundo orden Q=1/sqrt(2). No repetir esa Q indiscriminadamente para órdenes superiores.
+Linkwitz–Riley: órdenes pares; LR2, LR4, LR6, LR8 como catálogo inicial propuesto. Cascada de dos Butterworth del orden mitad; LR2 Q equivalente=0.5, LR4 dos secciones Q=1/sqrt(2). Mostrar comportamiento de suma y polaridad; no asumir misma polaridad apropiada para todos los órdenes.
+Bessel: orden, frecuencia y normalización documentada (retardo/fase o amplitud). Prioriza respuesta temporal del prototipo; la conversión digital modifica propiedades y debe validarse.
+Chebyshev I: orden, borde de paso y rizado de paso Rp.
+Chebyshev II: orden, borde de rechazo y atenuación de rechazo Rs.
+Elíptico: orden, bordes/especificaciones y Rp/Rs.
+Biquads personalizados: frecuencia y Q por sección, o coeficientes normalizados, con comprobación de estabilidad. Si se modifica la Q fijada por una familia, renombrar «Personalizado», conservando el origen.
+Propuesta de laboratorio: órdenes 1–8 para familias compatibles; ampliar solo tras pruebas. Exportación siempre limitada por modelo/firmware del procesador.
+
+3. Pendientes y orden
+Para prototipos HP/LP solo polos, cada polo aporta aproximadamente 6.02 dB/oct de pendiente asintótica: órdenes 1/2/3/4/6/8 corresponden a 6/12/18/24/36/48 dB/oct nominales.
+No aplicar esta regla indiscriminadamente a shelves, notch, APF, FIR o familias con ceros finitos. La pendiente digital local cambia cerca de Nyquist.
+Mostrar pendiente nominal y pendiente medida entre cursores por separado: [M(f2)-M(f1)]/log2(f2/f1), en dB/oct.
+All-pass ideal: 0 dB en magnitud, aunque su fase y retardo de grupo cambien.
+
+4. FIR
+Diseño/importación de FIR para crossover, EQ y fase: Fs, taps N, orden N-1, banda de transición, rizado, atenuación, ventana/método, normalización y tipo de fase.
+FIR simétrico de fase lineal: retardo de grupo (N-1)/(2 Fs), excepto puntos donde la fase no esté definida; el retardo total añade el del resto de la cadena.
+No asignar una Q universal ni una pendiente «6 dB por orden» al FIR. Otras fases requieren medir/calcular su retardo, no usar sin más la fórmula de fase lineal.
+Conservar precisión, longitud y frecuencia de muestreo de coeficientes; bloquear exportaciones incompatibles en lugar de truncar silenciosamente.
+
+5. Interfaz y enseñanza
+Tabla: activar, nombre, familia, función, orden, frecuencia(s), ganancia, Q/BW/S/Rp/Rs según caso, pendiente, latencia, destino.
+Campos no aplicables deshabilitados y explicación contextual. Vista avanzada de secciones, polos/ceros y coeficientes.
+Comparar original/procesado, filtro aislado, cascada y suma entre vías. Magnitud, fase envuelta/desenvuelta, impulso y retardo de grupo.
+Distinguir respuesta eléctrica del filtro y respuesta acústica resultante; la pendiente acústica depende también del altavoz.
+Ejercicios: Q 0.5/0.707/1/2 en segundo orden; primer frente a segundo orden; LR2 frente a LR4 con polaridad; Butterworth frente a Bessel; all-pass frente a delay; FIR y latencia.
+El generador no necesita estar encendido para estudiar filtros ideales o capturas.
+
+6. Verificación
+HP/LP: DC/Nyquist, respuesta de corte, pendientes, estabilidad y precisión en extremos de Fs.
+PEQ: boost/cut recíprocos con misma convención; shelves: ganancia extrema y pendiente.
+APF: magnitud unitaria y retardo de grupo correcto. Cruces: suma compleja, polaridad y retardo relativo.
+Órdenes altos: implementar por secciones de segundo orden para estabilidad numérica.
+Bypass de visualización y bypass exportado deben distinguirse explícitamente. El manual RiTA 2.8 indica que su BYPASS TODO de EQ es visual y no altera exportación; Mya debe evitar ambigüedad mostrando la cadena que realmente se exporta.
+
+FUENTES
+https://www.w3.org/TR/audio-eq-cookbook/
+https://www.mathworks.com/help/signal/ug/iir-filter-design.html
+https://www.ranecommercial.com/legacy/note160.html
+Manual RiTA 2.8.0, capítulo 6, páginas 18–20 (copia local en Referencias).
+No se pretende enumerar todo filtro matemáticamente posible. Este catálogo delimita las familias relevantes para ajuste de sistemas y docencia; las particularidades de cada procesador requieren documentación específica.
+
+AMPLIACIÓN: IIR / FIR / IR Y REFERENCIAS DOCENTES
+IR es la respuesta al impulso, no una tercera familia paralela a IIR/FIR. Propuesta de interfaz: biblioteca IR/TF, pestaña DSP IIR, pestaña DSP FIR y respuesta combinada. Los filtros lineales digitales de respuesta racional se organizan aquí por respuesta impulsional finita o infinita; «híbrido» es una cadena, no una nueva familia fundamental.
+
+Candidatos adicionales tras revisión de fuentes:
+• Transformación de Linkwitz (IIR): modificar una respuesta de segundo orden mediante pares frecuencia/Q de origen y destino. Útil para enseñanza de cajas cerradas; requiere límites de refuerzo y datos de capacidad del altavoz. No equivale al crossover Linkwitz–Riley.
+• Retardo fraccional: FIR Lagrange/sinc o IIR all-pass Thiran. Mostrar error de magnitud y retardo según frecuencia; no representarlos como delay ideal en toda la banda. Thiran exige dominio de estabilidad y parámetros válidos.
+• FIR por ventanas, mínimos cuadrados y equiripple: métodos de diseño, no nuevos tipos de corte. Comparar transición, rizado, rechazo y coste en taps. Fase lineal, mínima y mixta son opciones de fase, no sinónimos de FIR.
+• Filtros peine: rama directa más rama retardada para enseñar interferencia; si hay realimentación, modelo IIR con límites de estabilidad. Prioridad docente.
+• Hilbert y diferenciadores FIR: herramientas avanzadas de análisis/docencia; no prioritarias para exportación de ajuste de PA.
+• Correcciones de baffle-step/dipolo: bloques compuestos con modelo y banda de validez, no botones de mejora universal.
+• EQ dinámica, compresores y limitadores: fuera de la predicción mediante una única TF fija. Para modelarlos hacen falta señal temporal, detectores, niveles y estados; no incluirlos silenciosamente en la suma lineal de capturas.
+
+Prioridad propuesta:
+Primera: IIR clásicos, APF, FIR importado/diseñado, suma compleja y delay fraccional validado.
+Segunda: transformación de Linkwitz, comparación de métodos FIR y laboratorio de peine/directividad.
+Avanzada: Hilbert, diferenciadores, estructuras multibanda y modelos dependientes del nivel.
+Simulable en Mya no significa exportable a todos los procesadores: adaptadores por modelo, versión y capacidad.
+
+Bibliografía contrastada en esta ampliación:
+Pepe Ferrer y Albert G. Digón, Configuración y ajustes de sistemas de sonido, 2ª edición: editorial e introducción/índice público de 17 páginas. Identifica FIR/IIR, APF, lectura de fase, sumas y ajuste; no se ha obtenido ni leído el libro completo.
+https://altariaeditorial.com/libro/configuracion-y-ajustes-de-sonido/
+https://altariaeditorial.com/wp-content/uploads/2015/11/libro_sonido_2aedicion_9788494300783.pdf
+Bob McCarthy: descripción del autor de su segunda edición y ficha editorial de la tercera. Aportan orientación hacia interacción de fuentes, alineación y directividad. No se afirma lectura integral del libro.
+https://bobmccarthy.com/sound-systems-design-optimization-2nd-edition/
+https://www.routledge.com/Sound-Systems-Design-and-Optimization-Modern-Techniques-and-Tools-for/McCarthy/p/book/9780415731010
+Harry F. Olson: localizado artículo local Gradient Loudspeakers, JAES 21(2), marzo 1973, pp. 86–93. Revisadas las secciones iniciales de fundamentos de gradiente y directividad. Motivación para visualizar geometría, separación respecto a longitud de onda, delay, polaridad y patrón polar; no usar el orden del arreglo como si fuera el orden de un filtro eléctrico.
+No se encontraron libros completos de Ferrer/McCarthy por nombre en Documents, Downloads o Desktop en esta búsqueda; pueden existir bajo otros nombres.
+Fuentes técnicas para candidatos:
+https://www.linkwitzlab.com/filters.htm
+https://www.dsprelated.com/freebooks/pasp/Thiran_Allpass_Interpolators.html
+https://www.mathworks.com/help/signal/ug/fir-filter-design.html

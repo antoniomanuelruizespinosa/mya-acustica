@@ -1,0 +1,4 @@
+2026-10-26: creada base documental, copiados análisis y referencias sin modificar originales, establecido índice M00–M21, plantilla, mapa contextual y matriz inicial. No se trasladó ni modificó la aplicación.
+2026-10-26: añadidas directrices y prompts comunes para revisión Astra y ejecución Sol, formato de encargos y entregas breves.
+2026-10-26: incorporada revisión visual Propi, guía básica, atajos, menús y matriz de integración con Smaart/Mya; diálogos avanzados pendientes explícitos.
+2026-10-26: especificado proyecto único diseño/medición/DSP/3D tras revisión de capítulos pertinentes de RiTA; dirección confirmada: Propi más avanzado e inteligente.

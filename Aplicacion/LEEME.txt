@@ -1,0 +1,22 @@
+MYA ACUSTICA — copia de desarrollo MYA-004, 26/10/2026
+Código activo: esta carpeta. El original anterior se conserva intacto.
+Es un prototipo con datos sintéticos, sin adquisición ni calibración.
+Informe y limitaciones: ../Documentacion/07_Verificacion/MYA-004-resultado.txt
+App compilada: ../work/mya-cpp-build/MyaAcustica_artefacts/Debug/Mya Acustica.app
+No se ha abierto esta compilación. Coordinar la apertura antes de sustituir una
+instancia que esté utilizando Antonio.
+El proyecto se guarda aquí. La biblioteca nueva usa Biblioteca/biblioteca.json y
+Biblioteca/Datos/ con carpetas físicas, creadas al abrir esta compilación.
+Capturas/ anterior se conserva como origen de adopción de JSON demo propios.
+Los selectores gráficos se recuerdan en vista-graficos.json.
+
+Desde la raíz Mya Acústica, usando el CMake existente:
+CMAKE=/Users/antoniomanuelruizespinosa/Documents/Codex/2026-10-26/te/work/vendor/cmake-python/cmake/data/bin/cmake
+"$CMAKE" -S Aplicacion -B work/mya-cpp-build -DJUCE_DIR=/Users/antoniomanuelruizespinosa/Documents/Codex/2026-10-26/te/work/vendor/JUCE-8.0.12 -DCMAKE_BUILD_TYPE=Debug
+"$CMAKE" --build work/mya-cpp-build -j 4
+El ctest del mismo directorio bin permite: ctest --test-dir work/mya-cpp-build --output-on-failure
+El entorno depende del vendor anterior; no se ha creado un paquete redistribuible.
+
+MYA-004: medidores.json recuerda tarjetas y ventana; tf-graficos.json recuerda
+la presentación. Graph Settings contiene funciones operativas y pendientes
+deshabilitadas; consultar graph-settings-matriz en Documentacion/05_Referencia_tecnica.

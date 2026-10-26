@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "modelos": [
+    {
+      "marca": "Meyer Sound",
+      "modelo": "PANTHER-L/M/W",
+      "fuente": "https://docs.meyersound.com/products/en/datasheet---panther.html",
+      "datos": {
+        "cobertura_horizontal_deg": [
+          80,
+          95,
+          110
+        ],
+        "masa_kg": 68,
+        "rango_operativo_hz": [
+          55,
+          16000
+        ],
+        "splay_rango_deg": [
+          0.5,
+          9
+        ]
+      },
+      "pendiente": "Lista discreta de ángulos, bumper/cargas, modelo complejo y condiciones completas. Rango no implica cualquier ángulo continuo.",
+      "fecha_consulta": "2026-10-26",
+      "estado": "ficha_parcial_documentada_no_modelo_predictivo",
+      "validacion_Mya": false
+    },
+    {
+      "marca": "L-Acoustics",
+      "modelo": "K2",
+      "fuente": "https://www.l-acoustics.com/documentation/LOUDSPEAKERS/K2/EN/Owner%27s%20Manual/k2_om_en.pdf",
+      "datos": {
+        "horizontal_simetrico_deg": [
+          70,
+          110
+        ],
+        "horizontal_asimetrico_deg": [
+          [
+            35,
+            55
+          ],
+          [
+            55,
+            35
+          ]
+        ],
+        "angulo_interelemento_max_deg": 10
+      },
+      "pendiente": "Lista discreta, límites por configuración, directividad compleja y preset.",
+      "fecha_consulta": "2026-10-26",
+      "estado": "ficha_parcial_documentada_no_modelo_predictivo",
+      "validacion_Mya": false
+    },
+    {
+      "marca": "L-Acoustics",
+      "modelo": "KS28",
+      "fuente": "https://www.l-acoustics.com/products/KS28/",
+      "datos": {
+        "masa_kg": 79,
+        "dimensiones_mm": [
+          1340,
+          550,
+          719
+        ],
+        "limite_inferior_menos10dB_hz": 25,
+        "preset_referencia": "KS28_100",
+        "spl_pico_dB": 143,
+        "condicion_SPL": "1m semiespacio ruido rosa factor cresta4 según fabricante"
+      },
+      "pendiente": "Directividad/fase según arreglo y preset, condiciones mecánicas del bumper.",
+      "fecha_consulta": "2026-10-26",
+      "estado": "ficha_parcial_documentada_no_modelo_predictivo",
+      "validacion_Mya": false
+    },
+    {
+      "marca": "d&b",
+      "modelo": "KSL-SUB",
+      "fuente": "https://www.dbaudio.com/assets/products/downloads/manuals-documentation/sl-series/dbaudio-datasheet-ksl-sub-1.1-en.pdf",
+      "datos": {
+        "rango_menos5dB_estandar_hz": [
+          36,
+          105
+        ],
+        "rango_menos5dB_infra_hz": [
+          33,
+          75
+        ],
+        "masa_max_ficha_kg": 82,
+        "canales_front_rear_separados": true
+      },
+      "pendiente": "Manual operativo vigente, polar complejo cardioide, amplificador/preset, rigging. No sustituir por KSLi-SUB ni monopolo.",
+      "fecha_consulta": "2026-10-26",
+      "estado": "ficha_parcial_documentada_no_modelo_predictivo",
+      "validacion_Mya": false
+    }
+  ]
+}

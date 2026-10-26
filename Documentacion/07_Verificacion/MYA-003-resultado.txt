@@ -1,0 +1,81 @@
+MYA-003 — Biblioteca persistente, tipos de datos, ejes y selectores
+26/10/2026
+Estado: implementado y compilado. Verificación automática superada.
+Aceptación visual/interactiva pendiente; no se reinició ni abrió Mya para probarlo.
+
+BUILD PARA MOSTRAR
+/Users/antoniomanuelruizespinosa/Documents/ChatGPT/Mya Acústica/work/mya-cpp-build/MyaAcustica_artefacts/Debug/Mya Acustica.app
+Ventana identifica MYA-003. macOS Debug / AppleClang21 / JUCE8.0.12.
+La instancia que Antonio revisaba no se ha cerrado, reiniciado ni configurado.
+
+IMPLEMENTADO
+Biblioteca real que sustituye el árbol PA/AVG/DSP/Escenas dibujado: sesión activa
+fijada como destino visible, sesiones/subcarpetas, renombrar, expandir/contraer,
+mover mediante menú o drag entre carpetas, selección múltiple Cmd/Ctrl/Shift,
+buscador, color/icono X, mostrar/ocultar y ficha de captura. B y captura Espacio
+preservados; el buscador y los demás controles conservan su edición.
+Índice y carpetas físicas en Aplicacion/Biblioteca, creados al abrir la nueva app.
+Captura TF guarda snapshot complejo DEMO y coherencia demo con procedencia explícita;
+visibilidad y color afectan a sus curvas guardadas. La lectura usa el original
+guardado, no el generador actual. Los originales no se recalculan al moverlos.
+Persisten árbol, colores, visibilidad, expansión, vista de datos y destino al reabrir.
+El JSON demo antiguo se adopta por copia, sin modificar Aplicacion/Capturas.
+Vistas Capturas TF / Sweep-IR / RTA comparten sesión; las dos últimas permanecen
+vacías. Tipo de dato separado del método de adquisición; «foto» = snapshot.
+IDs estables y referencias futuras al original/derivado; enlace reservado en proyecto
+captureLibrary.bindings. Cargar en canal DSP… y borrado están deshabilitados.
+Ejes: marcas 31,5/63/125/250/500/1k/2k/4k/8k/16k sin recortar 20–20000 Hz;
+IR tiempo lineal -40..40 ms, cero central y marcas cada5 ms.
+Selectores superiores por panel persistentes: Fase/Magnitud independientes,
+Lin/Log/ETC de IR sintética. ETC calculada con señal analítica FFT/Hilbert.
+RTA/Espectrograma no se habilitan ni se simulan con una curva TF.
+Option5 recupera valores por defecto y el perfil de vista acordado.
+
+ARCHIVOS
+CaptureLibrary.h, CaptureLibraryPanel.h, CapturedTraceDisplay.h, ImpulseDisplay.h,
+GraphViewState.h; integración en Main.cpp, Commands.h, WorkstationCommands.inc,
+PlotPresentation.h y CMakeLists.txt. Pruebas library.cpp/impulse.cpp y ampliación
+commands.cpp. No cambios de motores de audio ni archivos originales Smaart.
+Contrato y decisiones: Documentacion/05_Referencia_tecnica/biblioteca-tipos-y-vinculos-dsp.txt.
+
+VERIFICACIÓN
+Compilación: PASS. CTest: 5/5 PASS (smoothing, presentation, commands, library, impulse).
+Registro: 114 IDs/claves únicos ES/EN; 48 pendientes bloqueados; 696 despachos
+permitidos contrastados con estado, además de denegaciones y atajos.
+Biblioteca: reapertura de carpetas/destino/tipo/color/visibilidad/expansión, renombrado,
+movimiento múltiple sin cambios del contenido, ciclos y grupos inválidos rechazados,
+instancia obsoleta rechazada, índices inválidos/ausentes conservados, adopción demo
+idempotente y recuperación simulada antes/después de confirmar un movimiento.
+Comprobación de lectura de muestras almacenadas y umbral de coherencia.
+Preferencias de selectores: escritura/lectura real y rechazo de tipos no soportados.
+IR: envolvente analítica contrastada contra una señal AM periódica conocida,
+Lin con signo, Log/ETC finitos, suelo -120 dB ref1 y tiempo -40/0/+40 ms.
+Evidencia y datos de ensayo: work/MYA-003. No se ha validado visualmente JUCE.
+
+QUÉ PROCEDE DE SMAART / QUÉ DECIDE MYA
+Smaart documental: árbol compacto, búsqueda, destino fijado, colores/X, selección,
+movimiento, ficha y selectores por panel. Mya: una sesión común con vistas tipadas,
+IDs de origen, payload inmutable, transacciones/recuperación y evitar borrado irreversible.
+La clasificación Snapshot/IR/RTA también incorpora la aclaración de Antonio sobre
+RiTA Memory Bank. No se declara equivalencia con esos programas.
+
+LÍMITES Y SIGUIENTE REVISIÓN
+Adquisición real TF/IR/RTA, importación .trf/.srf/WAV/ASCII, deconvolución, DSP por
+canal y derivados de IR: pendientes. La IR dibujada sigue siendo sintética y separada
+de la biblioteca; no se guardan IR ficticias ni audio sweep como si fuera una IR.
+Sólo hay lectura/presentación de TF guardadas; no carga funcional a DSP. Sus requisitos
+(variantes por canal, referencias compatibles, ventana reversible y evitar doble DSP)
+están registrados en el contrato, no implementados como motor.
+No vigilancia de movimientos externos por Finder ni exportador/selector portable de
+proyectos. Recargar valida el índice propio y conserva datos ante inconsistencias.
+Selección actual y filtro de búsqueda son temporales; carpetas/estado sí persisten.
+Revisión visual pendiente: apertura coordinada, tamaño del panel, Cmd/Shift, drag,
+iconos, menús, captura al destino, fuentes/cursor guardadas, selectores y teclados
+ES/EN/keypad. MYA-001/MYA-002 no se consideran aceptados visualmente por esta compilación.
+
+ACLARACIÓN DEL PERMISO
+Solicitud exacta: «¿Permites ejecutar la prueba de persistencia? JUCE sitúa su carpeta
+temporal de macOS fuera de las carpetas permitidas del proyecto».
+Autorizó sólo ejecutar mya_library_test; usó Library/Caches/mya_library_test.
+No autorizó abrir/cerrar/reiniciar Mya, audio ni modificar Smaart. Después se corrigió
+la ubicación temporal de las pruebas definitivas para usar carpetas del build/proyecto.

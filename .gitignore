@@ -1,0 +1,22 @@
+# Generated files and local research
+/work/
+/outputs/
+.DS_Store
+/build*/
+/vendor/
+*.app/
+*.dSYM/
+# Private session data and machine-specific settings
+/Aplicacion/Biblioteca/
+/Aplicacion/Capturas/
+/Aplicacion/*.json
+# Third-party manuals and extracted contents: keep local
+/Documentacion/08_Fuentes/
+# Credentials and editor state
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+/.idea/
+/.vscode/

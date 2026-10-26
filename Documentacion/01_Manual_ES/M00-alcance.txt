@@ -1,0 +1,7 @@
+M00 — ACERCA DE ESTA EDICIÓN
+Estado: BORRADOR documental, 26/10/2026.
+Mya Acustica es un proyecto de medición y ajuste de sistemas de sonido para macOS y Windows. La versión actual es un prototipo con respuestas sintéticas; no debe interpretarse como instrumento de medida validado.
+La interfaz se organiza en medición, DSP y una futura visualización 3D. La intención es capturar mediciones en el recinto y reutilizarlas para estudiar ajustes, conservando los originales y mostrando al ingeniero las modificaciones propuestas.
+Medir con sweep produce sonido durante la captura. El trabajo posterior sobre capturas puede realizarse sin emitir señal.
+La ayuda distinguirá delay de referencia de medición, desplazamiento visual y delay del procesador; inversión de magnitud y polaridad; promedio y suma acústica; ponderación y target.
+Este borrador no certifica importación Smaart, exportación a procesadores ni predicción 3D.

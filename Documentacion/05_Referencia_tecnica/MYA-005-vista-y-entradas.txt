@@ -1,0 +1,64 @@
+MYA-005 — VISTA Y ENTRADAS M/R
+26/10/2026
+
+WorkspaceViewState.h conserva anchos/visibilidad y ajustes M/R en vista-trabajo.json,
+con esquema y validación de tipos/rangos y escritura temporal. Este archivo es
+una preferencia de interfaz. No es perfil de equipo ni sesión de capturas.
+El proyecto demo mantiene sus campos anteriores; guardar/cargar capturas no
+cambia originales. MeterState y sus alarmas SPL se conservan independientes.
+
+CompactLayout::heights reparte fase/magnitud por igual cuando phaseFraction=.5;
+si sobra1px, queda fuera de los dos paneles. Alturas de retícula también iguales.
+El usuario puede cambiar proporciones arrastrando y restaurar con Option5.
+El margen derecho de retícula es2px; umbral de coherencia se edita en AjustesTF,
+no ocupa retícula ni conserva rótulo lateral. La coherencia conserva gamma²
+sintética almacenada; no se ha vuelto a elevar al cuadrado ni alterado máscaras.
+
+TFMeterModel.h es lógica dBFS sin calibración SPL. Entrada opcional: ausencia o
+NaN borra nivel/pico. Rango gráfico−60..0dBFS; saturación sólo con nivel>=0.
+Retención actualizada por frames: nuevo máximo renueva tiempo, al vencer baja
+al nivel actual; sin adquisición no hay frames ni niveles inventados. ON/OFF,
+retención0.5..60s y reset de picos son configurables. Umbrales propios−12/−3dBFS
+por defecto, naranja<rojo<=0. El modelo no recibe valores de las alarmas SPL.
+TFInputMeters dibuja tramos recortados a cápsula, con colorbaseTF hasta umbral
+naranja, tramo naranja hasta rojo y sólo tramo final rojo. El pico blanco puede
+quedar a la derecha del nivel actual; no es indicador de clip. Sin audio: vacío.
+No hay fuente de audio conectada a estos componentes en esta entrega.
+
+Track sigue ligado a comandos503/514 pendientes; interfaz circular disponible,
+sin toggle falso. La futura activación global debe recorrer todas lasTF del
+proyecto, independientemente de tarjeta visible/seleccionada. Color de activación
+individual sigue traceSwitch, no el nivel dBFS. No se ha iniciado ningún motor.
+
+CONTRATO SIGUIENTE: IA / FIR / DSP
+Target y AutoDelay/AutoFase/AutoEQ/AutoFIR/Comparar/Propuestas son puntos de
+entrada deshabilitados hasta disponer de datos y cálculo verificables. Propuesta
+requiere procedencia/versión de capturas, objetivo, banda, límites y métricas de
+comparación antes/después. El original permanece inmutable. El ingeniero puede
+ignorar, modificar o aceptar; aceptar no transfiere automáticamente al procesador.
+FIR: coeficientes, taps, Fs, longitud/ventana, referencia temporal, fase, ganancia,
+latencia declarada y presupuesto de dispositivo. Latencia de convolución/cómputo
+se informa aparte del retardo de grupo; no inferir siempre(N−1)/(2Fs), válido
+sólo para FIR lineal simétrico compatible. Verificación compleja en DSP, límites
+por modelo/firmware, formato/tasa compatible o ficha de parámetros manuales.
+Sin esas capacidades, mantener deshabilitados cálculo/exportación/aplicación.
+
+CONTRATO SIGUIENTE: GESTOR COMPLETO DE CONFIGURACIONES
+Unidad guardable: equipos y claves estables, TF/nombres/colores, rutas M/R/salida,
+Fs/buffer admitidos, calibraciones con identidad/vigencia, medidores y vista.
+Separar sesiones/recintos/capturas del perfil. Guardar/guardarcomo/cargar/listar/
+renombrar/eliminar con recuperación, esquema/versiones/migración y validación
+transaccional antes de aplicar. Fuentes ausentes se marcan sin asignar y requieren
+reasignación explícita; no elegir otra tarjeta/canal automáticamente. Cargar no
+inicia adquisición/generador. Cambiar ruta/Fs invalida calibración incompatible.
+Probar roundtrip, versión inválida, escritura fallida, dispositivo ausente, no
+arranque de audio y separación respecto de biblioteca. No sustituir este gestor
+por un diálogo parcial de nombre/guardar ni afirmar que ya está implementado.
+
+VERIFICACIÓN VISUAL
+Opción CMake MYA_BUILD_LAYOUT_SNAPSHOT=ON genera consola de render. Incluye los
+mismos componentes de Main.cpp, con fixture de datos en el directorio de build;
+creaComponentSnapshot sin ventana nativa. No instancia MainWindow ni activa la
+app abierta. Las curvas siguen siendo DEMO. La imagen input-meters-DEMO recibe
+valores sintéticos sólo en componentes locales del renderer. Ninguno se entrega
+a los vúmetros de la aplicación. No prueba audio real ni reemplaza aceptación.

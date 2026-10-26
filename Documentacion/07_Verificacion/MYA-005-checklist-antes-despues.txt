@@ -1,0 +1,70 @@
+MYA-005 — CHECKLIST VIGENTE Y ANTES/DESPUÉS
+26/10/2026. Referencia: decisiones-visuales-aprobadas.txt, registro cronológico.
+Este checklist consolida la última corrección expresa. No sustituye ni borra el
+historial. Concepto08 orienta distribución; no autoriza errores de textos/datos.
+Maquetas007/009 no se han usado para cambiar distribución.
+
+1. LATERALES / BIBLIOTECA / IA
+[x] Antes: laterales fijos154/238px (medición). Después:148/216px por defecto.
+    Arrastre con límites izquierda148..300, derecha216..340; el área central
+    conserva al menos680px a tamaños admitidos. Son límites de implementación
+    para legibilidad, no porcentajes ni medidas definitivas aprobadas por Antonio.
+[x] B/O y controles visibles para cerrar y volver a abrir ambos laterales.
+[x] Anchos y visibilidad se guardan al cambiar en vista-trabajo.json.
+[x] Lista de carpetas alargada: recupera56px antes reservados a aviso vacío;
+    el aviso pasa al tooltip, no tapa carpetas. Sin botón grande de captura.
+[x] Espacio y Archivo>Capturar TF mantienen captura DEMO y destino real.
+[x] TF+AVG comparten jerarquía por sesión; Sweep/IR separado. RTA contextual.
+[x] Siete botones IA pequeños: Target, AutoDelay, AutoFase, AutoEQ, AutoFIR,
+    Comparar y Propuestas. Todos deshabilitados por capacidades pendientes.
+
+2. GRÁFICOS / LECTURA
+[x] IR más pequeño por defecto (.14 del área, antes .17); tiempo−40..40ms.
+[x] Fase y magnitud exactamente iguales por defecto, incluso alturas impares.
+    Mismos márgenes de retícula; paso30° y magnitud3dB conservados.
+[x] Retícula llega a2px del borde derecho; antes14px. No columna para controles.
+[x] Coherencia roja superpuesta en retícula superior de magnitud, sin comprimir
+    escala ni reservar una banda. ON/OFF, mitad/cuarto, grosor y umbral siguen
+    en ajustes. Se eliminan numeración/eje lateral y porcentaje lateral.
+[x] Barra central24px (antes39), una línea coloreada, sin checkbox ni slash.
+    Frecuencia, magnitud, fase con°, coherencia y fuentes P1/P2 correctas;
+    fuente completa en tooltip. Coh individual por panel si las fuentes difieren.
+[x] Suavizados pequeños en fase/magnitud; no IR por octavas. 16k conservado.
+[x] Flechas X/Y y restauración Option5 conservadas. Vínculo de suavizado y
+    vínculo de zoom siguen separados y persistentes.
+[x] Un único botón Suma debajo del conjunto. Deshabilitado: no motor de suma
+    con referencias compatibles. AVG sigue siendo promedio, no suma compleja.
+
+3. VÚMETROS M/R / TRACK
+[x] Antes: segmentos grises de maqueta. Después: dos cápsulas continuas porTF,
+    M y R apilados, relieve y brillo suave opcional. Barras ocupan ancho libre.
+[x] Nivel numérico y escala debajo de CADA barra, no al lado ni encima.
+[x] Base TF1 verde/TF2 azul/TF3 rosa/TF4 amarillo sincronizada con trazo/tarjeta.
+    Editar color sigue disponible; biblioteca añade opción naranja para AVG.
+    No se crea un AVG ficticio: estimador y tarjetas AVG siguen pendientes.
+[x] Sólo los tramos finales alcanzados usan naranja/rojo. Umbrales propios
+    dBFS editables, por defecto−12/−3dBFS. No se usan105/110dBSPL aquí.
+[x] Pico blanco retenido ON/OFF, duración0.5..60s, reset. Se distingue de clip.
+[x] Sin adquisición: --dBFS, barras vacías, sin pico ni falsa saturación.
+[x] Fixture visual DEMO separado, rotulado, sólo para revisar acabados.
+[x] Track individual circular y global circular junto al transporte. Preparados
+    para iluminarse con su color cuando exista estado real; ahora apagados y
+    deshabilitados. No se simula seguimiento ni activación de TFs.
+[x] Cuatro TF accesibles mediante scroll propio; a900/960px no caben las4
+    tarjetas ampliadas simultáneamente. TF4 completa comprobada al desplazar.
+
+4. ALCANCE PENDIENTE EXPLÍCITO
+[>] Gestor completo de configuraciones pasa al siguiente bloque autorizado:
+    equipos/TF/rutas/calibración/medidores/vista, separado de sesiones del recinto;
+    dispositivo ausente exige reasignación explícita; cargar no arranca audio.
+    No se presenta la persistencia de vista como gestor completo de perfiles.
+[>] IA propone, ingeniero ignora/modifica/acepta. FIR exige taps, Fs, latencia;
+    verificación DSP y exportación compatible por modelo/firmware o ficha manual.
+    No se ha implementado ni anunciado optimización, FIR o exportación real.
+
+VALIDACIÓN
+8/8 pruebas. Render de componentes reales fuera de pantalla a1120x900,
+1440x960 y1760x1080, además TF4 desplazada y fixture M/R explícitamente DEMO.
+No son capturas de la instancia que Antonio está revisando. Aceptación visual
+por Antonio/Revisión y Control pendiente; no se afirma equivalencia con Propi
+ni animación en adquisición. No se abrió/reinició la app ni se inició audio.

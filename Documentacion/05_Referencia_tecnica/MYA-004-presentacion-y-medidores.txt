@@ -1,0 +1,134 @@
+MYA-004 — PRESENTACIÓN, MEDIDORES Y CONTRATO DE OPCIONES
+26/10/2026 · Especificación implementada y pendientes de este bloque.
+Reemplaza las flechas horizontales/paneo y la ubicación del enlace de suavizado
+anteriores. Los informes MYA-001/002/003/R1 se conservan como antecedentes fechados.
+
+REFERENCIAS
+Smaart local: chunk15 SPL Meters / Standalone SPL Meters / Grid Configuration;
+chunk18 Transfer Function Graph Settings completo, antes de Measurement Settings;
+chunk13 Spectrum Graph Settings; chunk05 Impulse Response Graph Settings.
+Inventario complementado por la inspección visual/AX comunicada desde Revisión y
+Control. Desarrollo no repitió esa inspección ni considera verificado el E,E de
+Smaart: el intento CUA comunicado terminó en timeout. E,E es el perfil de Antonio.
+Se reconstruyen navegación, opciones y comportamientos propios; no se copia código
+ni texto explicativo del producto de referencia ni se certifica equivalencia total.
+
+BARRA IZQUIERDA Y BIBLIOTECA
+Arriba Trazos / dB Meter. Dentro de Trazos: Trazos / Sweep-IR; RTA queda como entrada
+contextual del menú. Captura, información y papelera están al pie de la biblioteca.
+Trazos reúne SnapshotTF individuales y el tipo AVG en la misma jerarquía; traceRole
+es individual/average y persiste. Insignias TF/AVG/IR/RTA distinguen tipos.
+No hay todavía cálculo AVG ni creación de AVG ficticios: la API actual de captura
+rechaza traceRole=average. La reserva de tipo no certifica un promedio calculado.
+La papelera permanece deshabilitada hasta implementar borrado recuperable.
+Jerarquía, IDs, originales, colores, visibilidad, destino y búsqueda se conservan.
+No se crea ningún archivo RTA/IR real ni se importa .trf/.srf/WAV en este bloque.
+
+MEDIDORES — CONFIGURACIÓN REAL, MEDICIÓN PENDIENTE
+MeterState/Meters separan configuración de cualquier estimador. El mismo estado
+alimenta la página dB Meter y una ventana flotante movible/redimensionable.
+E,E abre o cierra esa ventana; X la oculta conservando configuración. Nombre,
+entrada, métrica y ponderación son editables por tarjeta. Se pueden añadir/quitar
+tarjetas y reordenarlas con < / >. Filas y columnas son explícitas y no eliminan
+tarjetas al cambiar: se aumenta la otra dimensión cuando hace falta capacidad.
+Los módulos escalan y tienen desplazamiento cuando no caben. No hay límite de4;
+prueba automatizada con21. No se promete rendimiento con miles de tarjetas.
+Fuente persistente = deviceKey + canal físico, no posición en un desplegable ni
+índice de TF. Los alias de micros sólo ayudan a identificar la entrada. Un equipo
+ausente queda marcado Unavailable; no se reasigna silenciosamente a otro canal.
+Métri­cas configurables: dBFS Peak, SPL Fast/Slow/Peak, Leq10s; ponderación Z/A/C.
+En dBFS se fuerza Z. Son ajustes futuros: ninguna métrica se calcula aún.
+Sin adquisición válida: lectura --, Max -- y sin audio/sin calibrar. Configurar
+SPL o Leq no habilita un nivel calibrado ni un búfer Leq real.
+Persisten tarjetas/orden, entradas, métrica, ponderación, filas/columnas, página y
+posición/tamaño de ventana en Aplicacion/medidores.json. Cambios son inmediatos;
+la geometría se guarda con retardo breve y al cerrar. Archivos inválidos se conservan.
+
+ALARMAS POR TARJETA
+Aviso105 naranja y alarma110 roja son ejemplos de Antonio, no límites universales
+ni una recomendación de exposición. Se editan umbrales, activación, animación e
+histéresis en Alarmas. La configuración queda ligada a métrica y ponderación.
+La evaluación exige fuente/canal coincidentes, dato finito y adquisición válida;
+además, calibración para métricas SPL/Leq. Un umbral SPL no se reutiliza en dBFS.
+En dBFS se exige configurar umbrales <=0; los105/110 del ejemplo no se aceptan.
+Desde aviso hasta alarma: naranja; desde alarma: rojo prioritario. Histéresis por
+defecto1 unidad de esa métrica: una alarma previa se mantiene hasta caer por debajo
+de alarma−histéresis; análogamente el aviso hasta aviso−histéresis. Ausencia de dato
+válido desactiva evaluación numérica. El arranque no presupone una configuración
+de alarma válida para cualquier unidad: se vincula al tipo al confirmar Alarmas.
+Probar aviso recorre naranja DEMO / rojo DEMO / fin; los dígitos siguen --.
+Fondo pulsante suave, texto AVISO/ALARMA más DEMO y lectura siempre visible. Si se
+desactiva animación, el color queda fijo. No se emite audio ni se cambia ganancia.
+La prueba visual no persiste como una alarma real. No hay monitoreo SPL activo.
+
+AJUSTES DE GRÁFICOS
+Ventana propia: Espectro / Función de transferencia / Respuesta al impulso; títulos
+y controles de ajustes ES/EN. Engranaje inferior de cada panel abre su familia.
+TF tiene General/Magnitud/Fase/Coherencia. Option/Alt+T abre TF. Measurement Settings
+abre los dispositivos/rutas existentes de Mya; no promete motores aún pendientes.
+OK cierra: los controles operativos guardan cambios al confirmarlos.
+Inventario persistente completo: graph-settings-matriz.json y .txt, 82 entradas:
+27 implementadas en el alcance indicado, 55 pendientes deshabilitadas. Algunos
+controles comparten un mismo ajuste, como los grosores TF/IR sintética.
+Los pendientes no aceptan cambios ni muestran una falsa aplicación exitosa.
+Incluye todas las opciones proporcionadas: Spectrum/banding/THD/peaks/calibración,
+espectrograma/historial/memoria; IR/overlap/umbral/HPF/LPF/ventana/banding/histograma;
+y TF/ponderación/promedios/unwrap/GD/MTW. La matriz es la referencia del estado.
+
+CONTROLES TF IMPLEMENTADOS
+Frecuencia log con retícula octavas/décadas/tercios, y lineal, conservando dominio
+20–20000 Hz. Grosores frontal/fondo y de coherencia; rangos Y, pasos de retícula,
+desplazamiento y zoom; fase envuelta con paso30° y magnitud3dB por defecto.
+Mostrar IR, permitir Off/sin suavizado, enlace fase-magnitud y enlace del eje X.
+El último comparte el eje de frecuencia entre los paneles actuales; Y mantiene
+sus unidades y el enlace global entre otras ventanas continúa pendiente.
+Retícula aprovecha el rectángulo de datos común: 36px izquierda,14 derecha,
+26 arriba y22 abajo para etiquetas/controles; dibujo y ratón usan ese mismo marco.
+Selectores de suavizado64x18 con Off/1/48/etc.; no tapan16k. Paso de fase30° produce
+180,150,120,90,60,30,0,−30,−60,−90,−120,−150,−180. No se inventa unwrap ni GD.
+La lectura central ocupa todo el ancho, en dos líneas con Hz, valores/unidades y
+coherencia de la fuente propia. Los nombres largos se acotan; no los valores.
+
+SUAVIZADO Y ZOOM SON AJUSTES DISTINTOS
+Comando301, único: Opciones > Ajustes de gráficos > Función de transferencia >
+Vincular suavizado de fase y magnitud. Activado por defecto, y se conserva una
+posterior elección contraria. El checkbox ya no ocupa la barra de lectura.
+Link Global Plot Smoothing es otra opción (mismo tipo entre ventanas), pendiente.
+Enlazar suavizado no cambia zoom, delays, datos originales ni promedio temporal.
+Off significa sin suavizado de dibujo, no sin promediado de adquisición.
+
+COHERENCIA, CONVENCIÓN Y UMBRAL
+Los datos actuales son demo: su relación S/(S+N) se declara como base gamma² de un
+modelo sintético, no como un estimador medido o validado. No se confunde con SPL.
+Modo cuadrado muestra esa base; modo normal muestra su raíz. No se vuelve a
+cuadrar una gamma² y producir gamma^4. Se arranca en cuadrada para conservar el
+valor que mostraba el demo anterior; las capturas originales no se reescriben.
+Datos ausentes permanecen ausentes. Importar convenciones ajenas sigue pendiente.
+Coherencia roja ON/OFF(C), altura1/4 o1/2 y grosor propio o vinculado al frontal.
+El grosor propio queda deshabilitado cuando sigue al frontal. Umbral0..100% con
+resolución0,01%, en la convención mostrada, aplicado a magnitud y fase. Ocultar la
+curva roja no desactiva el umbral. El umbral no modifica los archivos originales.
+Always Display MTW Coherence queda pendiente; no hay estimador MTW en este prototipo.
+
+NUEVO PERFIL DE FLECHAS HORIZONTALES
+Sobre un gráfico enfocado: izquierda reduce intervalo visible (acerca); derecha
+lo amplía (aleja), sin pan. Se aplica a IR, magnitud y fase, también en las vistas
+DSP/Laboratorio que ya dibujan esos gráficos. Las vistas futuras no se simulan.
+IR ancla0ms y zoom simétrico; rango80ms por defecto, límites de vista1,25..320ms.
+Fuera del registro IR sintético original no se inventan muestras: se deja sin dato.
+Frecuencia conserva el centro en coordenada log o lineal; limita vista al dominio
+20–20000 Hz. Cuando el centro no permite ampliar más dentro del dominio, se ajusta
+lo mínimo necesario. Enlace X se respeta; enlace de suavizado no lo activa.
+↑/↓ conserva desplazamiento Y y usa pasos configurados; Shift lo reduce.
+Option5 restaura zoom/pan/distribución por defecto e IR−40..40ms; conserva las
+preferencias configuradas de presentación, como rangos base y enlace de suavizado.
+No se modifican muestras, delay de referencia, delay DSP ni ganancia por hacer zoom.
+Con foco en campos, combos, sliders o listas se conserva su teclado/navegación.
+
+PERSISTENCIA Y ACEPTACIÓN
+TF: Aplicacion/tf-graficos.json; tipos/IR/escalas: vista-graficos.json; copia también
+en Guardar proyecto. Se admiten preferencias antiguas sin el nuevo enlace explícito.
+Se validan rangos, pasos y tipos antes de aplicar. Las opciones no implementadas no
+se guardan como si fueran operaciones activas. La matriz distingue esas dependencias.
+Las pruebas automáticas no sustituyen la apertura coordinada ni validan lectura SPL,
+coherencia medida, tratamiento IR, formatos externos ni equivalencia con Smaart.
