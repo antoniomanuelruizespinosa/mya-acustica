@@ -1,0 +1,41 @@
+MYA ACUSTICA — PUNTO DE CONTINUACIÓN
+26/10/2026. Revisión y control.
+
+BASE
+MYA-005, commit local a44fa66 en main. Árbol limpio antes de esta actualización documental.
+Desarrollo está inactivo; entrega compilada. Registro de pruebas: work/MYA-005/pruebas.log, 8/8 PASS. No repetidas en esta revisión documental.
+Código vigente: Aplicacion/ en este repositorio. No retomar la copia histórica.
+GitHub privado creado, subida pendiente de resolver acceso del conector; no afirmar respaldo remoto confirmado.
+
+REFERENCIAS SIN DUPLICAR
+Requisitos: decisiones-visuales-aprobadas.txt; última corrección expresa prevalece.
+Implementación: ../07_Verificacion/MYA-005-checklist-antes-despues.txt.
+Entrega y límites: ../07_Verificacion/MYA-005-resultado.txt.
+Las decisiones aprobadas son requisitos; MYA-005 todavía no tiene aceptación visual de Antonio.
+
+YA REALIZADO — NO REIMPLEMENTAR
+Laterales estrechos ajustables y persistentes; biblioteca por carpetas, TF/AVG en la misma jerarquía y Sweep/IR separado.
+Fase y magnitud de igual altura, pasos 30 grados/3 dB, IR centrado, retícula ampliada, barra fina y coherencia roja superior superpuesta.
+Suavizado por panel y vínculo, zoom horizontal, restauración y ajustes gráficos.
+M/R redondeados, color TF, tramos finales naranja/rojo, lectura debajo, pico configurable; sin audio se muestran vacíos.
+Track circular individual/global preparado, un Suma, IA compacta; operaciones sin motor deshabilitadas.
+Medidores flotantes, configuración y alarmas demo; no SPL real.
+
+REVISIÓN VISUAL ACTUAL
+Inspeccionado render de componentes reales workspace-1440x960.png; datos sintéticos y barras sin adquisición.
+A 960px TF4 necesita scroll. La lista estrecha abrevia nombres. Son aspectos para valorar, no autorización para rediseñar.
+La pantalla conserva textos ES/EN mezclados; completar traducción es trabajo pendiente.
+No se reinició la aplicación, no se emitió audio ni se alteró Smaart.
+
+SIGUIENTE PASO
+1. Antonio revisa MYA-005. Registrar únicamente desviaciones concretas; no regenerar distribución completa.
+2. Resolver respaldo GitHub y confirmar commit remoto. Conservar punto local aunque el conector siga pendiente.
+3. Siguiente bloque previsto: gestor de perfiles de tarjeta/rutas/TF/calibración/medidores/vista, separado de sesiones de recinto; cargar no inicia audio ni reasigna dispositivos ausentes.
+4. Después, adquisición real M/R y calibración/pruebas con OctaCapture, antes de anunciar mediciones válidas.
+5. TF/Find/Track/AVG y captura sweep/IR real; luego DSP offline, suma compatible y optimización verificable.
+6. Exportación/API por procesador y predicción 3D requieren bloques y validación propios. No están terminados.
+
+REGLA DE CAMBIO
+No cambiar tamaños, colores, posiciones, atajos o comportamiento aprobado por iniciativa propia.
+Cada encargo incluye lista de archivos y alcance, diferencias antes/después, pruebas pertinentes y aceptación pendiente/completada.
+Un único editor de código por checkout; no rehacer MYA-001..005. Documentar correcciones posteriores sin borrar historia.

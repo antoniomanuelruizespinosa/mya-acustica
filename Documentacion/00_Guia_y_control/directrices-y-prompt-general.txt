@@ -36,7 +36,7 @@ MEMORIA Y COORDINACIÓN
 • Registrar cambios de criterio con fecha y motivo; no duplicar especificaciones divergentes.
 • Enviar mensajes a otro chat solo con autorización de Antonio; este documento no sustituye esa autorización ni las reglas de herramientas.
 • No crear ciclos de consulta o sondeos sin necesidad. Encargos por lotes coherentes y entregas revisables.
-• Antes de ejecutar, confirmar ubicación real del código: la carpeta actual contiene documentación; el código previo está en Documents/Codex/2026-10-26/te/outputs/MyaAcustica/Aplicacion. No asumir traslado ni permisos de escritura allí.
+• Código vigente: /Users/antoniomanuelruizespinosa/Documents/ChatGPT/Mya Acústica/Aplicacion. El código de Documents/Codex/2026-10-26/te/outputs es histórico: no continuar allí. Antes de ejecutar, consultar 00_Guia_y_control/punto-de-continuacion.txt y git status. No repetir bloques entregados ni modificar decisiones aprobadas fuera del encargo.
 • No emitir audio, cambiar Smaart o aplicar ajustes a equipos como consecuencia de un encargo documental. Para pruebas físicas, seguir el alcance autorizado de la sesión.
 
 CALIDAD
