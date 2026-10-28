@@ -83,7 +83,7 @@ inline const std::vector<Command>& catalog(){
   {701,"help.shortcuts",{"Atajos y manejo","Shortcuts and operation"},"",6,{"",""},Capability::Ready,{"",""}},
   {702,"help.status",{"Estado del prototipo","Prototype status"},"",6,{"",""},Capability::Ready,{"",""}},
   {703,"help.about",{"Acerca de Mya Acústica","About Mya Acústica"},"",6,{"",""},Capability::Ready,{"",""}},
-  {790,"help.update",{"Buscar actualizaciones","Check for updates"},"",6,{"",""},Capability::Pending,{"Servicio de actualizaciones pendiente","Update service pending"}},
+  {790,"help.update",{"Buscar actualizaciones","Check for updates"},"",6,{"",""},Capability::Ready,{"Consulta la última versión publicada en GitHub","Check the latest published GitHub release"}},
   {801,"dsp.polarity",{"Polaridad DSP","DSP polarity"},"",3,{"DSP","DSP"},Capability::Demo,{"",""}},
   {802,"dsp.bypass",{"Bypass visual DSP","Visual DSP bypass"},"",3,{"DSP","DSP"},Capability::Demo,{"Solo comparación de la respuesta sintética","Synthetic response comparison only"}},
   {810,"dsp.auto.phase",{"Proponer alineación de fase","Propose phase alignment"},"",3,{"DSP","DSP"},Capability::Pending,{"Modelo, cálculo o historial DSP pendiente","DSP model, computation or history pending"}},

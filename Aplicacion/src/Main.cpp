@@ -21,6 +21,7 @@
 #include "PrincipalMeter.h"
 #include "Branding.h"
 #include "NativeTitleBranding.h"
+#include "UpdateCheck.h"
 using namespace juce;
 namespace Palette { const Colour bg{0xff222427}, panel{0xff2c3036}, plot{0xff080a0c}, ink{0xffe5edf4}, muted{0xffa9bac8}, cyan{0xff00e5ed}, blue{0xff159fe5}, orange{0xffffac24}, green{0xff54ee22}, line{0xff626e78}; }
 class MyaLook : public LookAndFeel_V4 {
@@ -197,6 +198,7 @@ public:
 };
 class Workstation : public Component, public KeyListener, public MenuBarModel, private ChangeListener, private Timer {
  MyaLook look;
+ std::unique_ptr<MyaUpdate::Checker> updateChecker;
  PaintSurface navigationOverlay;TextButton navigationTab{"v"},navigationMenus{"Todos los menus..."};
  AudioDeviceWatcher deviceWatcher;
  std::unique_ptr<SettingsDrawer> settingsDrawer;
@@ -347,7 +349,7 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
   double now=Time::getMillisecondCounterHiRes()*.001;for(size_t k=0;k<4;++k){auto key=deviceKeys[k].toStdString();inputMeters[k].channels[0].update(InputLevels::dbfs(inputEngine.channel(key,micInputs[k])),now,inputMeterSettings);inputMeters[k].channels[1].update(InputLevels::dbfs(inputEngine.channel(key,refInputs[k])),now,inputMeterSettings);inputMeters[k].repaint();}
   for(auto* model:meterModels()){for(const auto& c:model->state().cards){auto peak=inputEngine.channel(c.deviceKey.toStdString(),c.channel);if(c.metric==6){auto db=inputEngine.rms(c.deviceKey.toStdString(),c.channel);bool clip=inputEngine.rmsClip(c.deviceKey.toStdString(),c.channel);model->publishRmsSpl(c.id,c.deviceKey,c.channel,calibrationStore.spl(c.deviceKey,c.channel,db,clip),db.has_value(),calibrationStore.isAcknowledged(c.deviceKey,c.channel),clip);}else model->publishFs(c.id,c.deviceKey,c.channel,InputLevels::dbfs(peak),peak.clipped);}model->readingsChanged();}if(reportedDrops!=inputEngine.drops()){reportedDrops=inputEngine.drops();status="Entradas dBFS / bloques perdidos: "+String(reportedDrops)+". Las ventanas incompletas muestran --.";repaint(0,getHeight()-30,getWidth(),30);}
  }
- void writeInputDiagnostic(){FileOutputStream out(projectFile.getParentDirectory().getChildFile("diagnostico-entrada-ultimo.txt"));if(out.openedOk()){out.writeText(Time::getCurrentTime().toISO8601(true)+" / MYA-006-B-R4\n"+inputEngine.lastError()+"\n"+inputEngine.details()+"\n\n",false,false,"\n");out.flush();}}
+ void writeInputDiagnostic(){FileOutputStream out(projectFile.getParentDirectory().getChildFile("diagnostico-entrada-ultimo.txt"));if(out.openedOk()){out.writeText(Time::getCurrentTime().toISO8601(true)+" / "+MyaIdentity::version()+"\n"+inputEngine.lastError()+"\n"+inputEngine.details()+"\n\n",false,false,"\n");out.flush();}}
  bool pollCalibration(){bool ok=inputEngine.poll([this](const std::string& key,const InputLevels::Frame& frame,double rate){calibrationCapture.feed(key,frame,rate);});auto drops=inputEngine.drops();if(drops!=calibrationDrops)calibrationCapture.fail("Bloques perdidos durante calibracion");calibrationDrops=drops;return ok;}
  CalibrationInputSnapshot calibrationSnapshot(const String& key,int ch){auto k=key.toStdString();return {inputEngine.running(),inputEngine.channel(k,ch).valid,inputEngine.rmsClip(k,ch),inputEngine.rate(k),inputEngine.rms(k,ch),inputEngine.cursor(k),inputEngine.generation(),inputEngine.drops()};}
  void invalidateCalibration(const String& key,int ch){for(auto* model:meterModels())model->invalidateRms(key,ch);}
@@ -441,6 +443,25 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
  panel->calibrateRequested=[this]{int i=source.getSelectedId()-1;if(i>=0&&i<4)deferredCalibration(deviceKeys[(size_t)i],micInputs[(size_t)i]);else deferredCalibration();};routingStatusPanel=panel.get();refreshRoutingStatus();showDrawer("audio","Measurement Configuration",std::move(panel));}
 
  void info(String title,String body){AlertWindow::showMessageBoxAsync(MessageBoxIconType::InfoIcon,title,body,"Cerrar");}
+ void showUpdateResult(MyaUpdate::Result result,bool manual){
+  if(result.state==MyaUpdate::State::NewVersion){
+   auto* box=new AlertWindow("Nueva versión de Mya Acústica Analyzer",
+    "Disponible "+result.version+"; instalada "+MyaIdentity::version()+". La instalación es manual.",
+    MessageBoxIconType::InfoIcon);
+   box->addButton("Abrir descarga",1);box->addButton("Más tarde",0);
+   box->enterModalState(true,ModalCallbackFunction::create([url=result.url](int choice){if(choice==1)URL(url).launchInDefaultBrowser();}),true);
+  }else if(manual){
+   String message;
+   switch(result.state){
+    case MyaUpdate::State::Current:message="Ya tienes la versión más reciente ("+MyaIdentity::version()+").";break;
+    case MyaUpdate::State::NoRelease:message="Todavía no hay una versión publicada en GitHub.";break;
+    case MyaUpdate::State::NetworkError:message="No se pudo consultar GitHub. Comprueba la conexión e inténtalo de nuevo.";break;
+    case MyaUpdate::State::InvalidResponse:message="La respuesta de GitHub no contiene una versión válida.";break;
+    case MyaUpdate::State::NewVersion:break;
+   }
+   info("Buscar actualizaciones",message);
+  }
+ }
  void setup(Slider& s,Label& l,String name,double lo,double hi,double step,double value){s.setRange(lo,hi,step);s.setValue(value);s.setSliderStyle(Slider::LinearHorizontal);s.setTextBoxStyle(Slider::TextBoxRight,false,72,25);s.onValueChange=[this]{repaint();};l.setText(name,dontSendNotification);addAndMakeVisible(s);addAndMakeVisible(l);}
  void select(int n){navigationOverlay.setVisible(false);navigationTab.setButtonText("v");if(anchoredOptions)anchoredOptions->setVisible(false);closeCalibration();if(settingsDrawer)settingsDrawer->setVisible(false);mode=n;measure->setToggleState(n==0,dontSendNotification);dsp->setToggleState(n==1,dontSendNotification);vision->setToggleState(n==2,dontSendNotification);lab->setToggleState(n==3,dontSendNotification);resized();repaint();}
  void save(){DynamicObject::Ptr o=new DynamicObject();o->setProperty("schema",1);o->setProperty("synthetic",true);DynamicObject::Ptr lib=new DynamicObject();lib->setProperty("libraryId",captureLibrary.state().id);lib->setProperty("manifest","Biblioteca/biblioteca.json");lib->setProperty("bindings",libraryDSPBindings);o->setProperty("captureLibrary",var(lib.get()));o->setProperty("gainDB",gain.getValue());o->setProperty("delayMs",delay.getValue());o->setProperty("polarity",polarity);o->setProperty("stacks",stacks.getValue());o->setProperty("boxesPerStack",boxes.getValue());o->setProperty("spacingM",spacing.getValue());o->setProperty("linked",adjustmentLinked);Array<var> micros;for(size_t i=0;i<4;++i){DynamicObject::Ptr m=new DynamicObject();m->setProperty("name",micNames[i].getText());m->setProperty("deviceKey",deviceKeys[i]);m->setProperty("micInput",micInputs[i]);m->setProperty("refInput",refInputs[i]);m->setProperty("visible",traceSwitch[i].getToggleState());m->setProperty("colour",traceSwitch[i].colour.toString());m->setProperty("measurementDelayMs",micDelay[i].getValue());micros.add(var(m.get()));}o->setProperty("micros",micros);
@@ -462,6 +483,13 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
  }plotPanX[0]=0;for(int panel:{1,2}){auto k=(size_t)panel;double half=.5/plotZoomX[k];plotPanX[k]=jlimit(half,1.-half,.5+plotPanX[k])-.5;}if(auto graph=GraphViewState::decode(view["graphRepresentations"]))restoreGraphChoices(*graph);if(auto tf=TFDisplayState::decode(view["tfDisplay"])){tfSettings=*tf;reflectTF();if(tfSettings.linkFrequencyZoom)PlotPresentation::linkFrequency(plotZoomX,plotPanX,1);}if(writePreferences){persistTF();persistGraphChoices();}syncNames();resized();tfContent.repaint();status="Proyecto demo recuperado";repaint();}
  #include "WorkstationCommands.inc"
 public:
+ void checkForUpdates(bool manual){
+  if(!updateChecker){
+   Component::SafePointer<Workstation> safe(this);
+   updateChecker=std::make_unique<MyaUpdate::Checker>([safe](MyaUpdate::Result result,bool requested){if(safe)safe->showUpdateResult(result,requested);});
+  }
+  if(!updateChecker->check(MyaIdentity::version(),manual)&&manual)info("Buscar actualizaciones","Ya hay una consulta en curso.");
+ }
  StringArray getMenuBarNames() override{return commands.menuNames();}
  PopupMenu getMenuForIndex(int index,const String&) override{return commands.menu(index);}
  void menuItemSelected(int id,int) override{commands.invoke(id);}
@@ -828,7 +856,7 @@ public:
  Rectangle<int> center{centerX()+8,118,centerWidth()-16,getHeight()-183};if(mode==2){scene(g,center);if(adjustmentLinked)text(g,"DSP vinculado: "+String(gain.getValue(),1)+" dB / "+String(delay.getValue(),2)+String::fromUTF8(" ms / Ø ")+String(polarity?"ON":"OFF"),{center.getX()+10,center.getY()+35,center.getWidth()-20,25},12,Palette::green);}else if(mode==0){if(plotChoice.getSelectedId()!=2||measurementView==1)graph(g,plotBounds(0),String::fromUTF8("IMPULSE RESPONSE · sintética · ms"),0);if(measurementView==0){graph(g,plotBounds(1),displayName(1),1);graph(g,plotBounds(2),displayName(2),2);}}else{int usable=center.getHeight()-(mode==1||mode==3?100:0);int irHeight=plotChoice.getSelectedId()==2?0:104;if(irHeight)graph(g,{center.getX(),center.getY(),center.getWidth(),90},String::fromUTF8("IMPULSE RESPONSE · sintética · ms"),0);int gh=(usable-irHeight)/2;graph(g,{center.getX(),center.getY()+(irHeight?97:0),center.getWidth(),gh},String::fromUTF8("PHASE · grados"),1);graph(g,{center.getX(),center.getY()+irHeight+gh,center.getWidth(),gh},(mode==0?String::fromUTF8("MAGNITUDE · dB / Hz · demo"):String::fromUTF8("MAGNITUDE · dB / Hz · cian original · verde procesada")),2);if(mode==1||mode==3){int yy=center.getBottom()-85;text(g,String::fromUTF8("CADENA ACTIVA: GANANCIA → DELAY → POLARIDAD"),{center.getX()+8,yy,center.getWidth()-16,26},12,Palette::cyan);text(g,String::fromUTF8("EQ / crossover / all-pass / FIR: implementación pendiente"),{center.getX()+8,yy+29,center.getWidth()-16,25},12,Palette::muted);}}
  if(mode==0&&rightVisible){int x=getWidth()-rightWidth,w=rightWidth-16,gen=CompactLayout::generatorTop(getHeight());g.setColour(Colour(0xff172028));g.fillRoundedRectangle((float)x,(float)gen,(float)w,66.f,4);text(g,"Generador / sin audio",{x+4,gen,w-8,18},10,Palette::muted);}
 
- text(g,status,{12,getHeight()-28,getWidth()-445,24},12,Palette::muted);text(g,String::fromUTF8("MYA-006-B-R4 · dBFS / SPL RMS / GRÁFICAS DEMO"),{getWidth()-425,getHeight()-28,413,24},11,Palette::orange);
+ text(g,status,{12,getHeight()-28,getWidth()-445,24},12,Palette::muted);text(g,MyaIdentity::version()+String::fromUTF8(" · dBFS / SPL RMS / GRÁFICAS DEMO"),{getWidth()-425,getHeight()-28,413,24},11,Palette::orange);
  }
 };
 // Keep the established workspace coordinate system and all hit tests together.
@@ -842,9 +870,10 @@ public:
  void resized()override{station.setBounds(0,-reclaimedHeight,getWidth(),getHeight()+reclaimedHeight);}
 };
 class MainWindow : public DocumentWindow {
+ Workstation* workstation=nullptr;
 public:
  MainWindow():DocumentWindow(MyaIdentity::name(),Palette::bg,allButtons){
- setUsingNativeTitleBar(true);auto* surface=new WorkstationSurface();auto* workstation=&surface->station;setContentOwned(surface,true);
+ setUsingNativeTitleBar(true);auto* surface=new WorkstationSurface();workstation=&surface->station;setContentOwned(surface,true);
  #if JUCE_MAC
  MenuBarModel::setMacMainMenu(workstation);
  #else
@@ -859,12 +888,13 @@ public:
  #endif
  }
  void closeButtonPressed()override{JUCEApplication::getInstance()->systemRequestedQuit();}
+ void checkForUpdates(){if(workstation)workstation->checkForUpdates(false);}
 };
 class MyaApp:public JUCEApplication {
  std::unique_ptr<MainWindow> window;std::unique_ptr<MyaStartupWindow> startup;std::shared_ptr<bool> alive=std::make_shared<bool>(true);
 public:
- const String getApplicationName()override{return MyaIdentity::name();}const String getApplicationVersion()override{return "0.3.0";}
- void initialise(const String&)override{startup=std::make_unique<MyaStartupWindow>(true);auto token=alive;MessageManager::callAsync([this,token]{if(!*token)return;window=std::make_unique<MainWindow>();startup.reset();});}
+ const String getApplicationName()override{return MyaIdentity::name();}const String getApplicationVersion()override{return MyaIdentity::version();}
+ void initialise(const String&)override{startup=std::make_unique<MyaStartupWindow>(true);auto token=alive;MessageManager::callAsync([this,token]{if(!*token)return;window=std::make_unique<MainWindow>();startup.reset();window->checkForUpdates();});}
  void shutdown()override{*alive=false;startup.reset();window.reset();}
 };
 

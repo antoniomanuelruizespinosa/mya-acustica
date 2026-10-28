@@ -67,6 +67,7 @@ void executeCommand(int id){
   juce::String::fromUTF8("Datos sintéticos. Audio: entradas dBFS con Play explicito; graficas sinteticas, TF pendiente.\nDSP: ganancia, delay, polaridad y bypass visual demo. EQ/FIR y propuestas pendientes.\nDiseño: geometría demo, sin predicción SPL validada. Medidores: FS Peak de entradas abiertas; SPL/Leq sin calibracion ni estimador.\nProcesadores: API, archivo y ficha manual pendientes por modelo/firmware.\nES/EN cubre menús y comandos; el resto de la interfaz aún es parcial."):
   "Synthetic data. Audio: explicit Play opens dBFS inputs; synthetic plots, TF pending.\nDSP: demo gain, delay, polarity and visual bypass. EQ/FIR and proposals pending.\nDesign: demo geometry, no validated SPL prediction. Meters: FS Peak from opened inputs; SPL RMS unweighted with confirmed amplitude calibration; A/C, Fast/Slow and Leq pending.\nProcessors: API, file and manual sheet pending per model/firmware.\nES/EN covers menus and commands; other interface text is still partial.");break;
  case 703:showMyaAbout();break;
+ case 790:checkForUpdates(true);break;
  case 801:polarity=!polarity;break;case 802:disabled=!disabled;break;
  default:break;
  }

@@ -1,0 +1,28 @@
+MYA — Proceso de entregas revisadas (28/10/2026)
+
+Repositorio único: https://github.com/antoniomanuelruizespinosa/mya-acustica
+Nombre público: Mya Acústica Analyzer. El identificador técnico y Bundle ID se
+mantienen para preservar rutas y preferencias.
+
+1. Revisión y Control acepta fuente, pruebas, binario y exclusiones de cada entrega.
+2. Preparar una rama nueva desde el main REMOTO actualizado. El checkout local
+   actual tiene main antiguo y archivos sin consolidar: no resetearlo ni empujar
+   directamente desde él. Copiar únicamente la lista de fuentes aprobada a una
+   carpeta de trabajo aislada y revisar cada diferencia.
+3. Inspeccionar el índice antes de publicar: fuentes, tests, assets propios,
+   CMake, script de empaquetado y documentación pertinente. Excluir expresamente
+   Aplicacion/*.json, Aplicacion/Biblioteca, Aplicacion/Capturas, diagnósticos
+   de dispositivos, preferencias/calibraciones, mediciones, work, vendor,
+   builds, .app, .dmg, manuales externos, secretos y datos de sesión.
+   El .gitignore previene incorporaciones accidentales, pero no sustituye esta
+   revisión de la lista de archivos ni elimina datos ya versionados.
+4. Confirmar pruebas y SHA-256 del DMG y del ejecutable; revisar cambios, luego
+   abrir PR desde la rama. No integrar main sin inspección de Revisión y Control.
+5. Solo tras aprobar el mismo binario, crear el tag vX.Y.Z y la GitHub Release
+   publicada con ese DMG. La aplicación consulta la última Release publicada.
+   Un commit o PR sin Release no genera aviso de actualización.
+
+Instalación: abrir el DMG y copiar la aplicación a Aplicaciones tras guardar
+sesión, detener audio y cerrar la versión anterior. No hay instalación automática,
+firma Developer ID ni notarización en este paso. Gatekeeper puede pedir una
+confirmación manual al abrir una aplicación descargada.
