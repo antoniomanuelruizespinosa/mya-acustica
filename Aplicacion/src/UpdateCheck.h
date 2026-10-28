@@ -24,6 +24,7 @@ inline bool newer(Version candidate,Version current){
 }
 enum class State {NewVersion,Current,NoRelease,NetworkError,InvalidResponse};
 struct Result {State state=State::NetworkError;juce::String version,url;};
+inline juce::String currentMessage(const juce::String& installed){return juce::String::fromUTF8("Mya Acústica Analyzer está actualizada. Versión instalada: ")+installed+".";}
 inline Result interpret(int status,const juce::String& body,const juce::String& installed){
  if(status==404)return {State::NoRelease,{},{}};
  if(status!=200)return {State::NetworkError,{},{}};

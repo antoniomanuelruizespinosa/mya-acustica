@@ -22,7 +22,7 @@ inline Plan plan(const std::array<Route,4>& routes,unsigned mask,const std::vect
  if(result.groups.empty())result.error="Asigna al menos una pareja M/R o una entrada dBFS antes de Play";return result;
 }
 inline bool available(const Plan& p,const std::vector<Device>& devices){for(const auto& g:p.groups){auto d=std::find_if(devices.begin(),devices.end(),[&](const Device& item){return item.key==g.key;});if(d==devices.end())return false;for(int i=0;i<maxChannels;++i)if(g.enabled[(size_t)i]&&i>=d->channels)return false;}return true;}
-struct Peak {float amplitude=0;bool valid=false,clipped=false;double sumSquares=0;std::uint64_t samples=0;};
+struct Peak {float amplitude=0;bool valid=false,clipped=false;double sumSquares=0;std::uint64_t samples=0;std::array<double,3> weightedSquares{},weightedPeak{},fastPower{},slowPower{};bool weightedValid=false;};
 inline Peak peak(const float* samples,int count){if(!samples||count<=0)return {};Peak p;p.valid=true;for(int i=0;i<count;++i){float value=samples[i];if(!std::isfinite(value))return {};p.sumSquares+=(double)value*(double)value;++p.samples;value=std::abs(value);p.amplitude=std::max(p.amplitude,value);p.clipped=p.clipped||value>=1.f;}return p;}
 inline std::optional<double> dbfs(const Peak& p){if(!p.valid)return {};if(p.amplitude<=0)return -INFINITY;return 20.*std::log10((double)p.amplitude);}
 struct Frame {std::uint64_t sequence=0;double timeSeconds=0;std::array<Peak,maxChannels> channels{};};
