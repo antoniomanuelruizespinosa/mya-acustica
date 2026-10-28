@@ -1,0 +1,28 @@
+MYA-007 · Preparación local de versión 0.3.2 · 28/10/2026
+
+Estado
+- Código local actualizado a 0.3.2. CMake es la fuente de versión de JUCE, Info.plist y la aplicación. El test de actualizaciones comprueba 0.3.2 y detecta una futura 0.3.3.
+- La TF M/R seleccionada mide magnitud, fase y coherencia en directo. Cada TF tiene canal R configurable; Input 5 solo es una ruta de ejemplo. README, inicio y About distinguen esta TF de las demás curvas e IR de demostración.
+- .github/workflows/windows-x64.yml se incorporó desde origin/main y ahora obtiene la versión desde CMakeCache para comprobar el ejecutable y nombrar ZIP y artefacto. YAML analizado correctamente. No se compiló Windows localmente; el workflow debe ejecutarse en la PR.
+
+Verificación local
+- Compilación macOS Release correcta. CTest Release: 15/15. Compilación Debug correcta; CTest Debug: 16/16. Renderer offline correcto, sin audio. git diff --check correcto.
+- DMG creado con Aplicacion/tools/create-dmg.sh, firmado ad hoc, montado y comprobado en solo lectura. hdiutil verify confirmó imagen válida; Info.plist del DMG indica 0.3.2 y codesign --verify --deep --strict pasa.
+- DMG: work/MYA-007-LOOP/entrega-0.3.2/Mya-Acustica-Analyzer-v0.3.2-macOS.dmg (5765512 bytes).
+- SHA-256 DMG: e5b5fd22afa0fc3e9ac9f38c1e017748211ade3795076763445a8d763f50e33e
+- SHA-256 ejecutable dentro del DMG firmado: abc08ae600c29590e20b52354981e1aad866235c3639f3cb57c1aaa47372b32f
+- SHA-256 ejecutable del build antes de la firma de empaquetado: a855e537e94d1018612e3fb5bfd4b976cd247d9f60eeec0d0fd45d2c8293bef7
+- Archivo complementario: work/MYA-007-LOOP/entrega-0.3.2/Mya-Acustica-Analyzer-v0.3.2-macOS.dmg.sha256
+
+Archivos locales a integrar en la rama de entrega desde origin/main
+- Versionado, flujo y distribución: .github/workflows/windows-x64.yml; Aplicacion/CMakeLists.txt; Aplicacion/tools/create-dmg.sh; README.md; .gitignore.
+- Marca, todos bajo Aplicacion/assets/branding/: identidad-v1.txt, mya-analyzer-icon-16.png, mya-analyzer-icon-32.png, mya-analyzer-icon-64.png, mya-analyzer-icon-128.png, mya-analyzer-icon-256.png, mya-analyzer-icon-512.png, mya-analyzer-icon-1024.png, mya-analyzer-icon-v1.png y mya-analyzer-icon-v1.ico.
+- Fuente modificada: Aplicacion/src/CaptureLibraryPanel.h, CommandUI.h, Commands.h, CompactLayout.h, GraphSettingsWindow.h, Main.cpp, MeterState.h, Meters.h, TFInputMeters.h, TFMeterModel.h, WorkspaceViewState.h y WorkstationCommands.inc.
+- Fuente nueva: Aplicacion/src/AnchoredAudioOptions.h, Branding.h, InputLevelCore.h, InputRoutePreferences.h, LiveInputEngine.h, LoopCalibrationCore.h, LoopCalibrationStore.h, LoopPink.h, MeterOptionsInventory.h, MeterSurface.h, MyaIdentity.h, NativeTitleBranding.h, NativeTitleBranding_mac.mm, PrincipalMeter.h, RmsCalibrationCore.h, SplCalibrationPanel.h, SplCalibrationStore.h, TransferFunctionCore.h y UpdateCheck.h.
+- Pruebas modificadas: Aplicacion/tests/commands.cpp, input_meters.cpp, layout_snapshot.cpp, preferences.cpp y ui_layout.cpp.
+- Pruebas nuevas: Aplicacion/tests/input_engine.cpp, input_levels.cpp, loop_calibration.cpp, meter_views.cpp, rms_calibration.cpp, session_persistence.cpp, transfer_function.cpp y update_check.cpp.
+- Adjuntar este informe y Documentacion/07_Verificacion/MYA-007-loop-calibracion-resultado.txt como evidencia. El DMG y el .sha256 son artefactos de Release, no archivos de fuente.
+
+Riesgos para Revisión y Control
+- El checkout local parte de un commit anterior a origin/main y está muy modificado. Integrar por archivo/diff, no copiar el árbol entero. En particular, conservar CaptureLibrary.h y tests/library.cpp de origin/main: su versión local revertiría validaciones de rutas de recuperación.
+- Comprobar compilación y pruebas en la rama resultante antes del Release. El workflow Windows x64 solo queda verificado por inspección y YAML; requiere una ejecución real en la PR. La firma macOS es ad hoc, sin Developer ID ni notarización. No se hizo prueba acústica nueva, reinicio de Mya, commit, push, PR ni Release.

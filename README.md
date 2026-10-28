@@ -4,7 +4,7 @@ Prototipo privado de aplicación de medición acústica para macOS y Windows, de
 
 ## Estado
 
-La interfaz y las pruebas trabajan principalmente con datos sintéticos. No se considera validada la adquisición real, la calibración SPL, la optimización IA, el DSP ni la transferencia a procesadores. Consultar `Documentacion/07_Verificacion` para el alcance de cada entrega. Compilar y superar pruebas no equivale a aceptación visual ni validación acústica.
+La versión 0.3.2 adquiere entradas dBFS y calcula magnitud, fase y coherencia de una TF M/R seleccionada. Incluye loop rosa interno y físico, con canal de referencia configurable por TF; Input 5 es solo una ruta de ejemplo. La IR, las demás TF visibles, la optimización IA, el DSP y la transferencia a procesadores siguen siendo demostraciones o funciones pendientes. La adquisición, la calibración y las medidas aún requieren validación acústica completa. Consultar `Documentacion/07_Verificacion` para el alcance de cada entrega. Compilar y superar pruebas no equivale a aceptación visual ni validación acústica.
 
 ## Compilar
 

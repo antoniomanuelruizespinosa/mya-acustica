@@ -6,7 +6,7 @@ MyaCommands::Context commandContext() const {
  MyaCommands::Context x;x.mode=mode;x.measurementView=measurementView;x.selectedTF=source.getSelectedId();
  x.drawer=settingsDrawer&&settingsDrawer->isVisible();x.left=leftVisible;x.right=rightVisible;
  x.ir=plotChoice.getSelectedId()==1;x.coherence=showCoherence.getToggleState();
- x.linked=linkSmooth.getToggleState();x.polarity=polarity;x.bypass=disabled;
+ x.linked=linkSmooth.getToggleState();x.polarity=polarity;x.bypass=disabled;x.internalLoop=internalLoopEnabled;
  auto lib=libraryPanel.context();x.libraryReady=lib.libraryReady;x.libraryTF=lib.libraryTF;x.librarySelection=lib.librarySelection;x.libraryFolders=lib.libraryFolders;x.libraryCaptures=lib.libraryCaptures;x.libraryView=(int)captureLibrary.state().view;x.sidebarMeters=dockMeterState.state().sidebarMeters;x.metersVisible=meters&&meters->isVisible();x.allowNoSmoothing=tfSettings.allowNone;
  x.mainMeterVisible=meterState.state().mainVisible;x.meterClock=meterState.state().clock;if(auto* c=meterState.primaryCard()){x.meterMax=meterState.runtime(c->id).maximum.has_value();x.meterLeq=meterState.runtime(c->id).leqFill.has_value();}
  x.graphTypes=plotTypes;x.irScale=irScale;
@@ -38,13 +38,16 @@ void executeCommand(int id){
  }
  else switch(id){
  case 506:beginInputs(15);break;
+ case 504:if(pinkLoopActive)stopInputs("Loop rosa detenido; salida en silencio.");else{int selected=source.getSelectedId()-1;if(selected>=0&&selected<4)beginInputs(1u<<selected,{},true);else status="Selecciona TF 1-4 antes de iniciar Pink";}break;
+ case 512:{bool enable=!internalLoopEnabled;if(inputEngine.running()||permissionPending)stopInputs("Cambio de loop: audio detenido.");internalLoopEnabled=enable;status=enable?"Loop interno preparado; pulsa Pink para generar referencia virtual.":"Loop interno desactivado; referencia fisica seleccionada.";break;}
  case 515:{int n=source.getSelectedId()-1;if(n>=0&&n<4){beginInputs(1u<<n);}break;}
  case 507:stopInputs();break;
  case 508:stopInputs("Entradas en pausa. Pulsa Play para reabrir.");break;
+ case 526:inputEngine.discardPendingTF();liveTF.reset();liveTFState=0;status=inputEngine.running()?"TF en directo reiniciada con V; esperando nuevas muestras M/R.":"TF en directo borrada con V; entradas detenidas.";break;
  case 101:load();break;case 102:save();break;case 103:captureTrace();break;
  case 201:audioSettings();if(auto* window=getTopLevelComponent())window->toFront(true);break;case 202:engineSettings(source.getSelectedId()-1);break;
  case 971:meterState.mainVisibility(!meterState.state().mainVisible);break;case 972:meterState.clockMode(!meterState.state().clock);break;case 973:principalMeterOptions();break;case 974:if(auto* c=meterState.primaryCard())meterState.resetMax(c->id);break;case 975:if(auto* c=meterState.primaryCard())meterState.resetLeq(c->id);break;
- case 517:signalOptions("pink");break;case 518:signalOptions("sweep");break;case 970:signalOptions("loop");break;
+ case 517:signalOptions("pink");break;case 518:signalOptions("sweep");break;case 292:case 970:signalOptions("loop");break;
  case 203:showMeters();break;case 303:tfGraphSettings(1);break;case 963:tfGraphSettings(2);break;case 964:tfGraphSettings(0);break;case 960:case 961:dockMeterState.sidebar(id==961?!dockMeterState.state().sidebarMeters:false);leftVisible=true;break;
  case 301:{
   linkSmooth.setToggleState(!linkSmooth.getToggleState(),dontSendNotification);
@@ -52,7 +55,7 @@ void executeCommand(int id){
   break;
  }
  case 380:case 381:commands.language=id==380?MyaCommands::Language::ES:MyaCommands::Language::EN;if(graphWindow&&graphWindow->isVisible()){int tab=graphWindow->selectedTab();tfGraphSettings(tab,false);}menuItemsChanged();break;
- case 980:select(0);measurementView=0;plotChoice.setSelectedId(1,dontSendNotification);tfSettings.showIR=true;cursorPlot=-1;activePlot=1;status="Vista TF DEMO / impulso, fase y magnitud; dBFS de entrada independiente";break;
+ case 980:select(0);measurementView=0;plotChoice.setSelectedId(1,dontSendNotification);tfSettings.showIR=true;cursorPlot=-1;activePlot=1;status="Vista TF / magnitud, fase y coherencia de la TF seleccionada con Play; impulso DEMO";break;
  case 981:measurementView=1;cursorPlot=-1;activePlot=0;status="IR DEMO sintetica / no medicion real; motor IR pendiente";break;
  case 401:case 402:case 403:case 404:select(id-401);break;
  case 405:leftVisible=!leftVisible;break;case 406:rightVisible=!rightVisible;break;
@@ -64,8 +67,8 @@ void executeCommand(int id){
  case 602:{closeCalibration();if(settingsDrawer)settingsDrawer->setVisible(false);break;}
  case 701:info(commands.language==MyaCommands::Language::ES?"Atajos / perfil Mya":"Shortcuts / Mya profile",commands.shortcutsHelp());break;
  case 702:info(commands.language==MyaCommands::Language::ES?"Estado real":"Actual status",commands.language==MyaCommands::Language::ES?
-  juce::String::fromUTF8("Datos sintéticos. Audio: entradas dBFS con Play explicito; graficas sinteticas, TF pendiente.\nDSP: ganancia, delay, polaridad y bypass visual demo. EQ/FIR y propuestas pendientes.\nDiseño: geometría demo, sin predicción SPL validada. Medidores: FS Peak de entradas abiertas; SPL/Leq sin calibracion ni estimador.\nProcesadores: API, archivo y ficha manual pendientes por modelo/firmware.\nES/EN cubre menús y comandos; el resto de la interfaz aún es parcial."):
-  "Synthetic data. Audio: explicit Play opens dBFS inputs; synthetic plots, TF pending.\nDSP: demo gain, delay, polarity and visual bypass. EQ/FIR and proposals pending.\nDesign: demo geometry, no validated SPL prediction. Meters: FS Peak from opened inputs; SPL RMS unweighted with confirmed amplitude calibration; A/C, Fast/Slow and Leq pending.\nProcessors: API, file and manual sheet pending per model/firmware.\nES/EN covers menus and commands; other interface text is still partial.");break;
+  juce::String::fromUTF8("Audio: Play abre entradas dBFS y calcula magnitud, fase y coherencia de una TF M/R seleccionada; requiere referencia suficiente. IR, otras TF y DSP siguen en demo.\nDSP: ganancia, delay, polaridad y bypass visual demo. EQ/FIR y propuestas pendientes.\nDiseño: geometría demo, sin predicción SPL validada. Medidores: FS Peak de entradas abiertas; otras ponderaciones pendientes.\nProcesadores: API, archivo y ficha manual pendientes por modelo/firmware.\nES/EN cubre menús y comandos; el resto de la interfaz aún es parcial."):
+  "Audio: Play opens dBFS inputs and calculates live magnitude, phase and coherence for one selected M/R TF; sufficient reference is required. IR, other TFs and DSP remain demo.\nDSP: demo gain, delay, polarity and visual bypass. EQ/FIR and proposals pending.\nDesign: demo geometry, no validated SPL prediction. Meters: FS Peak from opened inputs; other weightings pending.\nProcessors: API, file and manual sheet pending per model/firmware.\nES/EN covers menus and commands; other interface text is still partial.");break;
  case 703:showMyaAbout();break;
  case 790:checkForUpdates(true);break;
  case 801:polarity=!polarity;break;case 802:disabled=!disabled;break;

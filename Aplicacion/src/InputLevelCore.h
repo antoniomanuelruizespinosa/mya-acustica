@@ -15,9 +15,9 @@ struct Source {std::string device;int channel=0;};
 struct Device {std::string key;int channels=0;};
 struct Group {std::string key;std::array<bool,maxChannels> enabled{};};
 struct Plan {std::vector<Group> groups;std::string error;bool valid()const{return error.empty()&&!groups.empty();}};
-inline Plan plan(const std::array<Route,4>& routes,unsigned mask,const std::vector<Source>& observers,const std::vector<Device>& devices){
+inline Plan plan(const std::array<Route,4>& routes,unsigned mask,const std::vector<Source>& observers,const std::vector<Device>& devices,bool virtualReference=false){
  Plan result;auto include=[&](const std::string& key,int channel)->bool{auto found=std::find_if(devices.begin(),devices.end(),[&](const Device& d){return d.key==key;});if(found==devices.end()){result.error="Dispositivo no disponible: "+key;return false;}if(channel<1||channel>found->channels||channel>maxChannels){result.error="Canal de entrada no disponible: "+key+" / "+std::to_string(channel);return false;}auto g=std::find_if(result.groups.begin(),result.groups.end(),[&](const Group& group){return group.key==key;});if(g==result.groups.end()){result.groups.push_back({key,{}});g=std::prev(result.groups.end());}g->enabled[(size_t)channel-1]=true;return true;};
- for(size_t i=0;i<4;++i)if(mask&(1u<<i)){const auto& r=routes[i];if(r.device.empty()&&r.mic==0&&r.ref==0)continue;if(r.device.empty()||!include(r.device,r.mic)||!include(r.device,r.ref)){if(result.error.empty())result.error="Ruta M/R incompleta TF "+std::to_string(i+1);return result;}}
+ for(size_t i=0;i<4;++i)if(mask&(1u<<i)){const auto& r=routes[i];if(r.device.empty()&&r.mic==0&&r.ref==0)continue;if(r.device.empty()||!include(r.device,r.mic)||(!virtualReference&&!include(r.device,r.ref))){if(result.error.empty())result.error="Ruta M/R incompleta TF "+std::to_string(i+1);return result;}}
  for(const auto& source:observers)if(!source.device.empty()&&!include(source.device,source.channel))return result;
  if(result.groups.empty())result.error="Asigna al menos una pareja M/R o una entrada dBFS antes de Play";return result;
 }

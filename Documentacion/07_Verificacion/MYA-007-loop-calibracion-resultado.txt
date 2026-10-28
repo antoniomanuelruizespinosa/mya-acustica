@@ -1,0 +1,30 @@
+MYA-007 · Loop interno y loop físico · 2026-10-28
+
+Alcance implementado
+- Int.Loop prepara una referencia virtual desde las muestras exactas de Pink. Activarlo no abre dispositivos ni emite audio. Pink usa el canal de salida configurado solo al pulsarlo; Stop y Pause lo silencian.
+- El loop físico toma la TF seleccionada, su canal R y el canal de salida configurado en Audio / E-S. Exige que entrada y salida pertenezcan a la misma tarjeta y valida que ambos canales existan. Input 5 y Output 1 son solo un ejemplo de ruta, no valores fijos de la aplicación.
+- Pink tiene nivel ajustable entre -60 y -20 dBFS nominal, con límite de pico de 0,1 FS. Solo se habilita el canal de salida elegido; los demás quedan en silencio.
+- REF Gain modifica las muestras de referencia de TF. Calib Loop compara el retorno físico sin trim con las muestras de salida, calcula retardo electrónico y compensación de ganancia por correlación. Rechaza silencio, recorte, baja correlación, cambio de frecuencia y pérdida de bloques. El retardo no se presenta como distancia acústica.
+- Se conserva una calibración por combinación de dispositivo/backend, frecuencia, búfer, canal de salida y canal de referencia. Solo se aplica al reabrir con la misma combinación. Reset Loop borra únicamente el formato activo de la ruta seleccionada y restaura REF Gain a 0 dB cuando esa ruta está activa; los demás formatos y rutas permanecen guardados. Con el audio detenido, Reset borra el registro guardado que muestra el panel. El archivo anterior de un solo registro se lee y se migra al guardar.
+- El panel muestra la ruta seleccionada. Con el loop detenido, el retardo guardado se identifica como «guardado / pendiente de validar»; solo se muestra como actual al abrir el loop con ruta y formato coincidentes.
+
+Evidencia física de Revisión y Control, ruta de ejemplo Output 1 (L) → Input 5 de Octa-Capture
+- Con Pink a -60 dBFS, Input 5 mostró aproximadamente -69 dBFS.
+- Primera Calib Loop: 26,35 ms y correlación 0,96. Reset Loop borró el retardo y restauró REF Gain a 0 dB.
+- Segunda calibración: 26,35 ms y correlación 0,95. Tras Stop y reabrir el loop, se restauraron 26,35 ms y REF Gain de 9,1 dB. El generador quedó detenido.
+- Esta prueba se hizo con la compilación anterior a la corrección de rutas dinámicas. La nueva selección libre de salida y referencia aún no tiene una prueba física.
+
+Validación de código tras la corrección de rutas y el guardado múltiple
+- Compilación Debug macOS: correcta. CTest: 16/16 pruebas correctas. El test del motor usa una referencia Input 3. La persistencia se comprueba con dos rutas (Output 2 → Input 3 y Output 4 → Input 7), dos formatos de la primera, reapertura de ambas, borrado aislado por formato y migración del archivo anterior.
+- El cálculo de calibración se prueba con retardo de 317 muestras, ganancia de 6 dB, silencio, recorte y cambio de frecuencia.
+- Render sin audio: panel completo a 1440x960 y 1120x900; Reset habilitado con calibración guardada, Calib deshabilitado con audio detenido y retardo guardado etiquetado como pendiente de validar.
+- git diff --check: sin errores. No se abrió Mya ni se emitió audio durante la corrección de rutas y del guardado múltiple.
+
+Pendiente
+- Probar físicamente una ruta configurada distinta de Output 1 → Input 5 y compilar en Windows.
+- El checkout compartido contiene cambios anteriores sin confirmar. Los cambios siguen locales para auditoría; no se han mezclado en un commit, PR ni release.
+
+Revisión adicional de rutas por TF y compatibilidad Mac/Windows
+- Cada TF ofrece su propio selector Ref. Ch. en Audio / E-S y en sus opciones. La selección se guarda por TF, entra en el plan de adquisición y determina la referencia que recibe la TF y Calib Loop. Input 5 solo figura en pruebas de ejemplo; no está fijado en el flujo del loop.
+- Se restauró la rama Windows de defaultProjectFile: usa la carpeta de datos de usuario Mya Acustica, como en origin/main. Se restauraron también las condiciones del test de actualizaciones que detectan aserciones y mantienen activas sus comprobaciones en compilaciones Release.
+- Se añadió prueba con cuatro TF y cuatro referencias distintas (Input 3, 7, 6 y 8), incluida persistencia y reapertura de las rutas. Compilación Debug macOS correcta; CTest 16/16; render visual sin audio correcto; git diff --check correcto. No se abrió Mya ni se emitió audio. La rama Windows se revisó por código, sin compilación Windows disponible aquí.

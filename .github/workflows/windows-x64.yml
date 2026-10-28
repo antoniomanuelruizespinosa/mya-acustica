@@ -37,6 +37,7 @@ jobs:
         run: ctest --test-dir build-windows -C Release --output-on-failure
 
       - name: Verify x64 executable and package
+        id: package
         shell: pwsh
         run: |
           $exe = "build-windows/MyaAcustica_artefacts/Release/Mya Acustica.exe"
@@ -45,20 +46,24 @@ jobs:
           $offset = [BitConverter]::ToInt32($bytes, 0x3c)
           $machine = [BitConverter]::ToUInt16($bytes, $offset + 4)
           if ($machine -ne 0x8664) { throw "Executable is not x64 PE" }
+          $match = Select-String -Path "build-windows/CMakeCache.txt" -Pattern '^CMAKE_PROJECT_VERSION:STATIC=(\d+\.\d+\.\d+)$' | Select-Object -First 1
+          if (-not $match) { throw "CMake project version missing" }
+          $expectedVersion = $match.Matches[0].Groups[1].Value
           $version = (Get-Item $exe).VersionInfo.ProductVersion
-          if (-not $version.StartsWith("0.3.1")) { throw "Unexpected product version: $version" }
+          if ($version -ne $expectedVersion -and -not $version.StartsWith("$expectedVersion.")) { throw "Unexpected product version: $version (expected $expectedVersion)" }
           New-Item -ItemType Directory -Force dist | Out-Null
           Copy-Item $exe "dist/Mya Acustica.exe"
-          $zip = "Mya-Acustica-Analyzer-v0.3.1-Windows-x64.zip"
+          $zip = "Mya-Acustica-Analyzer-v$expectedVersion-Windows-x64.zip"
           Compress-Archive -Path "dist/Mya Acustica.exe" -DestinationPath "dist/$zip"
           $hash = (Get-FileHash "dist/$zip" -Algorithm SHA256).Hash.ToLowerInvariant()
           "$hash  $zip" | Set-Content "dist/$zip.sha256"
+          "version=$expectedVersion" >> $env:GITHUB_OUTPUT
           Write-Host "Windows x64 PE verified; ZIP SHA-256: $hash"
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Mya-Acustica-Analyzer-v0.3.1-Windows-x64
+          name: Mya-Acustica-Analyzer-v${{ steps.package.outputs.version }}-Windows-x64
           path: |
             dist/*.zip
             dist/*.sha256
