@@ -23,6 +23,7 @@
 #include "Branding.h"
 #include "NativeTitleBranding.h"
 #include "UpdateCheck.h"
+#include "AppDataLocation.h"
 using namespace juce;
 namespace Palette { const Colour bg{0xff222427}, panel{0xff2c3036}, plot{0xff080a0c}, ink{0xffe5edf4}, muted{0xffa9bac8}, cyan{0xff00e5ed}, blue{0xff159fe5}, orange{0xffffac24}, green{0xff54ee22}, line{0xff626e78}; }
 class MyaLook : public LookAndFeel_V4 {
@@ -373,12 +374,8 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
  static File defaultProjectFile(){
  #if defined(MYA_OFFSCREEN_RENDER)
  return File(String::fromUTF8(MYA_PROJECT_DIRECTORY)).getChildFile("MYA-006-A-fixture").getChildFile("proyecto-demo.json");
- #elif JUCE_WINDOWS
- auto folder=File::getSpecialLocation(File::userApplicationDataDirectory).getChildFile("Mya Acustica");
- folder.createDirectory();
- return folder.getChildFile("proyecto-demo.json");
  #else
- return File(String::fromUTF8(MYA_PROJECT_DIRECTORY)).getChildFile("proyecto-demo.json");
+ return MyaAppData::projectFile();
  #endif
  }
  File projectFile;
