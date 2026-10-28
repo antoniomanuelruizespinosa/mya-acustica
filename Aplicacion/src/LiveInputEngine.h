@@ -2,6 +2,7 @@
 #include "AudioRouting.h"
 #include "InputLevelCore.h"
 #include "RmsCalibrationCore.h"
+#include "WeightedMeterCore.h"
 #include "LoopPink.h"
 #include "LoopCalibrationCore.h"
 #include "TransferFunctionCore.h"
@@ -47,6 +48,7 @@ class LiveInputEngine {
   std::atomic<int> errorPublication{0};std::array<char,512> backendError{};
   Clock clock=systemClock;double sampleRate=0;
   std::array<RmsCalibration::Rolling,InputLevels::maxChannels> rms;
+  std::array<WeightedMeter::Channel,InputLevels::maxChannels> weighted;
   InputLevels::Window latest;
   double receivedAt=0,openedAt=0;unsigned seenDrops=0;
   juce::String key;
@@ -58,7 +60,7 @@ class LiveInputEngine {
   void audioDeviceAboutToStart(juce::AudioIODevice* d)override{
    if(starts.fetch_add(1)!=0){fault.store(Fault::UnexpectedRestart);return;}
    sampleRate=d->getCurrentSampleRate();count=0;auto active=d->getActiveInputChannels();
-   for(int ch=0;ch<InputLevels::maxChannels;++ch)if(active[ch])physical[(size_t)count++]=ch;
+   for(int ch=0;ch<InputLevels::maxChannels;++ch)if(active[ch]){physical[(size_t)count++]=ch;weighted[(size_t)ch].configure(sampleRate);}
    aboutReady.store(true,std::memory_order_release);stopped.store(false);
   }
   void audioDeviceStopped()override{stopNotified.store(true);stopped.store(true);}
@@ -78,6 +80,7 @@ class LiveInputEngine {
    const double now=clock();lastCallbackMs.store(now,std::memory_order_release);
    lastInputs.store(inputs,std::memory_order_relaxed);lastSamples.store(samples,std::memory_order_relaxed);
    auto frame=InputLevels::capture(input,fault.load(std::memory_order_relaxed)!=Fault::None?-1:inputs,samples,physical,count,++sequence);
+   if(input&&inputs==count)for(int i=0;i<count;++i){int ch=physical[(size_t)i];weighted[(size_t)ch].process(input[i],samples,frame.channels[(size_t)ch]);}
    frame.timeSeconds=now*.001;
    if(!queue.push(frame))dropped.fetch_add(1,std::memory_order_relaxed);
    if(captureMic>0&&(captureRef>0||virtualReference)&&input&&inputs==count&&samples>0){
@@ -199,7 +202,7 @@ public:
    }
    if(observeRaw){TransferFunctionCore::RawBlock raw;for(int drained=0;drained<64&&s->rawQueue.pop(raw);++drained)if(raw.sequence>s->minimumRawSequence)observeRaw(s->key.toStdString(),raw);}
    unsigned count=s->dropped.load();bool gap=count!=s->seenDrops;s->seenDrops=count;
-   if(gap)for(auto& rms:s->rms)rms.reset();
+   if(gap){for(auto& rms:s->rms)rms.reset();for(auto& weighted:s->weighted)weighted.configure(s->sampleRate);}
    if(window.any){window.gap=window.gap||gap;s->latest=window;s->receivedAt=lastProcessedMs;}else if(gap)s->latest={};
    now=clock();fault=s->fault.load(std::memory_order_acquire);
    if(fault==Fault::BackendError)return fail(*s,"Error notificado por backend",now);
@@ -221,7 +224,7 @@ public:
  InputLevels::Peak channel(const std::string& key,int channel)const{if(!runningFlag||channel<1||channel>InputLevels::maxChannels)return {};double now=clock();for(const auto& s:sessions)if(s->key.toStdString()==key){if(!s->latest.any||s->latest.gap||now-s->receivedAt>250)return {};return s->latest.channels[(size_t)channel-1];}return {};}
  #if defined(MYA_INPUT_ENGINE_TEST)
  // Drive the ACTUAL callback/queue/poll path with a clock, no device creation/open.
- void fixtureStart(juce::String key,double rate,const std::vector<int>& channels,bool pinkOutput=false,int tfMic=0,int tfRef=0,bool internalReference=false){stop();error.clear();description.clear();auto s=std::make_unique<Session>();s->key=key;s->clock=clock;s->sampleRate=rate;s->openedAt=clock();s->starts=1;s->aboutReady=true;s->stopped=false;s->pinkOutput=pinkOutput;s->captureMic=tfMic;s->captureRef=tfRef;s->virtualReference=internalReference;for(int ch:channels)s->physical[(size_t)s->count++]=ch-1;sessions.push_back(std::move(s));runningFlag=true;}
+ void fixtureStart(juce::String key,double rate,const std::vector<int>& channels,bool pinkOutput=false,int tfMic=0,int tfRef=0,bool internalReference=false){stop();error.clear();description.clear();auto s=std::make_unique<Session>();s->key=key;s->clock=clock;s->sampleRate=rate;s->openedAt=clock();s->starts=1;s->aboutReady=true;s->stopped=false;s->pinkOutput=pinkOutput;s->captureMic=tfMic;s->captureRef=tfRef;s->virtualReference=internalReference;for(int ch:channels){s->physical[(size_t)s->count++]=ch-1;s->weighted[(size_t)ch-1].configure(rate);}sessions.push_back(std::move(s));runningFlag=true;}
  void fixtureCallback(const float* const* input,int inputs,int samples,size_t session=0){sessions[session]->audioDeviceIOCallbackWithContext(input,inputs,nullptr,0,samples,{});}
  void fixtureOutputCallback(const float* const* input,int inputs,float* output,int samples){float* channels[]={output};sessions.front()->audioDeviceIOCallbackWithContext(input,inputs,channels,1,samples,{});}
  void fixtureStereoOutputCallback(const float* const* input,int inputs,float* left,float* right,int samples){float* channels[]={left,right};sessions.front()->audioDeviceIOCallbackWithContext(input,inputs,channels,2,samples,{});}

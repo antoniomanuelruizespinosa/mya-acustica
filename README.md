@@ -1,10 +1,10 @@
 # Mya Acústica Analyzer
 
-Prototipo privado de aplicación de medición acústica para macOS y Windows, desarrollado en C++17 y JUCE 8.0.12.
+Prototipo de aplicación de medición acústica para macOS y Windows, desarrollado en C++17 y JUCE 8.0.12.
 
 ## Estado
 
-La versión 0.3.3 adquiere entradas dBFS y calcula magnitud, fase y coherencia de una TF M/R seleccionada. Incluye loop rosa interno y físico, con canal de referencia configurable por TF; Input 5 es solo una ruta de ejemplo. El proyecto, las preferencias, las calibraciones y la biblioteca se guardan en la carpeta de datos del usuario «Mya Acustica», independiente de la ubicación del código. La migración desde una instalación anterior requiere indicar explícitamente la carpeta antigua a `mya_migrate_data`; conserva el origen y no sobrescribe un destino existente. La IR, las demás TF visibles, la optimización IA, el DSP y la transferencia a procesadores siguen siendo demostraciones o funciones pendientes. La adquisición, la calibración y las medidas aún requieren validación acústica completa. Consultar `Documentacion/07_Verificacion` para el alcance de cada entrega. Compilar y superar pruebas no equivale a aceptación visual ni validación acústica.
+La versión 0.3.4 adquiere entradas dBFS y calcula magnitud, fase y coherencia de una TF M/R seleccionada. El loop rosa físico se configura en su propia ventana: TF, tarjeta, micro, salida, referencia, nivel, REF Gain, calibración y reset. Los medidores principal, lateral y flotante ofrecen dBFS Peak y SPL Z/A/C Fast, Slow, Peak y Leq tras confirmar la calibración del canal. A/C son filtros digitales aproximados; Mya no está certificado como sonómetro IEC. El proyecto y las calibraciones se guardan en la carpeta de datos del usuario «Mya Acustica». La IR, las demás TF visibles, la optimización IA, el DSP y la transferencia a procesadores siguen siendo demostraciones o funciones pendientes. Las pruebas de software no sustituyen la validación acústica con equipo real. Consultar `Documentacion/07_Verificacion` para el alcance de cada entrega.
 
 ## Compilar
 

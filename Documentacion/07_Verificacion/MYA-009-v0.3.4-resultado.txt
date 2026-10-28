@@ -1,0 +1,17 @@
+MYA-009 · v0.3.4 · Loop físico y medidores · 28/10/2026
+
+Implementado
+- Loop Settings permite escoger TF, tarjeta/backend, micro, salida y referencia física, activar/desactivar el loop, ajustar Pink y REF Gain, calibrar y resetear la ruta. La ruta se guarda en entradas-niveles.json. Configurarla no emite audio; el loop solo se abre tras activar la casilla.
+- Texto «Mya Acústica Analyzer está actualizada. Versión instalada: 0.3.4.».
+- Medidores principal, lateral y flotante: dBFS Peak; SPL Z/A/C Fast (125 ms), Slow (1 s), Peak y Leq por periodo con reset; SPL RMS Z previo. Cada lectura SPL requiere calibración del canal y confirmación de la cadena. Sin datos válidos se muestra --.
+
+Validación local macOS
+- Compilación Release de app y pruebas: correcta.
+- CTest Release: 19/19, con aserciones activas en las pruebas nuevas.
+- Renderer aislado: correcto; ventana Loop Settings, texto de actualización y disposición de medidores capturados sin audio. La prueba visual evita crear AlertWindow sin ventana nativa, porque JUCE 8.0.12 falla en ese entorno; el texto se comprueba por separado.
+- DMG v0.3.4 firmado ad hoc, verificado y montado correctamente. Firma sin notarización de Apple.
+
+Límites pendientes de comprobar
+- No se ha medido físicamente el loop Output 1/L → Input 5 en esta versión, ni se ha contrastado 94/114 dB y las ponderaciones con un sonómetro patrón. Los filtros A/C son aproximaciones digitales normalizadas a 1 kHz; no se declara conformidad IEC 61672.
+- Compilación y pruebas Windows pendientes de CI de la pull request; ASIO requiere SDK de Steinberg y continúa desactivado por defecto.
+- La IR, optimización IA, DSP y simulación 3D no forman parte de esta entrega.
