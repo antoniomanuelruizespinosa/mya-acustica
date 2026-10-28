@@ -192,10 +192,11 @@ public:
   }
   return moves.empty()?true:transaction(next,moves);
  }
- // Only this application's explicitly synthetic TF payload is currently capturable.
+ // Store only explicit, complete TF payloads. Synthetic fixtures remain importable for tests,
+ // but the live application writes measured-transfer payloads.
  juce::String capture(const juce::var& payload,juce::String name,juce::String colour,juce::String legacyKey={},bool adopting=false){
-  if(!ready()||(!adopting&&data.view!=Kind::SnapshotTF)){error=juce::String::fromUTF8("Solo hay adquisición demo de snapshots TF");return {};}
-  if(!payload.isObject()||!payload["synthetic"].isBool()||!bool(payload["synthetic"])||int(payload["schema"])!=1||!payload["samples"].isArray()||payload["samples"].getArray()->size()<2){error=juce::String::fromUTF8("Snapshot TF demo no válido");return {};}
+  if(!ready()||(!adopting&&data.view!=Kind::SnapshotTF)){error=juce::String::fromUTF8("Selecciona la biblioteca de Función de Transferencia");return {};}
+  if(!payload.isObject()||!payload["synthetic"].isBool()||int(payload["schema"])!=1||!payload["samples"].isArray()||payload["samples"].getArray()->size()<2){error=juce::String::fromUTF8("Captura TF no válida");return {};}
   if(payload["traceRole"].toString()=="average"){error="AVG: estimador pendiente";return {};}
   double previous=0;
   for(const auto& point:*payload["samples"].getArray()){
@@ -203,7 +204,7 @@ public:
    double frequency=double(point["frequencyHz"]),real=double(point["real"]),imaginary=double(point["imaginary"]);
    if(!std::isfinite(frequency)||frequency<=previous||!std::isfinite(real)||!std::isfinite(imaginary)){error=juce::String::fromUTF8("Datos TF no válidos");return {};}previous=frequency;
   }
-  auto next=data;Node n;n.id=uid();n.parent=data.active;n.kind=Kind::SnapshotTF;n.name=name.trim().isEmpty()?"Snapshot TF demo":name.trim();n.colour=colour;n.diskName=n.id+".json";n.method="synthetic-demo";n.origin="original-demo";n.legacyKey=legacyKey;next.nodes.push_back(n);
+  bool synthetic=bool(payload["synthetic"]);auto next=data;Node n;n.id=uid();n.parent=data.active;n.kind=Kind::SnapshotTF;n.name=name.trim().isEmpty()?"Captura TF":name.trim();n.colour=colour;n.diskName=n.id+".json";n.method=synthetic?"synthetic-demo":"live-transfer";n.origin=synthetic?"original-demo":"measured";n.legacyKey=legacyKey;next.nodes.push_back(n);
   auto stored=payload.clone();if(!adopting){stored.getDynamicObject()->setProperty("traceRole","individual");stored.getDynamicObject()->setProperty("measurementId",n.id);stored.getDynamicObject()->setProperty("libraryId",data.id);}
   auto staged=root.getChildFile("Pendientes").getChildFile(n.diskName);if(!staged.getParentDirectory().createDirectory().wasOk()||!staged.replaceWithText(adopting?juce::File(legacyKey).loadFileAsString():juce::JSON::toString(stored))){error="No se pudo escribir la captura";return {};}
   return transaction(next,{{staged,file(next,n)}})?n.id:juce::String{};

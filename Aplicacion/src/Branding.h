@@ -31,7 +31,7 @@ public:
   g.fillAll(juce::Colour(0xff222427));g.drawImageWithin(icon,getWidth()/2-48,12,96,96,juce::RectanglePlacement::centred);
   g.setColour(juce::Colour(0xffe5edf4));g.setFont(23.f);g.drawText(MyaIdentity::brand(),12,118,getWidth()-24,30,juce::Justification::centred);
   g.setColour(juce::Colour(0xff00e5ed));g.setFont(17.f);g.drawText(MyaIdentity::descriptor(),12,151,getWidth()-24,25,juce::Justification::centred);
-  g.setColour(juce::Colour(0xffa9bac8));g.setFont(12.f);g.drawFittedText(MyaIdentity::version()+juce::String::fromUTF8("\nEntradas dBFS con Play explícito\nSPL RMS calibrado / una TF M/R en directo / IR demo"),14,190,getWidth()-28,94,juce::Justification::centred,5);
+  g.setColour(juce::Colour(0xffa9bac8));g.setFont(12.f);g.drawFittedText(MyaIdentity::version()+juce::String::fromUTF8("\nEntradas dBFS con Play explícito\nSPL calibrado / TF M/R, IR, RTA y espectrograma reales"),14,190,getWidth()-28,94,juce::Justification::centred,5);
  }
 };
 inline void showMyaAbout(){juce::DialogWindow::LaunchOptions options;options.dialogTitle="Acerca de / "+MyaIdentity::name();options.dialogBackgroundColour=juce::Colour(0xff222427);options.useNativeTitleBar=true;options.resizable=false;options.content.setOwned(new MyaAboutPanel());options.launchAsync();}
