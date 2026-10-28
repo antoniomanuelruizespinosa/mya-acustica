@@ -6,13 +6,13 @@ int main(int argc,char** argv){
  if(argc!=2)return 2;juce::ScopedJuceInitialiser_GUI init;juce::File(juce::String::fromUTF8(MYA_PROJECT_DIRECTORY)).getChildFile("MYA-006-A-fixture").createDirectory();
  juce::File out(juce::String::fromUTF8(argv[1]));if(!out.createDirectory())return 3;
  auto write=[&](const juce::Image& image,juce::String name){juce::FileOutputStream stream(out.getChildFile(name));if(!stream.openedOk()||!stream.setPosition(0)||!stream.truncate())return false;return juce::PNGImageFormat{}.writeImageToStream(image,stream);};
- if(MyaIdentity::name()!=juce::String::fromUTF8("Mya Acústica Analizer")||MyaIdentity::brand()+" "+MyaIdentity::descriptor()!=MyaIdentity::name())return 74;
+ if(MyaIdentity::name()!=juce::String::fromUTF8("Mya Acústica Analyzer")||MyaIdentity::brand()+" "+MyaIdentity::descriptor()!=MyaIdentity::name())return 74;
  for(auto pair:{std::pair<float,int>{25,400},{23,396}})if(juce::GlyphArrangement::getStringWidth(juce::Font(juce::FontOptions(pair.first)),MyaIdentity::brand())>pair.second)return 75;
  for(auto pair:{std::pair<float,int>{18,400},{17,396}})if(juce::GlyphArrangement::getStringWidth(juce::Font(juce::FontOptions(pair.first)),MyaIdentity::descriptor())>pair.second)return 76;
  #if JUCE_MAC
  auto titleWidth=myaNativeTitleRequiredWidth();if(titleWidth<=24||titleWidth>1120-240)return 77;std::cout<<"PASS native title metrics: "<<titleWidth<<" px incl. icon, centred at minimum window width1120, no native window created\n";
  #endif
- {MyaAboutPanel about;if(!about.assetValid())return 34;if(!write(about.createComponentSnapshot(about.getLocalBounds()),"about-Mya-Acustica-Analizer.png"))return 35;}
+ {MyaAboutPanel about;if(!about.assetValid())return 34;if(!write(about.createComponentSnapshot(about.getLocalBounds()),"about-Mya-Acustica-Analyzer.png"))return 35;}
  {
   WorkstationSurface surface;auto& station=surface.station;
   for(auto size:{juce::Point<int>{1440,960},juce::Point<int>{1760,1080},juce::Point<int>{1120,900}}){surface.setSize(size.x,size.y);if(!station.previewSurface(surface))return 38;station.previewCursor(2,.6);if((size.y>=960&&!station.previewFits())||!station.previewListAccessible()||!station.previewLeftHeader())return 7;if(!write(surface.createComponentSnapshot(surface.getLocalBounds()),"workspace-"+juce::String(size.x)+"x"+juce::String(size.y)+".png"))return 4;}
