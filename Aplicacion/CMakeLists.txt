@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(MyaAcustica VERSION 0.3.4 LANGUAGES C CXX)
+project(MyaAcustica VERSION 0.3.5 LANGUAGES C CXX)
 add_compile_definitions(MYA_VERSION_STRING="${PROJECT_VERSION}")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

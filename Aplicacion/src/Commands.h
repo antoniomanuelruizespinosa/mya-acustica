@@ -60,7 +60,7 @@ inline const std::vector<Command>& catalog(){
   {502,"measurement.find",{"Buscar retardo TF","Find TF delay"},"L / F",4,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
   {503,"measurement.track.all",{"Track general / todas las TF","Track all project TFs"},"",4,{"",""},Capability::Pending,{"Tiempo de todas las TF del proyecto; motor pendiente, sin incluir AVG","Timing for every project TF; engine pending, excludes AVG"}},
   {504,"generator.pink",{"Ruido rosa","Pink noise"},"G",4,{"",""},Capability::Ready,{"Emite por la salida configurada al nivel ajustado; con Int.Loop usa la misma señal como referencia virtual","Outputs on the configured channel at the selected level; with Int.Loop the same signal is the virtual reference"}},
-  {505,"generator.sweep",{"Sweep","Sweep"},"S",4,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
+  {505,"generator.sweep",{"Sweep","Sweep"},"S",4,{"",""},Capability::Ready,{"Emite un barrido logarítmico por la salida configurada","Outputs a logarithmic sweep on the configured channel"}},
   {526,"measurement.averager.reset",{"Refrescar TF en directo","Refresh live TF"},"V",4,{"",""},Capability::Ready,{"Vacía muestras pendientes y reinicia el promedio M/R; conserva capturas guardadas","Discards pending samples and resets M/R averaging; keeps saved captures"}},
   {506,"start",{"Iniciar todos","Start all"},"",4,{"",""},Capability::Ready,{"Abre entradas y mide una TF seleccionada","Opens inputs and measures one selected TF"}},
   {507,"stop",{"Detener todos","Stop all"},"",4,{"",""},Capability::Ready,{"Cierra entradas y borra TF en directo","Closes inputs and clears live TF"}},
@@ -181,7 +181,7 @@ inline constexpr std::array<int,4> tfBindings{{502,514,513,515}};
 inline constexpr std::array<std::array<int,2>,3> extraMenus{{{{4,103}},{{1,203}},{{5,409}}}};
 struct Context {
  bool mainMeterVisible=true,meterClock=false,meterMax=false,meterLeq=false;bool libraryReady=true,libraryTF=true;int librarySelection=0,libraryFolders=0,libraryCaptures=0,libraryView=1;bool sidebarMeters=false,metersVisible=false,allowNoSmoothing=true;
- int mode=0,selectedTF=1,measurementView=0;bool drawer=false,left=true,right=true,ir=true,coherence=true,linked=true,polarity=false,bypass=false,internalLoop=false;
+ int mode=0,selectedTF=1,measurementView=0;bool drawer=false,left=true,right=true,ir=true,coherence=true,linked=true,polarity=false,bypass=false,internalLoop=false,pinkActive=false,sweepActive=false;
  std::array<int,2> graphTypes{{1,2}};int irScale=0;
  std::array<int,2> smoothing{{1,1}};Language language=Language::ES;
 };
@@ -198,6 +198,8 @@ inline State state(const Command& c,const Context& x){
  if(c.id==980||c.id==981){s.enabled=c.id==980||x.mode==0;s.checked=x.mode==0&&x.measurementView==(c.id==981?1:0);}
  if(c.id==407&&x.measurementView!=0)s.enabled=false;
  if(c.id==512){s.enabled=x.mode==0;s.checked=x.internalLoop;if(!s.enabled)s.reason={"Disponible en Medición","Available in Measurement"};}
+ if(c.id==504){s.enabled=x.mode==0;s.checked=x.pinkActive;if(!s.enabled)s.reason={"Disponible en Medición","Available in Measurement"};}
+ if(c.id==505){s.enabled=x.mode==0;s.checked=x.sweepActive;if(!s.enabled)s.reason={"Disponible en Medición","Available in Measurement"};}
  if(c.id==526&&x.mode!=0){s.enabled=false;s.reason={"Disponible en Medición","Available in Measurement"};}
  if(c.id==203)s.checked=x.metersVisible;
  if(c.id==960)s.checked=!x.sidebarMeters;if(c.id==961)s.checked=x.sidebarMeters;

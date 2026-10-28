@@ -27,6 +27,7 @@ int main(int argc,char**){
  x.selectedTF=5;assert(!state(*find(103),x).enabled);assert(!state(*find(202),x).enabled);assert(!state(*find(520),x).enabled);
  x={};assert(state(*find(405),x).checked);x.left=false;assert(!state(*find(405),x).checked);
  x={};assert(state(*find(512),x).enabled&&!state(*find(512),x).checked);x.internalLoop=true;assert(state(*find(512),x).checked);x.mode=1;assert(!state(*find(512),x).enabled);
+ x={};assert(state(*find(504),x).enabled&&state(*find(505),x).enabled);x.pinkActive=true;assert(state(*find(504),x).checked&&!state(*find(505),x).checked);x.pinkActive=false;x.sweepActive=true;assert(!state(*find(504),x).checked&&state(*find(505),x).checked);x.mode=1;assert(!state(*find(504),x).enabled&&!state(*find(505),x).enabled);
  assert(state(*find(301),x).checked);x.linked=false;assert(!state(*find(301),x).checked);
  x.drawer=false;assert(!state(*find(602),x).enabled);x.drawer=true;assert(state(*find(602),x).enabled);
  x.smoothing={{4,7}};assert(state(*find(313),x).checked);assert(state(*find(326),x).checked);assert(!state(*find(310),x).checked);

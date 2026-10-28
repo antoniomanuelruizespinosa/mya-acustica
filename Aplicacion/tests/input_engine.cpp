@@ -26,6 +26,7 @@ int main(int argc,char** argv){
   nonzero=false;for(float sample:out){assert(std::isfinite(sample)&&std::abs(sample)<=LoopPink::maximum);nonzero=nonzero||sample!=0.f;}assert(nonzero);
   for(float sample:right)assert(sample==0.f);
   engine.stop();assert(!engine.running()&&!engine.outputDbfs(key));
+  engine.setSweep(20,20000,1.);engine.setSweepLevelDb(-40);engine.fixtureSignal(juce::String(key),48000,{1},LiveInputEngine::Signal::Sweep);out.fill(1.f);engine.fixtureOutputCallback(input,1,out.data(),480);nonzero=false;for(float sample:out){assert(std::isfinite(sample)&&std::abs(sample)<=LoopSweep::maximum);nonzero=nonzero||sample!=0.f;}assert(nonzero&&engine.outputDbfs(key));for(int block=1;block<100;++block)engine.fixtureOutputCallback(input,1,out.data(),480);assert(engine.sweepComplete());out.fill(1.f);engine.fixtureOutputCallback(input,1,out.data(),480);for(float sample:out)assert(sample==0.f);engine.stop();
  }
  // Single physical Input1: actual IO callback -> SPSC -> peak/RMS poll, no backend open.
  start();assert(engine.poll()&&!engine.rms(key,1));

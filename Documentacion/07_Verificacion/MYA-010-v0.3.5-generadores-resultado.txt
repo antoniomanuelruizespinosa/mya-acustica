@@ -1,0 +1,9 @@
+MYA-010 · v0.3.5 · Generadores Pink y Sweep · 28/10/2026
+
+- Pink continuo real, nivel -60 a -20 dBFS y segunda pulsación para detener.
+- Sweep logarítmico real configurable en frecuencia, duración y nivel; finaliza una sola vez y silencia la salida.
+- Pink y Sweep son mutuamente excluyentes.
+- Tarjeta, salida y parámetros se guardan en entradas-niveles.json.
+- Prueba física: Roland OCTA-CAPTURE, Output 1/L, -40 dBFS. Pink inició y detuvo dejando la salida en silencio. Sweep 20 Hz–20 kHz / 5 s finalizó y silenció la salida automáticamente.
+- La captura y deconvolución de la respuesta al sweep no forman parte de esta entrega.
+- Validación automática: compilación Release, 19/19 pruebas y snapshot de interfaz.

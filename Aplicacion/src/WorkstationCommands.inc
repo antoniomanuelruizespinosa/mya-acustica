@@ -6,7 +6,7 @@ MyaCommands::Context commandContext() const {
  MyaCommands::Context x;x.mode=mode;x.measurementView=measurementView;x.selectedTF=source.getSelectedId();
  x.drawer=settingsDrawer&&settingsDrawer->isVisible();x.left=leftVisible;x.right=rightVisible;
  x.ir=plotChoice.getSelectedId()==1;x.coherence=showCoherence.getToggleState();
- x.linked=linkSmooth.getToggleState();x.polarity=polarity;x.bypass=disabled;x.internalLoop=internalLoopEnabled;
+ x.linked=linkSmooth.getToggleState();x.polarity=polarity;x.bypass=disabled;x.internalLoop=internalLoopEnabled;x.pinkActive=pinkLoopActive;x.sweepActive=sweepActive;
  auto lib=libraryPanel.context();x.libraryReady=lib.libraryReady;x.libraryTF=lib.libraryTF;x.librarySelection=lib.librarySelection;x.libraryFolders=lib.libraryFolders;x.libraryCaptures=lib.libraryCaptures;x.libraryView=(int)captureLibrary.state().view;x.sidebarMeters=dockMeterState.state().sidebarMeters;x.metersVisible=meters&&meters->isVisible();x.allowNoSmoothing=tfSettings.allowNone;
  x.mainMeterVisible=meterState.state().mainVisible;x.meterClock=meterState.state().clock;if(auto* c=meterState.primaryCard()){x.meterMax=meterState.runtime(c->id).maximum.has_value();x.meterLeq=meterState.runtime(c->id).leqFill.has_value();}
  x.graphTypes=plotTypes;x.irScale=irScale;
@@ -38,7 +38,8 @@ void executeCommand(int id){
  }
  else switch(id){
  case 506:beginInputs(15);break;
- case 504:if(pinkLoopActive)stopInputs("Loop rosa detenido; salida en silencio.");else{int selected=source.getSelectedId()-1;if(selected>=0&&selected<4)beginInputs(1u<<selected,{},true);else status="Selecciona TF 1-4 antes de iniciar Pink";}break;
+ case 504:if(pinkLoopActive)stopInputs("Ruido rosa detenido; salida en silencio.");else{int selected=source.getSelectedId()-1;beginInputs(internalLoopEnabled&&selected>=0&&selected<4?1u<<selected:0,{},LiveInputEngine::Signal::Pink);}break;
+ case 505:if(sweepActive)stopInputs("Sweep detenido; salida en silencio.");else beginInputs(0,{},LiveInputEngine::Signal::Sweep);break;
  case 512:{bool enable=!internalLoopEnabled;if(inputEngine.running()||permissionPending)stopInputs("Cambio de loop: audio detenido.");internalLoopEnabled=enable;status=enable?"Loop interno preparado; pulsa Pink para generar referencia virtual.":"Loop interno desactivado; referencia fisica seleccionada.";break;}
  case 515:{int n=source.getSelectedId()-1;if(n>=0&&n<4){beginInputs(1u<<n);}break;}
  case 507:stopInputs();break;
