@@ -260,3 +260,5 @@ Inicio provisional real sin espera artificial; preview desde Acerca de si arranq
 rapido. Logo15, nombre, ANALYZER y build; sin audio ni login. Revision visual pendiente.
 
 27/10/2026 — NOMBRE OFICIAL: Mya Acústica Analizer. Escritura exacta solicitada por Antonio; reemplaza el descriptor Analyzer. Aplicar en cabecera, inicio, Acerca de y textos visibles; conservar icono y distribución. Mantener identificadores técnicos y preferencias para evitar pérdida de sesiones.
+
+28/10/2026 — NOMBRE OFICIAL ACTUAL: Mya Acústica Analyzer. Corrección expresa posterior de Antonio; sustituye la grafía Analizer en la interfaz y la documentación activa. Conservar icono, distribución e identificadores técnicos.
