@@ -39,7 +39,7 @@ public:
  juce::String shortcutsHelp() const{
   juce::String value;
   for(const auto& c:MyaCommands::catalog())if(!c.shortcut.empty())value+=details(c,MyaCommands::state(c,current()))+"\n";
-  value+=language==MyaCommands::Language::ES?juce::String::fromUTF8("\nIzquierda: reducir intervalo X; derecha: ampliar intervalo X; arriba/abajo: Y. Shift reduce el paso Y. T selecciona TF demo. V requiere un motor de promedio; D reservado. Doble clic: centrar panel.\nLos atajos no actúan mientras se escribe o se usa otro control."):"\nLeft narrows X; right widens X; up/down scroll Y. Shift reduces the Y step. T selects demo TF. V requires an averaging engine; D is reserved. Double click: centre panel.\nShortcuts do not run while typing or operating another control.";
+  value+=language==MyaCommands::Language::ES?juce::String::fromUTF8("\nIzquierda: reducir intervalo X; derecha: ampliar intervalo X; arriba/abajo: Y. Shift reduce el paso Y. T selecciona TF. V reinicia el promedio de la TF en directo. D reservado. Doble clic: centrar panel.\nLos atajos no actúan mientras se escribe o se usa otro control."):"\nLeft narrows X; right widens X; up/down scroll Y. Shift reduces the Y step. T selects TF. V resets live TF averaging. D is reserved. Double click: centre panel.\nShortcuts do not run while typing or operating another control.";
   return value;
  }
 };

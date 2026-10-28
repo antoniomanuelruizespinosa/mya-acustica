@@ -1,0 +1,18 @@
+MYA-007 · Revisión de entrega 0.3.2 · 28/10/2026
+
+Base: origin/main 3134d97. Se trasladaron únicamente fuente, pruebas,
+workflow y documentación del loop/TF; se conservó la validación de rutas de
+CaptureLibrary.h y tests/library.cpp del main remoto.
+
+En la rama aislada: compilación macOS Release correcta y 15/15 pruebas CTest
+correctas. El DMG se creó desde ese mismo árbol, verificó con hdiutil, se montó
+en solo lectura, mostró versión 0.3.2 y contiene una aplicación firmada ad hoc.
+SHA-256 DMG final: a9c3587788c23816a30a520befc9be8605bb41097c1ba31fd326c23928f61658
+SHA-256 ejecutable firmado dentro del DMG: 6671789d2719a9c88e18dc01745c5c29eabf1d12e25991c4a73e8ac67cbe2068
+DMG final: /private/tmp/mya-v032-release-artifacts/Mya-Acustica-Analyzer-v0.3.2-macOS.dmg
+
+El DMG preliminar indicado en MYA-007-v0.3.2-preparacion-entrega.txt pertenece
+al árbol local anterior y no es el artefacto de publicación. La compilación
+Windows debe completarse en GitHub Actions antes de publicar la Release. La
+selección de otra ruta física distinta de Output 1 -> Input 5 queda pendiente
+de prueba en hardware; las rutas múltiples sí tienen prueba automatizada.

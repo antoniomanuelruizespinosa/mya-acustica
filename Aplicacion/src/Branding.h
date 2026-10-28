@@ -11,7 +11,7 @@ public:
  explicit MyaStartupPanel(bool realStartup):starting(realStartup){setSize(420,360);proceed.setColour(juce::TextButton::buttonColourId,juce::Colour(0xff18242d));proceed.setColour(juce::TextButton::textColourOffId,juce::Colour(0xff00e5ed));setTitle("Inicio / "+MyaIdentity::name());addAndMakeVisible(proceed);proceed.onClick=[this]{if(onContinue)onContinue();};}
  bool assetValid()const{return icon.isValid()&&icon.hasAlphaChannel();}
  void resized()override{proceed.setBounds(getWidth()/2-58,getHeight()-40,116,26);}
- void paint(juce::Graphics& g)override{g.fillAll(juce::Colour(0xff11181d));g.drawImageWithin(icon,getWidth()/2-64,20,128,128,juce::RectanglePlacement::centred);g.setColour(juce::Colour(0xffe5edf4));g.setFont(25.f);g.drawText(MyaIdentity::brand(),10,168,getWidth()-20,32,juce::Justification::centred);g.setColour(juce::Colour(0xff00e5ed));g.setFont(18.f);g.drawText(MyaIdentity::descriptor(),10,203,getWidth()-20,26,juce::Justification::centred);g.setColour(juce::Colour(0xffa9bac8));g.setFont(12.f);g.drawText(MyaIdentity::version()+" / MYA-006-C",10,248,getWidth()-20,22,juce::Justification::centred);g.drawText(starting?"Iniciando analizador...":"Vista previa del inicio",10,277,getWidth()-20,22,juce::Justification::centred);}
+ void paint(juce::Graphics& g)override{g.fillAll(juce::Colour(0xff11181d));g.drawImageWithin(icon,getWidth()/2-64,20,128,128,juce::RectanglePlacement::centred);g.setColour(juce::Colour(0xffe5edf4));g.setFont(25.f);g.drawText(MyaIdentity::brand(),10,168,getWidth()-20,32,juce::Justification::centred);g.setColour(juce::Colour(0xff00e5ed));g.setFont(18.f);g.drawText(MyaIdentity::descriptor(),10,203,getWidth()-20,26,juce::Justification::centred);g.setColour(juce::Colour(0xffa9bac8));g.setFont(12.f);g.drawText(MyaIdentity::version(),10,248,getWidth()-20,22,juce::Justification::centred);g.drawText(starting?"Iniciando analizador...":"Vista previa del inicio",10,277,getWidth()-20,22,juce::Justification::centred);}
 };
 class MyaStartupWindow : public juce::DocumentWindow {
 public:
@@ -31,7 +31,7 @@ public:
   g.fillAll(juce::Colour(0xff222427));g.drawImageWithin(icon,getWidth()/2-48,12,96,96,juce::RectanglePlacement::centred);
   g.setColour(juce::Colour(0xffe5edf4));g.setFont(23.f);g.drawText(MyaIdentity::brand(),12,118,getWidth()-24,30,juce::Justification::centred);
   g.setColour(juce::Colour(0xff00e5ed));g.setFont(17.f);g.drawText(MyaIdentity::descriptor(),12,151,getWidth()-24,25,juce::Justification::centred);
-  g.setColour(juce::Colour(0xffa9bac8));g.setFont(12.f);g.drawFittedText(MyaIdentity::version()+juce::String::fromUTF8(" / MYA-006-C\nEntradas dBFS con Play explícito\nSPL RMS calibrado / Gráficas DEMO / TF pendiente"),14,190,getWidth()-28,94,juce::Justification::centred,5);
+  g.setColour(juce::Colour(0xffa9bac8));g.setFont(12.f);g.drawFittedText(MyaIdentity::version()+juce::String::fromUTF8("\nEntradas dBFS con Play explícito\nSPL RMS calibrado / una TF M/R en directo / IR demo"),14,190,getWidth()-28,94,juce::Justification::centred,5);
  }
 };
 inline void showMyaAbout(){juce::DialogWindow::LaunchOptions options;options.dialogTitle="Acerca de / "+MyaIdentity::name();options.dialogBackgroundColour=juce::Colour(0xff222427);options.useNativeTitleBar=true;options.resizable=false;options.content.setOwned(new MyaAboutPanel());options.launchAsync();}
