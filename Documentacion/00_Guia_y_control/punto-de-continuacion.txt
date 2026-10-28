@@ -164,3 +164,5 @@ Mya Acustica conservados, preferencias en las mismas rutas.13/13 y render PASS;
 texto nativo177px con icono, cabe al minimo1120; inicio/Acerca inspeccionados.
 Build separado work/MYA-006-B-R4/build/Mya Acústica Analizer.app. Sin audio ni
 reinicio; Revisión coordina apertura. Historial/checkpoints sin reescribir.
+
+28/10/2026 — Corrección de nombre posterior a B-R4: Mya Acústica Analyzer. La grafía Analizer de B-R4 queda como dato histórico. Código y README corregidos; la aplicación empaquetada B-R4 aún conserva el nombre anterior hasta recompilar.
