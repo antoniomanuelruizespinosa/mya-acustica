@@ -312,6 +312,10 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
  static File defaultProjectFile(){
  #if defined(MYA_OFFSCREEN_RENDER)
  return File(String::fromUTF8(MYA_PROJECT_DIRECTORY)).getChildFile("MYA-006-A-fixture").getChildFile("proyecto-demo.json");
+ #elif JUCE_WINDOWS
+ auto folder=File::getSpecialLocation(File::userApplicationDataDirectory).getChildFile("Mya Acustica");
+ folder.createDirectory();
+ return folder.getChildFile("proyecto-demo.json");
  #else
  return File(String::fromUTF8(MYA_PROJECT_DIRECTORY)).getChildFile("proyecto-demo.json");
  #endif
