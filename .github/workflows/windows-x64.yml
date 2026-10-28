@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build-and-test:
-    runs-on: windows-2025
+    runs-on: windows-2022
     steps:
       - name: Checkout Mya
         uses: actions/checkout@v4
