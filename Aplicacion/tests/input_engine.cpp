@@ -13,7 +13,8 @@ int main(int argc,char** argv){
  retry.arm(true);assert(retry.consume("Sin primer callback >2000 ms [CoreAudio / OCTA-CAPTURE]")&&!retry.consume("Sin primer callback >2000 ms"));
  retry.arm(true);retry.cancel();assert(!retry.consume("Sin primer callback >2000 ms"));
  auto x=sine();const float* input[]={x.data()};LiveInputEngine engine(clockMs);
- auto start=[&](std::vector<int> channels=std::vector<int>{1}){nowMs+=10000;engine.fixtureStart(juce::String(key),48000,channels);};
+ auto startChannels=[&](const std::vector<int>& channels){nowMs+=10000;engine.fixtureStart(juce::String(key),48000,channels);};
+ auto start=[&]{startChannels({1});};
  auto callback=[&]{nowMs+=10;engine.fixtureCallback(input,1,480);};
  // Duplex callback: output is silent unless the explicit low-level pink test is armed.
  {
@@ -52,9 +53,9 @@ int main(int argc,char** argv){
  // The observer can see a stop/error while draining; post-drain checks still reject.
  start();callback();assert(!engine.poll([&](const auto&,const auto&,double){engine.fixtureStopped();}));assert(engine.lastError().contains("audioDeviceStopped"));
  // Callback packing must map to physical Input5, not silently to Input1.
- start({5});for(int i=0;i<100;++i){callback();assert(engine.poll());}assert(engine.rms(key,5)&&!engine.rms(key,1));
+ startChannels({5});for(int i=0;i<100;++i){callback();assert(engine.poll());}assert(engine.rms(key,5)&&!engine.rms(key,1));
  // R3 global M1..4/R5 acquisition mask still yields five distinct physical inputs.
- start({1,2,3,4,5});std::array<std::array<float,480>,5> channels;const float* five[5];
+ startChannels({1,2,3,4,5});std::array<std::array<float,480>,5> channels;const float* five[5];
  for(size_t ch=0;ch<5;++ch){channels[ch]=x;for(auto& sample:channels[ch])sample*=(float)(ch+1);five[ch]=channels[ch].data();}
  for(int i=0;i<100;++i){nowMs+=10;engine.fixtureCallback(five,5,480);assert(engine.poll());}
  for(int ch=1;ch<=5;++ch){assert(engine.channel(key,ch).valid&&engine.rms(key,ch));assert(std::abs(*engine.rms(key,ch)-(-43.01029995664+20*std::log10(ch)))<1.e-6);}
