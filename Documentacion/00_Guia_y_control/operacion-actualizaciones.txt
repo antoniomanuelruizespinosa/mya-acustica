@@ -1,0 +1,9 @@
+PREFERENCIA PERSISTENTE DE ANTONIO — 26/10/2026
+«cierra siempre y abre la nueva al revisar».
+Al revisar una actualizacion: guardar sesion, detener audio, cerrar version anterior
+y abrir nueva version verificada. Revisión y Control coordina esa operacion para
+que no existan reinicios simultaneos. No autoPlay tras abrir.
+Sustituye la prohibicion anterior de reiniciar sin permiso individual en cada cambio.
+No supone autorizacion para reinicios concurrentes de este agente: Revisión gestiona
+ahora el cambioA->R2 y se encargara de abrir la siguiente entrega al revisarla.
+No cerrar ni reiniciar desde Desarrollo mientras Revisión realiza la operacion.

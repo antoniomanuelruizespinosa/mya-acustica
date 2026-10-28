@@ -4,7 +4,7 @@
 #include <juce_gui_extra/juce_gui_extra.h>
 
 class CommandUI {
- struct Binding {juce::Button* button;int id;bool compact;};
+ struct Binding {juce::Button* button;int id;bool compact;int targetTF=0;};
  std::vector<Binding> bindings;
 public:
  MyaCommands::Language language=MyaCommands::Language::ES;
@@ -17,8 +17,8 @@ public:
   return MyaCommands::commandText(c,s,language);
  }
  bool invoke(int id){bool result=MyaCommands::dispatch(id,current(),action);refresh();return result;}
- void bind(juce::Button& b,int id,bool compact=false){jassert(MyaCommands::find(id)!=nullptr);bindings.push_back({&b,id,compact});b.setClickingTogglesState(false);b.onClick=[this,id]{invoke(id);};}
- void refresh(){auto x=current();for(auto& b:bindings){auto* c=MyaCommands::find(b.id);if(!c)continue;auto s=MyaCommands::state(*c,x);
+ void bind(juce::Button& b,int id,bool compact=false,int targetTF=0){jassert(MyaCommands::find(id)!=nullptr);bindings.push_back({&b,id,compact,targetTF});b.setClickingTogglesState(false);b.onClick=[this,id]{invoke(id);};}
+ void refresh(){auto x=current();for(auto& b:bindings){auto* c=MyaCommands::find(b.id);if(!c)continue;auto contextForButton=x;if(b.targetTF)contextForButton.selectedTF=b.targetTF;auto s=MyaCommands::state(*c,contextForButton);
   b.button->setEnabled(s.enabled);b.button->setToggleState(s.checked,juce::dontSendNotification);
   b.button->setTitle(title(*c));b.button->setTooltip(details(*c,s));
   if(b.button->getProperties()["transportIcon"].toString().isEmpty()&&!bool(b.button->getProperties()["commandGlyph"]))b.button->setButtonText(b.compact?utf8(MyaCommands::compactName(*c,language)):title(*c));
@@ -39,7 +39,7 @@ public:
  juce::String shortcutsHelp() const{
   juce::String value;
   for(const auto& c:MyaCommands::catalog())if(!c.shortcut.empty())value+=details(c,MyaCommands::state(c,current()))+"\n";
-  value+=language==MyaCommands::Language::ES?juce::String::fromUTF8("\nIzquierda: reducir intervalo X; derecha: ampliar intervalo X; arriba/abajo: Y. Shift reduce el paso Y. D/V conservan navegación demo. Doble clic: centrar panel.\nLos atajos no actúan mientras se escribe o se usa otro control."):"\nLeft narrows X; right widens X; up/down scroll Y. Shift reduces the Y step. D/V retain demo navigation. Double click: centre panel.\nShortcuts do not run while typing or operating another control.";
+  value+=language==MyaCommands::Language::ES?juce::String::fromUTF8("\nIzquierda: reducir intervalo X; derecha: ampliar intervalo X; arriba/abajo: Y. Shift reduce el paso Y. T selecciona TF demo. V requiere un motor de promedio; D reservado. Doble clic: centrar panel.\nLos atajos no actúan mientras se escribe o se usa otro control."):"\nLeft narrows X; right widens X; up/down scroll Y. Shift reduces the Y step. T selects demo TF. V requires an averaging engine; D is reserved. Double click: centre panel.\nShortcuts do not run while typing or operating another control.";
   return value;
  }
 };

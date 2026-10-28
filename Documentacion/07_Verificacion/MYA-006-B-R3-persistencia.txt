@@ -1,0 +1,107 @@
+MYA-006-B-R3 — PERSISTENCIA LIMPIA Y RUTAS AUSENTES
+27/10/2026. Base: B-R2 limpia aprobada por Antonio. No cambiar interfaz.
+
+RESULTADO
+Tres fallos reproducidos antes de corregir (regresion-antes.txt, procesoexit1):
+1 Guardar demo conservaba TF ocultas y fuentes limpias en JSON, pero nuevo
+  Workstation no cargaba proyecto-demo.json al arrancar: recuperaba defaults.
+2 RoutingPanel(E/S) sin dispositivo mostraba texto de dispositivo ausente pero
+  selectedId0; una edicion de NOMBRE emitia key vacia/M0/R0.
+3 EnginePanel(TF) sin entradas disponibles devolvia M0/R0 al editar NOMBRE,
+  color o delay: se propagaba una reasignacion que el usuario no habia pedido.
+Tras correccion:13/13 pruebas, renderer PASS y auditoria de copia de ocho JSON
+aprobados PASS. No se ha abierto/reiniciado la app ni se ha abierto audio fisico.
+
+ESTADO REAL DE LOS ARCHIVOS APROBADOS
+Los ocho JSON actuales coinciden byte a byte con el checkpoint aprobado.
+Proyecto guardado: cuatro TF ocultas; fase/magnitud seleccionan TF1 oculta;
+impulso sin TF visible; modoTF, TF1 seleccionada. Captura demo sigue en biblioteca.
+Rutas: TF1 YA figura M0/R0 tanto en proyecto-demo.json como en entradas-niveles.json;
+TF2..4 conservan M2/3/4 y R5. No se asigna M1/R5 por inferencia, ni se recupera
+una preferencia mas antigua sobre la base aprobada. No puede atribuirse con certeza
+la perdida historica concreta, pero las rutas de perdida anteriores se reprodujeron.
+No se han escrito los JSON privados actuales ni se han copiado capturas privadas
+al paquete de codigo. Checkpoint aprobado intacto:165 huellas verificadas.
+
+CAMBIOS ACOTADOS
+Inicio: restauracion de proyecto guardado de solo lectura, sin Play, antes de aplicar
+preferencias de maquina. Cargar no simula captura ni borra biblioteca. El tamaño,
+menus, colores, graficas, celdas, barra nativa e inicio mantienen geometria aprobada.
+Version de entrega B-R3 es el unico cambio de identificacion visual.
+
+Precedencia explicita, comprobada:
+- Inicio: snapshot del proyecto para visibilidad TF, fuentes de graficas, estado
+  de sesion y vista. Despues preferencias de maquina actuales prevalecen donde
+  coinciden: rutas, anchuras/visibilidad laterales, representaciones y ajustes TF.
+  Si no hay preferencias de rutas, queda la ruta almacenada en el proyecto.
+- Comando Abrir/Load explicito: restaura snapshot del proyecto y persiste sus
+  rutas/ajustes TF/representacion, como accion deliberada del usuario.
+- Guardar demo: escribe proyecto; no es un gestor completo de perfiles ni copia
+  de los otros archivos. Biblioteca y tres modelos de medidores siguen separados.
+Los setters usados al restaurar llevan dontSendNotification: no deben provocar
+escrituras diferidas de preferencias al arrancar. Al finalizar se sincronizan
+nombres, seleccion y fuentes de medidores con la TF restaurada.
+
+Rutas: un dispositivo/canal configurado y ausente conserva ID y texto marcado
+Unavailable. Su opcion ausente queda deshabilitada, sin elegir otro dispositivo
+ni otro canal. Nombre/color/delay no convierten ausencia temporal en ceros.
+Conectar/reconectar actualiza catalogo/labels, no abre audio ni cambia rutas.
+Elegir deliberadamente un dispositivo DIFERENTE sigue dejando M/R0 para asignacion
+explicita; no se reutilizan canales de otra tarjeta silenciosamente.
+El resumen de TF muestra InputN[Unavailable] si habia un canal guardado: no lo
+confunde con Not assigned. Sin nuevos controles o redistribucion de interfaz.
+
+MATRIZ DE PERSISTENCIA
+proyecto-demo.json: visibilidad/nombres/colores/delay TF, fuente por grafica,
+seleccion TF, modoTF/IR, zoom/pan/smoothing y snapshot de ajustes/rutas/demo.
+entradas-niveles.json: rutas actuales por backend/dispositivo/canal, sin autoPlay.
+vista-trabajo.json: anchuras/visibilidad laterales, estilo M/R y colorAVG.
+vista-graficos.json: tipos de panel, escalaIR y vinculo.
+tf-graficos.json: presentacion/umbrales/zoom de graficas TF.
+medidores.json / medidores-lateral.json / medidores-flotantes.json: configuraciones
+independientes; runtime no persistido ni mezclado entre vistas.
+Biblioteca/: manifiesto/datos independientes. Guardar vista limpia no vacia datos.
+calibraciones-spl.json: NO existe en base actual; no hay offset fisico validado.
+
+PRUEBAS
+session_persistence: antes3fallos demostrados, despues todosPASS; guardado limpio,
+reconstruccion de componentes nuevos, Load explicito, proyecto no reescrito al
+reabrir, rutas de maquina posteriores a Guardar prevalecen al inicio y no se
+reescriben; captura DEMO sintetica retenida sin trazos visibles.
+Paneles reales E/S y TF: edicion offline no borra fuente/M/R; catalogo de vuelta
+resuelve mismo canal; un canal temporalmente ausente no se remapea; cambio
+explicito de tarjeta sigue borrando M/R para asignarlos conscientemente.
+Auditoria adicional: se COPIAN los ocho JSON del checkpoint a un fixture local
+ignorado, con biblioteca SINTETICA independiente. Nuevos componentes restauran
+estado limpio y rutas EXACTAS, incluidos ceros de TF1. Los ocho JSON copiados
+quedan identicos byte a byte. No se copia el payload privado de biblioteca.
+12 pruebas previas B-R2 pasan tambien: RMS, calibracion, guardado, callbacks,
+medidores, fuentes/alarma, comandos, graficas, preferencias, etc. Aserciones JUCE
+hacen fallar los tests relevantes; ninguna asercion en logs finales.
+Renderer real offscreen PASS/exit0. Diagnostico CoreMIDI preexistente al enumerar
+no implica apertura ni asercion. No hay prueba de desconexion fisica nueva: son
+catalogos/sesiones offline. La apertura de dispositivos sigue bloqueada en renderer.
+
+VERSIONADO Y RESPALDO
+HEAD local main=fb3912b8a431ffb91dca2f468363441d12491ddd, dos commits propios;
+ultimo codigo entregado B-R2/B-R3 sigue en working tree, no commit nuevo.
+GitHub consultado por conector: repo antoniomanuelruizespinosa/mya-acustica PRIVADO,
+acceso admin/push disponible. Main remoto=8fa21558e991a0acdf521a1d9cb10f7683e3af29,
+mensaje Guardar MYA-005 y punto de continuacion; no contiene B-R2/B-R3.
+No refs remotas locales que acrediten sincronizacion; cabezas distintas, ancestria
+no comprobada. No confundir checkpoint local con commit/subida confirmada.
+Ver propuesta-respaldo-seguro-2026-10-27.txt. Sin commit, push, force o mezcla de repo.
+.gitignore ahora excluye tambien diagnostico-entrada-*.txt, metadatos de maquina.
+
+ENTREGA SEPARADA
+work/MYA-006-B-R3/build/Mya Acustica.app — macOS arm64 Debug, JUCE8.0.12.
+SHA256 ejecutable:
+3c31376036e93502470ad8a279031e494899a9e3cf413d189720e36385bdde0c
+Fuente exacta, diferencias con base aprobada, logs, renders, identidad y manifiesto.
+Icono15 aprobado original embebido verificado; B-R2/base aprobada no sobrescritos.
+
+PENDIENTE
+Revisión coordina abrir B-R3 cuando proceda. Fisica94/114 NO completada; ultima
+prueba CUA tuvo timeout, no offset guardado ni exito de calibracion que afirmar.
+Pendientes estabilidad/hardware, reconexion real, Windows/ASIO y validacion TF real.
+No ampliar ahora a otros motores ni redisenar la interfaz aprobada.

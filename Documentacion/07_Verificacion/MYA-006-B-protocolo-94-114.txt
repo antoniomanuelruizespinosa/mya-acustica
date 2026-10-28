@@ -1,0 +1,66 @@
+MYA-006-B — PROTOCOLO MANUAL 94 / 114 dB SPL
+Preparado para Antonio y Revisión. NO EJECUTADO con hardware por Desarrollo.
+
+Revisión coordina guardar sesión, detener entradas, cerrar versión anterior y abrir
+la entrega B identificada en MYA-006-B-resultado.txt. Inicio sin Play automático.
+No ejecutar dos versiones con entradas abiertas a la vez.
+
+1. Identificar backend, dispositivo, canal físico, micrófono/serie, calibrador,
+   frecuencia del tono, fecha y ganancia declarada. Usar referencia real indicada
+   por el calibrador y sus condiciones/correcciones aplicables, sin inventarlas.
+   94/114 son presets; valor manual permite una referencia distinta (0..180 dB).
+   Confirmar ajuste y acoplamiento según instrucciones del equipo. Mya no lee ni
+   modifica ganancia, 48V ni calibrador y no detecta cambios físicos de cadena.
+2. Abrir Calibrar SPL RMS desde menú de calibración, E/S, SPL Config o contextual
+   de la celda. Verificar backend/dispositivo y canal: nunca asumir Input1 ni R5.
+   Elegir micrófono identificable y anotar ganancia. Si la entrada no está abierta,
+   pulsar Play entrada seleccionada; solo abre ese canal, sin salida/generador.
+   Esperar lectura RMS digital (~1 s). Las gráficas TF/IR siguen siendo DEMO.
+3. Aplicar 94 dB nominales con referencia efectiva correcta. Evitar clipping.
+   Confirmar misma cadena y ganancia declarada. Pulsar Calibrar. Mantener tono
+   durante 10 tramos >=0,5 s (>=5 s), dispersión max-min <=0,5 dB. Anotar digital
+   medido, dispersión y offset propuesto; revisar offset actual antes de cambiarlo.
+   Confirmar nuevo offset solo con calibrador todavía aplicado y fuente válida.
+   Cancelar/cerrar no reemplaza el offset guardado.
+4. Elegir SPL RMS sin ponderación en el medidor de esa misma fuente. Principal,
+   lateral y flotantes se configuran por separado. Comprobar ~94 dB y anotar
+   promedio observado/rango durante al menos 10 s, sin denominarlo Leq.
+5. SIN RECALIBRAR ni cambiar la referencia del dialogo, cambiar el calibrador a 114 manteniendo micrófono, canal y
+   ganancia. Esperar asentamiento y lectura RMS. Registrar lectura y diferencia
+   respecto a 94: incremento esperado ~20 dB si el conjunto permanece lineal.
+   Si hay clipping a 114, prueba NO válida; no ajustar ganancia y seguir usando
+   el offset anterior. Una nueva ganancia requiere nueva calibración completa.
+   Las tolerancias físicas de aceptación deben considerar especificaciones e
+   incertidumbre del micrófono/calibrador/interfaz; Mya no certifica conformidad.
+6. Solo como ensayo independiente posterior: calibrar a 114 sin cambiar cadena y
+   comparar su offset con el obtenido a 94. NO presentar lecturas reajustadas a
+   cada nivel como prueba independiente de linealidad. Conservar ambos registros
+   externos: el archivo Mya mantiene el último confirmado por fuente/canal.
+7. Cancelación: con offset existente, capturar otro resultado y cancelar. Comprobar
+   offset/fecha anteriores conservados. Probar silencio/clip/cambio de fuente/
+   Stop/desconexión: confirmar debe quedar bloqueado y no sustituir el registro.
+8. Reiniciar audio o app: offset/identidad persisten, lecturas SPL quedan -- hasta
+   confirmar explícitamente misma cadena en el diálogo (metadatos deben coincidir).
+   Cambiar ganancia/micrófono exige nueva calibración; no hay Gain Tracking.
+9. Independencia: asignar fuentes distintas a principal, lateral y flotantes;
+   cambiar métrica, color y disposición de una vista. Las otras no deben cambiar.
+   La misma fuente comparte su offset físico; cada tarjeta mantiene máximo propio.
+   Repetir en otro canal/micrófono. Ningún offset se hereda entre canales/backend.
+
+Convención digital: 10 log10(sum(x²)/N). Offset=referencia−RMSdigital.
+Lectura: energía de los dos últimos tramos completos >=0,5 s (~1 s rectangular).
+No añadir 3,01 dB, ni usar pico M/R como RMS. Sin A/C, conformidad Z, Fast/Slow,
+Leq, SPL Peak ni corrección de curva de micrófono. Curva espectral no aplicada.
+Los picos preliminares -21,8/-2,1 dBFS no calibran ni validan esta implementación.
+
+HOJA DE REGISTRO (rellenar en prueba física)
+Build/SHA256:
+Backend / dispositivo / canal:
+Micrófono / serie / ganancia declarada:
+Calibrador / serie / tono / referencia efectiva / fecha / condiciones:
+94: RMSdigital / offset / dispersión / lectura/rango posterior:
+114 SIN recalibrar: lectura/rango / incremento / clipping sí-no:
+Offset independiente a114, si se ensaya / diferencia entre offsets:
+Cancelar / Stop / reconectar / reinicio sin autoPlay:
+Independencia de vistas y canales:
+Resultado físico / tolerancia fundamentada / incidencias / responsable:

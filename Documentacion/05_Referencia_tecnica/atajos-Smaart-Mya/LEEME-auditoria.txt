@@ -1,0 +1,106 @@
+AUDITORIA COMPLETA DOCUMENTAL Y DE CODIGO — MYA-006-A-R3
+26/10/2026. Smaart Suite instalado9.6.4 (Info.plist), ayuda local de esa instalacion.
+No se ha operado Smaart, generado audio ni validado fisicamente el teclado en Smaart.
+No se afirma paridad funcional ni que todos los comandos Mya sean medicion real.
+
+COBERTURA
+161 HTML examinados para localizar atajos/menus;51 paginas de menu con menciones
+explicitas y77 fuentes locales con SHA256 para trazabilidad, sin copiar el manual.
+Todas las109 asignaciones de keyboard-shortcuts.html se contrastan individualmente.
+Rangos1..9 y Delete/Backspace se expanden:127 casos. Dos combinaciones adicionales
+verificadas en paginas de menu llevan el total a129 casos: Shift+OptionS y
+Shift+OptionT para ajustes de ANALISIS, distintos de ajustes de GRAFICA.
+137 comandos de Commands.h inventariados, con shortcut, estado declarado y despacho
+en contexto por defecto obtenido del binario de prueba. Listados no omiten comandos
+sin atajo, personalizados Mya ni comandos sin equivalente Smaart confirmado.
+
+ARCHIVOS
+matriz-completa.tsv / .json: cada combinacion, accion de referencia resumida,
+comandos relacionados, comportamiento R2/R3, conflicto/decision y fuente local.
+ref_fila es el indice del extractor de tabla, no una linea HTML ni un ancla inventada.
+catalogo-Mya-completo.tsv: TODOS los comandos actuales Mya, tambien sin teclado.
+fuentes-locales.json: version, alcance del escaneo y huellas de fuentes consultadas.
+El estado Ready es capacidad del comando, no garantia de habilitacion contextual:
+por ejemplo975 ResetLeq no esta habilitado sin buffer Leq, que aun no existe.
+IDs relacionados no significan equivalencia de algoritmo, datos ni gesto.
+Un SIN ATAJO ASIGNADO no debe confundirse con accion operativa por esa tecla.
+
+HALLAZGOS Y CORRECCIONES
+V: tabla y reset-averager.html coinciden. Vaciar buffers/promedios de medida, incluido
+IR desde9.5. NO refresca pantalla ni recarga biblioteca. R2 lo enviaba a MappVision.
+R3 registra526 ResetAverager conV, PENDIENTE/deshabilitado hasta tener motor real.
+No limpia picos M/R, no borra capturas ni inventa reinicio de un promedio inexistente.
+MappVision sigue por navegacion/menu, sinV.
+
+Cmd/CtrlR (F5 solo Windows): la tabla lo asigna a RECARGAR BIBLIOTECA. El comando911
+Mya existe por menu; esa tecla sigue SIN ASIGNAR en este bloque. No se asignaV como
+sustituto. Candidato concreto para futuro perfil, no equivalencia ya implementada.
+
+D: tabla dice Find simple/Track doble; toggle-delay-tracking.html asignaD aTrack.
+L en activate-delay-finder.html es Find. R2 enviabaD y ShiftD aDSP sin aprobacion
+expresa. R3 retira esa navegacion y reservaD, sin elegir arbitrariamente entre
+acciones contradictorias. DSP sigue accesible por menu/desplegable. L/F y Track
+individual/general conservan sus acciones y estado pendiente, sin motor fingido.
+
+T: antes401 solo entraba al workspace Medicion, pudiendo conservar la vistaIR.
+Ahora980 selecciona realmente la vistaTF demo con impulso/fase/magnitud, incluso
+desdeDSP/3D. Conserva fuentes, suavizado y zoom de los paneles. No arranca audio.
+
+Modificadores: antes se ignoraba Shift en letras/E y se disparaban acciones simples.
+ShiftEspacio capturaba una DEMO individual; ShiftT abria Medicion, ShiftG actuaba
+comoG y ShiftE podia abrir flotantes tras dos pulsaciones. Ya no ocurre. La secuencia
+E,E usa un unico criterio en workspace, biblioteca, graficos y flotantes: E sin
+Cmd/Ctrl/Alt/Shift, intervalo<650ms y fuera de editores. ShiftEspacio no sobrescribe
+ni captura en este bloque. ShiftOptionT tampoco abre ajustes de GRAFICA como alias
+del OptionT simple. Se conserva Shift para + y para paso fino de panY ya aprobado.
+
+PERFIL DE ANTONIO CONSERVADO
+B izquierda; O derecha; L/F Find individual/repetir (pendiente); G rosa (pendiente);
+S Sweep (pendiente, NO preset RTA); E,E flotantes; Espacio captura TF DEMO;
+Option5 restaura vista/layout/zoom (alcance mayor que default range de Smaart);
+izquierda/derecha ZOOM horizontal, no pan; +/-Y, Cmd/Ctrl+/-XY,
+Cmd/Ctrl+Option/Alt+/-X; arriba/abajo panY y Shift paso fino; C coherencia demo;
+K reloj/principal; OptionK principal visible; OptionT ajustes TF. No se inventa
+otra tecla para DSP/3D ni se habilitan generacion, Find, Track, Leq o promedios.
+Enter de biblioteca solo en seleccion unica; campos, combos y sliders conservan
+su teclado. CmdA/CmdC en editores siguen siendo seleccion/copia de texto, no audio
+ni exportacionASCII de trazos.
+
+CONTRADICCIONES DE LA FUENTE, NO RESUELTAS ARBITRARIAMENTE
+- D Find/Track: tabla frente a pagina de comando. D reservado; pendiente decidir
+  perfil/pulsaciones con Revision/Antonio cuando el motor exista.
+- I/CmdI: tabla asignaI a modoIR y CmdI a LiveIR; realtime-and-ir-modes asignaCmdI
+  al modoIR. impulse-response-mode-ui vuelve aI. Mya981 es vistaIR DEMO disponible
+  por botones/menu, sin inventarI/CmdI.407 solo muestra impulso superiorTF.
+- ShiftEspacio: tabla/CaptureAll frente aRecapture. Tabla proponeCmdShiftEspacio
+  para recaptura pero recapture.html diceShiftEspacio. No implementar sobrescritura
+  ni captura multiple bajo una combinacion ambigua. CapturaMya original inmutable.
+- CtrlShiftX y CtrlShiftE son CTRL LITERAL en Mac y Windows, no Cmd equivalente.
+  Aun sin asignar; futuras capas no deben colapsar ambos modificadores para ellos.
+- Presets: tabla/view-presets usan1..9; ciertas referencias enlazan1..10;0 tiene
+  funcion multiespectro propia. No prometer slot10 ni reutilizar0 sin contrato.
+
+ACCIONES PENDIENTES ACCIONABLES
+1. Resolver los tres conflictos documentales anteriores antes de asignar acciones
+   de motor/recaptura. No requiere interrumpir la sesion actual para esta auditoria.
+2. Cmd/CtrlR ->911 es candidato de biblioteca ya operativa; falta autorizacion de
+   adopcion del resto del perfil, no esta habilitado aqui por simple disponibilidad.
+3. Combinaciones de motor/FFT/IR/Leq/RTA/cursores/presets/targets/logging quedan
+   sin asignar o pendientes segun cada fila. No ampliar funciones para rellenar tabla.
+4. Validar fisicamente tecladoES/EN, teclado numerico, modificadores nativosMac y
+   futurosWindows; se han simulado combinaciones en tests, no ensayado todos esos
+   equipos. Windows no compilado ni probado.
+
+VERIFICACION DEL BLOQUE
+Tests de registro/despacho, Vpendiente, Dreservado, Tdesdeotrosespacios, variantes
+Shift rechazadas, zoom con modificadores conservado, focoedicion y las16 combinaciones
+de modificadores deE. Compilacion macOS y render de componentes sin abrir audio.
+Auditoria documental terminada; pendientes funcionales explicitos en cada fila.
+No equivale a haber ejecutado todos los atajos de Smaart ni a paridad de software.
+
+ACTUALIZACION MYA-006-B — 26/10/2026
+La matriz/catalogo y huellas anteriores describen R3. B habilita comando290
+calibration.spl (Ready), con dialogo RMS por fuente y Play explicito dentro.
+No nuevo atajo ni reasignacion de teclas. No equivale a calibracion fisica validada.
+Fuentes C++ actuales tienen nuevas huellas; las anteriores siguen como evidencia
+historica de R3, no como manifiesto de la entrega B. Ver informe MYA-006-B.

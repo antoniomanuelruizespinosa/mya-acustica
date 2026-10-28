@@ -1,0 +1,44 @@
+MYA-006-B — CONTRATO DE IMPLEMENTACION, 26/10/2026 — IMPLEMENTADO, VALIDACION FISICA PENDIENTE
+Base R3 preservada en work/checkpoints/MYA-006-A-R3-antes-B/. Integracion selectiva,
+no restaurar Main/CMake antiguos. R3 nativa/desplegable observados por Revision;
+no equivale a revision interactiva completa ni splash completamente validado.
+
+Ldigital=10log10(sum(x*x)/N), muestras normalizadas +/-1. Mismo calculo en captura
+calibracion y posterior RMS. Offset=Lcal-Ldigital; SPL=RMSdigital+offset.
+Sin usar peak M/R, ni sumar/restar3.0103dB por fuera de la energia. Seno a peak1
+sin saturacion teorica RMS=-3.0103dBFS; en calibracion una muestra>=1 rechaza clipping.
+Energia doble precision/samples/clip/no-finitos acumulados en callback sin UI/disco
+ni asignacion dinamica. ColaSPSC preasignada; integracion/resumen en hiloUI acotados.
+Frame incluye secuencia y tiempo monotono. Huecos/secuencia/tiempo>250ms rechazan
+captura. Antes de confirmar se valida tambien el tramo parcial si acumula>=50ms
+(evita juzgar estabilidad por una fraccion de ciclo en buffers muy pequenos). M/R siguen samplepeak independiente. No salidas, gain,48V ni calibrador.
+
+Elecciones propias Mya, NO especificaciones atribuidas a Smaart:
+- captura10 tramos de al menos0.5s, cerrados en limite de callback: total>=5s;
+- estabilidad max-min de tramos<=0.5dB; silencio/nivelRMS<=-100dBFS rechazado;
+- referencia manual0..180dBSPL (sanidad de entrada), presets94/114;
+- RMS de lectura: dos ultimos tramos completos>=0.5s cada uno (aprox1s rectangular),
+  no constanteFast/Slow ni Leq; no ponderacion A/C ni conformidadZ.
+Confirmacion explicita solamente si resultado valido y fuente/sesion sigue activa;
+se revisan datos pendientes antes de guardar. Cancelar no escribe offsets.
+Se guarda por backend/dispositivo/canal, mic identificado, ganancia declarada,
+referencia, fecha, digital medido, offset, duracion y dispersion. Sin GainTracking;
+misma cadena/ganancia es condicion declarada por usuario, no observada por hardware.
+Al reabrir/arrancar stream se exige reconocer cadena antes de reutilizar offset.
+Curva micro no aplicada: correccion espectral separada y fuera de este bloque.
+
+Fuentes de flujo leidas anteriormente: ayuda local Smaart9.6.4
+sound-level-calibration.html y amplitude-calibration.html. Sin importar offsets,
+valores o preferencias de Smaart. Convencion/tolerancias anteriores son nuestras.
+Independencia de configuraciones principal/lateral/flotante conservada; calibracion
+es propiedad de fuente fisica: tarjetas de la misma entrada consultan ese registro,
+sin compartir su entrada/metrica/ponderacion/estilo/layout mutable.
+Pruebas fisicas94/114 preliminares de peak -21.8/-2.1 NO son calibraciones ni se usan.
+No abrir audio con tools ni reiniciar app; Revision coordina apertura al terminar.
+
+Entrega: Documentacion/07_Verificacion/MYA-006-B-resultado.txt y protocolo-94-114.
+Fecha persistida ISO8601 con zona local, no etiquetada falsamente UTC.
+
+B-R1: escritura directa del temporal mediante FileOutputStream; apertura, write y
+flush comprobados y stream cerrado antes de reemplazo. No File::replaceWithText
+en guardado de calibracion. Aserciones JUCE pasan a ser fallo del test RMS.

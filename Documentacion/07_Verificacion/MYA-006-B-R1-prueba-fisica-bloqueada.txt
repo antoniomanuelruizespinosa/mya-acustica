@@ -1,0 +1,3 @@
+26/10/2026 — Prueba fisica B-R1 bloqueada antes de calibrar.
+OCTA-CAPTURE detectada / CoreAudio / Input 1. Antonio confirma calibrador a94 dB y ganancia +12 dB. Micro EMX-7150 identificado por entrada (serie no aportada).
+Dos intentos de Play entrada seleccionada: footer Entrada detenida o sin callbacks. Pulsa Play para reabrir. RMS permanece --, cadena desmarcada. No captura ni offset guardado; no validacion94/114. Causa aun desconocida: mensaje agrupa failed/stopped/timeout. Desarrollo informado. Sin cambio de gain/48V ni generacion.

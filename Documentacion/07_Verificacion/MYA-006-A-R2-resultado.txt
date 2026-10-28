@@ -1,0 +1,139 @@
+MYA-006-A-R2 — MEDIDORES INDEPENDIENTES Y RETIRADA DE FRANJA INTERIOR
+26/10/2026. Requisito corregido explicitamente por Antonio a traves de Revision.
+Esta aclaracion sustituye la interpretacion anterior de compartir IDs/configuracion
+mutable entre lateral, principal y flotante; los informes antiguos son historicos.
+
+PRIORIDAD Y CONTINUIDAD
+Trabajo preliminar MYA-006-B guardado sin integrar ni validar en:
+work/checkpoints/MYA-006-B-en-curso-antes-prioridad-medidores/.
+Incluye nucleo RMS/calibracion/store en desarrollo, NO aptos para usar ni compilar
+como producto completo. InputLevelCore.h y LiveInputEngine.h restituidos exactamente
+a R1 para esta entrega. No se incorpora calibracion ni se aplican offsets.
+Checkpoint previo a calibracion conservado: work/checkpoints/MYA-006-A-R1-antes-calibracion/.
+
+CORRECCION DE ESTADO
+- Principal derecho: su estado existente en medidores.json; se conserva el archivo
+  y todas sus tarjetas/configuraciones, incluida la seleccion principal historica.
+  El principal sigue siendo un medidor fijo en la posicion aprobada.
+- Lateral: coleccion/configuracion/layout propios en medidores-lateral.json.
+- Flotantes: coleccion/configuracion/layout/geometria propios en medidores-flotantes.json.
+- Primera apertura de esta version sin los nuevos archivos: copia unica del estado
+  previo como punto de partida y genera IDs distintos para cada nueva vista. No
+  modifica medidores.json. Si los nuevos archivos existen, no vuelve a copiarlos.
+  Si las preferencias originales son invalidas, se conserva el archivo y se informa;
+  no se sustituye por una configuracion inventada.
+- Editar entrada/metrica/ponderacion/nombre/colores/alarmas/orden en una vista no
+  modifica otra. Las fuentes adquiridas se pueden observar desde varias vistas,
+  pero runtime/maximos/reset tambien son independientes por vista y tarjeta.
+- Nuevos medidores Input1, sin fallback silencioso. Legacy canal0 sigue Sin asignar.
+- La opcion ambigua Mostrar como principal del menu lateral/flotante se retira:
+  ya no hay una accion que vincule su tarjeta al principal derecho. Este se configura
+  desde su selector/SPL Config. Siempre delante se configura en ... del flotante.
+
+CUADRICULAS
+Filas y columnas se guardan exactamente como se eligen, sin incrementar la otra
+magnitud. Anadir tarjetas tampoco altera la cuadrícula. No se elimina ninguna tarjeta.
+Si tarjetas > filas*columnas: paginas explicitas con <, > y numero en el pie del
+panel. Orden por indice conservado dentro de cada pagina. Reabrir inicia pagina1.
+Si el ancho/alto no admite celdas legibles, viewport con desplazamiento horizontal/
+vertical; minimo124x138. Encabezados Lateral/Flotantes, menu# y ... permanecen fijos.
+El pie muestra filas x columnas y pagina/total. No se amplian sidebars automaticamente.
+
+FRANJA SUPERIOR
+Eliminada la franja interior decorativa MYA ACUSTICA de37px. Navegacion conservada
+con los mismos ocho botones, orden, anchos y separaciones, desplazada37px arriba.
+La superficie visible aloja el workspace con37px mas de altura y origen desplazado,
+conservando juntos coordenadas/hit tests existentes. Se recupera toda esa altura para
+el layout sin alterar los anclajes inferiores ni las proporciones fase/magnitud.
+Barra nativa cerrar/minimizar/maximizar conservada. Version y GRAFICAS DEMO aparecen
+compactos en el pie existente. No se crea banda nueva ni se cambian otros controles.
+
+VERIFICACION
+- Build macOS Debug MYA-006-A-R2 correcto, sin avisos en esta compilacion incremental.
+- CTest10/10 PASS. Nueva prueba meter_views: migracion unica sin modificar original,
+  IDs distintos, fuentes/metrica/ponderacion/estilo/grid/runtime/reset independientes,
+  2x2/1x4/4x1/1x1, exceso sin perdida, anadir sin ampliar grid y persistencia/reapertura.
+- Render de componentes reales sin ventana nativa ni audio: mismas variantes lateral
+  y flotante; paginacion visita todas las tarjetas comprobando coordenadas, capacidad,
+  visibilidad y flechas. Cambio del principal no modifica tarjetas de otras vistas.
+- Superficie1440x960,1760x1080 y1120x900: ocho botones de navegacion conservan
+  coordenadas relativas y pasan a y6; 37px recuperados, fase/magnitud de igual altura,
+  sidebars ajustables, cuatro botones izquierdos y controles inferiores accesibles.
+- Inspeccion visual de workspace sin franja, lateral1x4 con scroll, flotante4x1 con
+  scroll y lateral1x1 con paginas1/4. Evidencias en work/MYA-006-A-R2/render/.
+- Regresiones R1: estados de panel, tooltip E/S y legacy Sin asignar siguen pasando.
+- Diagnostico CoreMIDI previo de JUCE durante enumeracion en renderer; no apertura
+  fisica ni fallo del render. No se reinicio ni abrio la instancia de Antonio ni se
+  interrumpio su adquisicion. No se editaron preferencias vivas de usuario con tools.
+
+BUILD Y GUIA DE VERIFICACION
+work/MYA-006-A-R2/build/Mya Acustica.app; fuentes/logs/huellas en la misma entrega.
+Cuando Antonio decida usar el build, sin interrumpir su prueba actual:
+1. Cambiar fuente/metrica del principal derecho; comprobar que lateral y flotante
+   conservan las suyas. Repetir desde lateral y flotante con fuentes distintas.
+2. Elegir lateral1x4 y flotante4x1 con #. Comprobar pies separados y scroll. Cambiar
+   solo una dimension no debe alterar la otra ni la otra vista.
+3. Elegir1x1 con cuatro tarjetas: pie1/4 y flechas permiten recorrer todas. Anadir
+   una tarjeta mantiene1x1 y aumenta paginas. Ninguna tarjeta se borra.
+4. Reabrir y comprobar preferencias separadas. Revisar alarmas/fondos desde el menu
+   contextual de cada tarjeta y SPL Config del principal.
+5. Confirmar ausencia de franja interior y conservacion de barra nativa/navegacion.
+Pendiente validacion de Antonio sobre el build; no se declara aceptacion global UI.
+Windows/ASIO no probados. Exactitud/desconexion fisica pendientes. Calibracion SPL
+sigue autorizada pero guardada fuera de este build para retomar despues de verificar
+esta correccion prioritaria; no se presenta como terminada ni probada.
+
+ADENDA — CURVA PERSISTENTE / ORIGEN COMPROBADO Y AVG
+Lectura sin modificaciones de Aplicacion/Biblioteca/biblioteca.json y su captura:
+ID90312247624a42cf9ff26eb73032b0ed, nombre TF1 /02:55:36,
+colour ff54ee22, visible=true, acquisitionMethod synthetic-demo, origin original-demo.
+El fichero contiene muestras complejas guardadas, sin coherencia. drawSaved dibuja
+las capturas visibles independientemente de los cuatro interruptores de TF. IR no
+lee esas capturas. Esto explica curva verde suave persistente, IR vacio/coherencia
+oculta y cursor con valores al ocultar las cuatro TF; no es un fallback DSP nuevo.
+El defecto era su origen poco visible y la falta de un selector explicito de captura.
+No se borro ni oculto la captura del usuario mediante tools.
+Ahora los selectores de fase/magnitud ofrecen TF+capturas visibles, Solo TF visibles,
+Sin trazos, cada TF y cada captura con nombre/procedencia. Elegir una TF excluye las
+capturas de ese panel. Capturas presentes se identifican en la cabecera existente y
+el tooltip. La biblioteca conserva la gestion normal: Trazos > TF+AVG > clic en el
+color de la captura para alternar visibilidad. El selector persiste por ID de captura.
+Sin fuente visible valida, no se dibuja curva ni se inventa valor: cursor--, IR vacio,
+coherencia ausente. Una captura oculta o eliminada no provoca fallback a otra fuente.
+Regresion offscreen: captura sintetica propia sin coherencia, cuatro TF ocultas;
+se verifica captura con nombre, SoloTF vacio y ocultar captura con todos los valores
+--. Ficheros trace-origins-0/1/2.png. No se usan/modifican datos vivos del usuario.
+
+AVG antes quedaba excluido por el filtro de mouseDown index>=4. Ahora clic en fila,
+borde, nombre o color selecciona source5 y pinta el borde seleccionado; doble clic
+fila/nombre/color edita su color. No hay datos/estimador AVG, por lo que el color no
+finge alternar visibilidad de un promedio inexistente, ni se habilitan Play/Find/Track.
+Prueba de fila/nombre/color/doble clic y estado deshabilitado PASS; imagen
+AVG-selected-no-estimator.png. Sin nueva adquisicion, promedio ni cambios M/R.
+
+ADENDA — ACABADO NUMERICO CON RELIEVE SOLICITADO
+Pintura comun sin estado mutable (MeterSurface.h) para principal, celdas lateral/
+flotante y editor numerico: degradado discreto de su propio color, borde redondeado,
+luz superior y sombra interior. Alarmas/pulso se calculan antes y suministran su color
+al pintor. No modifica M/R, tamaños, margenes, distribucion ni graficas.
+Antes: render-before-relief/; despues: render/. Inspeccion de 2x2/1x4/4x1, principal y
+fixture propia con fondo azul, aviso ocre y alarma magenta personalizados, con valores
+sinteticos explicitamente DEMO (meter-relief-custom-colours-DEMO.png).
+Acabado entregado para revision, sin declarar aprobada la interfaz global.
+
+ADENDA — MODOS TF / IR EXCLUSIVOS
+La causa era reutilizar407 (visibilidad del impulso superior) como selector IR,
+mientras TF401 indicaba el workspace entero y seguia marcado. Se separan acciones:
+980 selecciona TF (impulso superior, fase y magnitud),981 selecciona vista propia
+IR DEMO sintetica no medida. Solo uno de los dos modos queda activo; repetirlo
+mantiene el mismo modo, sin alternar visibilidad. RTA420 sigue pendiente/deshabilitado.
+407 y el ajuste avanzado indican expresamente visibilidad del impulso dentro deTF;
+no seleccionan modoIR. Volver aTF muestra sus tres paneles sin alterar fuentes,
+zoom/pan de fase/magnitud, suavizado ni representaciones guardadas. IR usa la misma
+IR sintetica del prototipo, no hay adquisicion/estimador IR real.
+Pruebas de estados de comandos y render de secuencia TF/IR/IR/TF PASS; imagenes
+mode-IR-demo-exclusive.png y mode-TF-three-panels-exclusive.png. No cambia el motor
+ni reinicia audio al alternar vistas. El estado de modo se incluye al guardar proyecto.
+Especificacion RTA/espectrograma2D/3D y combinado registrada como PENDIENTE en
+Documentacion/05_Referencia_tecnica/RTA-espectrograma-especificacion-pendiente.txt;
+no se finge su implementacion ni se amplia al3D de prediccion de recinto.

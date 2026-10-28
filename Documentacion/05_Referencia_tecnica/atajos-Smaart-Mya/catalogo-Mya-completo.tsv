@@ -1,0 +1,138 @@
+id	key	accion_ES	atajo	capacidad	menu	ruta_ES	estado_contexto_defecto
+101	project.open	Abrir demo	sin asignar	Ready	0		ready enabled
+102	project.save	Guardar demo	sin asignar	Ready	0		ready enabled
+103	trace.capture	Capturar TF	Space	Demo	0		demo enabled
+190	data.import	Importar medidas / IR / carpetas	sin asignar	Pending	0		pending disabled
+192	report.export	Exportar informe	sin asignar	Pending	0		pending disabled
+201	config.audio	Audio / E-S	sin asignar	Ready	1		ready enabled
+202	config.tf	Ajustes TF seleccionada	sin asignar	Demo	1		demo enabled
+290	calibration.spl	Calibración SPL / micrófono	sin asignar	Pending	1		pending disabled
+292	calibration.loop	Calibración de loop	sin asignar	Pending	1		pending disabled
+293	config.generator	Ajustes de generador	sin asignar	Pending	1		pending disabled
+291	config.averaging	Promedios en directo	sin asignar	Pending	1		pending disabled
+301	plot.smoothing.link	Vincular suavizado de fase y magnitud	sin asignar	Demo	2	Ajustes de gráficos/Función de transferencia	demo enabled
+310	plot.smoothing.phase.0	Sin suavizado	sin asignar	Demo	2	Suavizado / fase	demo enabled
+311	plot.smoothing.phase.1	1/48 oct	sin asignar	Demo	2	Suavizado / fase	demo enabled
+312	plot.smoothing.phase.2	1/24 oct	sin asignar	Demo	2	Suavizado / fase	demo enabled
+313	plot.smoothing.phase.3	1/12 oct	sin asignar	Demo	2	Suavizado / fase	demo enabled
+314	plot.smoothing.phase.4	1/6 oct	sin asignar	Demo	2	Suavizado / fase	demo enabled
+315	plot.smoothing.phase.5	1/3 oct	sin asignar	Demo	2	Suavizado / fase	demo enabled
+316	plot.smoothing.phase.6	1 octava	sin asignar	Demo	2	Suavizado / fase	demo enabled
+320	plot.smoothing.magnitude.0	Sin suavizado	sin asignar	Demo	2	Suavizado / magnitud	demo enabled
+321	plot.smoothing.magnitude.1	1/48 oct	sin asignar	Demo	2	Suavizado / magnitud	demo enabled
+322	plot.smoothing.magnitude.2	1/24 oct	sin asignar	Demo	2	Suavizado / magnitud	demo enabled
+323	plot.smoothing.magnitude.3	1/12 oct	sin asignar	Demo	2	Suavizado / magnitud	demo enabled
+324	plot.smoothing.magnitude.4	1/6 oct	sin asignar	Demo	2	Suavizado / magnitud	demo enabled
+325	plot.smoothing.magnitude.5	1/3 oct	sin asignar	Demo	2	Suavizado / magnitud	demo enabled
+326	plot.smoothing.magnitude.6	1 octava	sin asignar	Demo	2	Suavizado / magnitud	demo enabled
+380	language.es	Español	sin asignar	Ready	2	Idioma de menús y comandos	ready enabled
+381	language.en	Inglés	sin asignar	Ready	2	Idioma de menús y comandos	ready enabled
+391	plot.fft	Ventanas FFT / FTW	sin asignar	Pending	2		pending disabled
+392	plot.cursor.lock	Cursor bloqueado / deltas	sin asignar	Pending	2		pending disabled
+393	plot.theme	Tema / grosor de trazos	sin asignar	Pending	2		pending disabled
+401	view.measurement	Medición	sin asignar	Demo	3		demo enabled
+402	view.dsp	DSP / Ajuste	sin asignar	Demo	3		demo enabled
+403	view.design	Mya Mapp Vision 3D	sin asignar	Demo	3		demo enabled
+404	view.lab	Laboratorio	sin asignar	Demo	3		demo enabled
+405	view.left	Barra izquierda	B	Ready	3		ready enabled
+406	view.right	Barra derecha	O	Ready	3		ready enabled
+407	view.ir	Impulso superior en TF	sin asignar	Demo	3		demo enabled
+408	view.coherence	Coherencia demo	C	Demo	3		demo enabled
+409	view.reset	Restaurar vista	Option/Alt+5	Ready	3		ready enabled
+980	measurement.view.tf	Vista TF	T	Demo	3		demo enabled
+981	measurement.view.ir	Vista IR demo	sin asignar	Demo	3		demo enabled
+420	view.rta	Espectro RTA	sin asignar	Pending	3		pending disabled
+421	view.spectrogram	Espectrograma	sin asignar	Pending	3		pending disabled
+422	view.rt60	RT60 por bandas	sin asignar	Pending	3		pending disabled
+502	measurement.find	Buscar retardo TF	L / F	Pending	4		pending disabled
+503	measurement.track.all	Track general / todas las TF	sin asignar	Pending	4		pending disabled
+504	generator.pink	Ruido rosa	G	Pending	4		pending disabled
+505	generator.sweep	Sweep	S	Pending	4		pending disabled
+526	measurement.averager.reset	Reiniciar promedio / bufer de medida	V	Pending	4		pending disabled
+506	start	Iniciar todos	sin asignar	Ready	4		ready enabled
+507	stop	Detener todos	sin asignar	Ready	4		ready enabled
+508	pause	Pausar todos	sin asignar	Ready	4		ready enabled
+509	tf.create	Crear TF	sin asignar	Pending	4		pending disabled
+510	average.create	Crear promedio	sin asignar	Pending	4		pending disabled
+511	timer	Temporizador	sin asignar	Pending	4		pending disabled
+512	internal.loop	Loop interno	sin asignar	Pending	4		pending disabled
+513	gain.track	Seguimiento de ganancia	sin asignar	Pending	4		pending disabled
+514	track.tf	Track individual	sin asignar	Pending	4		pending disabled
+515	start.tf	Iniciar TF	sin asignar	Ready	4		ready enabled
+516	find.advanced	Buscador avanzado	sin asignar	Pending	4		pending disabled
+517	pink.settings	Opciones de ruido rosa	sin asignar	Ready	4		ready enabled
+518	sweep.settings	Opciones de sweep	sin asignar	Ready	4		ready enabled
+519	phase.results	Resultados de fase automática	sin asignar	Pending	4		pending disabled
+520	measurement.delay.reset	Restaurar delay manual TF	sin asignar	Demo	4		demo enabled
+521	measurement.polarity	Polaridad de medición	sin asignar	Pending	4		pending disabled
+203	window.meters	Medidores	E, E	Demo	5		demo enabled
+602	window.drawer.close	Cerrar panel de ajustes	Esc	Ready	5		ready disabled
+701	help.shortcuts	Atajos y manejo	sin asignar	Ready	6		ready enabled
+702	help.status	Estado del prototipo	sin asignar	Ready	6		ready enabled
+703	help.about	Acerca de Mya Acústica	sin asignar	Ready	6		ready enabled
+790	help.update	Buscar actualizaciones	sin asignar	Pending	6		pending disabled
+801	dsp.polarity	Polaridad DSP	sin asignar	Demo	3	DSP	demo disabled
+802	dsp.bypass	Bypass visual DSP	sin asignar	Demo	3	DSP	demo disabled
+810	dsp.auto.phase	Proponer alineación de fase	sin asignar	Pending	3	DSP	pending disabled
+811	dsp.auto.xover	Proponer cruce	sin asignar	Pending	3	DSP	pending disabled
+812	dsp.auto.eq	Auto EQ	sin asignar	Pending	3	DSP	pending disabled
+813	dsp.auto.fir	Auto FIR	sin asignar	Pending	3	DSP	pending disabled
+814	dsp.target	Targets	sin asignar	Pending	3	DSP	pending disabled
+815	dsp.filters	Filtros / tabla DSP	sin asignar	Pending	3	DSP	pending disabled
+816	dsp.variant	Crear variante / deshacer	sin asignar	Pending	3	DSP	pending disabled
+817	dsp.design.bridge	Diseño → DSP	sin asignar	Pending	3	DSP	pending disabled
+818	dsp.dsp.bridge	DSP → Diseño	sin asignar	Pending	3	DSP	pending disabled
+830	processor.profiles	Modelo / firmware y capacidades	sin asignar	Pending	1	Procesadores	pending disabled
+831	processor.api	Conexión API por modelo	sin asignar	Pending	1	Procesadores	pending disabled
+832	processor.export	Exportar archivo por modelo	sin asignar	Pending	1	Procesadores	pending disabled
+833	processor.manual	Ficha de introducción manual	sin asignar	Pending	1	Procesadores	pending disabled
+840	remote.lan	Control remoto LAN / API	sin asignar	Pending	1		pending disabled
+850	plot.zoom.in.y	Ampliar Y	+	Demo	4	Gráfica activa	demo enabled
+851	plot.zoom.out.y	Reducir Y	-	Demo	4	Gráfica activa	demo enabled
+852	plot.zoom.in.xy	Ampliar XY	Cmd/Ctrl + +	Demo	4	Gráfica activa	demo enabled
+853	plot.zoom.out.xy	Reducir XY	Cmd/Ctrl + -	Demo	4	Gráfica activa	demo enabled
+854	plot.zoom.in.x	Ampliar X	Cmd/Ctrl + Option/Alt + +	Demo	4	Gráfica activa	demo enabled
+855	plot.zoom.out.x	Reducir X	Cmd/Ctrl + Option/Alt + -	Demo	4	Gráfica activa	demo enabled
+856	plot.zoom.arrow.in	Reducir intervalo X	Left	Demo	4	Gráfica activa	demo enabled
+857	plot.zoom.arrow.out	Ampliar intervalo X	Right	Demo	4	Gráfica activa	demo enabled
+858	plot.pan.up	Desplazar arriba	Up	Demo	4	Gráfica activa	demo enabled
+859	plot.pan.down	Desplazar abajo	Down	Demo	4	Gráfica activa	demo enabled
+900	library.session.new	Nueva sesión	sin asignar	Ready	0	Biblioteca	ready enabled
+901	library.folder.new	Nueva subcarpeta	sin asignar	Ready	0	Biblioteca	ready enabled
+902	library.rename	Renombrar selección	sin asignar	Ready	0	Biblioteca	ready disabled
+903	library.destination	Fijar destino de captura	sin asignar	Ready	0	Biblioteca	ready disabled
+904	library.move	Mover selección a…	sin asignar	Ready	0	Biblioteca	ready disabled
+905	library.show	Mostrar capturas	sin asignar	Ready	0	Biblioteca	ready disabled
+906	library.hide	Ocultar capturas	sin asignar	Ready	0	Biblioteca	ready disabled
+907	library.info	Información de captura / carpeta	Enter (library)	Ready	0	Biblioteca	ready disabled
+908	library.colour	Color de capturas	sin asignar	Ready	0	Biblioteca	ready disabled
+909	library.delete	Eliminar selección	sin asignar	Pending	0	Biblioteca	pending disabled
+910	library.load.dsp	Cargar en canal DSP…	sin asignar	Pending	0	Biblioteca	pending disabled
+911	library.reload	Recargar biblioteca	sin asignar	Ready	0	Biblioteca	ready enabled
+930	plot.type.ir.lin	Lin	sin asignar	Demo	2	Escala de amplitud IR	demo enabled
+931	plot.type.ir.log	Log	sin asignar	Demo	2	Escala de amplitud IR	demo enabled
+932	plot.type.ir.etc	ETC	sin asignar	Demo	2	Escala de amplitud IR	demo enabled
+940	plot.type.panel1.mag	Magnitud	sin asignar	Demo	2	Gráfico 1	demo enabled
+941	plot.type.panel1.phase	Fase	sin asignar	Demo	2	Gráfico 1	demo enabled
+950	plot.type.panel2.mag	Magnitud	sin asignar	Demo	2	Gráfico 2	demo enabled
+951	plot.type.panel2.phase	Fase	sin asignar	Demo	2	Gráfico 2	demo enabled
+302	plot.smoothing.global	Vincular suavizado global del mismo tipo	sin asignar	Pending	2	Ajustes de gráficos/Función de transferencia	pending disabled
+303	plot.settings.tf	Función de transferencia…	Option/Alt+T	Ready	2	Ajustes de gráficos	ready enabled
+963	plot.settings.ir	Respuesta al impulso…	sin asignar	Ready	2	Ajustes de gráficos	ready enabled
+964	plot.settings.spectrum	Espectro…	sin asignar	Ready	2	Ajustes de gráficos	ready enabled
+960	sidebar.traces	Trazos	sin asignar	Ready	3	Barra izquierda	ready enabled
+961	sidebar.meters	dB Meter	sin asignar	Demo	3	Barra izquierda	demo enabled
+912	library.view.rta	RTA (biblioteca contextual)	sin asignar	Ready	0	Biblioteca	ready enabled
+913	library.view.traces	Trazos: individuales y AVG	sin asignar	Ready	0	Biblioteca	ready enabled
+971	meter.main.visible	Medidor principal	Option/Alt+K	Ready	3		ready enabled
+972	meter.main.clock	Medidor / reloj	K	Ready	3		ready enabled
+973	meter.main.config	SPL Config / opciones de medidor	sin asignar	Ready	1		ready enabled
+974	meter.max.reset	Reset Max	sin asignar	Ready	4		ready disabled
+975	meter.leq.reset	Reset Leq	sin asignar	Ready	4		ready disabled
+969	average.start	Iniciar AVG	sin asignar	Pending	4		pending disabled
+970	loop.settings	Opciones de loop interno	sin asignar	Ready	1		ready enabled
+965	dsp.auto.delay	Auto Delay	sin asignar	Pending	3	DSP	pending disabled
+966	dsp.compare	Comparar	sin asignar	Pending	3	DSP	pending disabled
+967	dsp.proposals	Propuestas	sin asignar	Pending	3	DSP	pending disabled
+968	plot.sum	Suma	sin asignar	Pending	2		pending disabled
+914	library.view.ir	Sweep / IR	sin asignar	Ready	0	Biblioteca	ready enabled

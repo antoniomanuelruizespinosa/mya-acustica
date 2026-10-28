@@ -1,0 +1,21 @@
+RTA Y ESPECTROGRAMA — ESPECIFICACION SOLICITADA, PENDIENTE
+26/10/2026. Requisito explicito de Antonio transmitido por Revision.
+No implementado en MYA-006-A-R2; selector RTA permanece deshabilitado y sin estado
+activo. No hay motor FFT/RTA/espectrograma real ni audio generado por esta solicitud.
+
+Modo de medicion mutuamente excluyente: TF / RTA / IR.
+Dentro de RTA:
+- Representacion RTA: Barras / Lineas / Ambas.
+- Espectrograma convencional2D: frecuencia-tiempo-color de nivel.
+- Representacion3D del mismo historial: frecuencia-tiempo-altura de nivel.
+- Modo combinado RTA + espectrograma.
+Convencional y2D son la misma representacion, no motores adicionales. La vista3D
+es otra representacion del mismo historial espectral; no es Mya Mapp Vision ni
+prediccion acustica de un recinto.
+Fuente/configuracion deben ser seleccionables; espectro, historial2D y3D deben
+compartir datos, normalizacion y unidades coherentes, con procedencia explicita.
+No inventar niveles/colores de medicion, conformidad de bandas/ponderaciones ni
+valores SPL sin calibracion/estimadores verificados. Detalles FFT, ventana,
+normalizacion, bins/bandas, tiempos e historial requieren contrato y pruebas en
+su bloque futuro. No se fijan aqui parametros numericos no solicitados.
+Prioridad: correcciones actuales y calibracion autorizada; no ampliar al3D acustico.

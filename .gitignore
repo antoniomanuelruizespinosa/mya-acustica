@@ -20,3 +20,6 @@
 *.key
 /.idea/
 /.vscode/
+
+# Device diagnostics may contain private machine/session metadata
+/Aplicacion/diagnostico-entrada-*.txt
