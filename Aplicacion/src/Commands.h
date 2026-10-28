@@ -17,9 +17,9 @@ inline const std::vector<Command>& catalog(){
   {103,"trace.capture",{"Capturar TF","Capture TF"},"Space",0,{"",""},Capability::Demo,{"Guarda datos sintéticos; no una medida","Saves synthetic data; not a measurement"}},
   {190,"data.import",{"Importar medidas / IR / carpetas","Import measurements / IR / folders"},"",0,{"",""},Capability::Pending,{"Importador y procedencia pendientes","Importer and provenance pending"}},
   {192,"report.export",{"Exportar informe","Export report"},"",0,{"",""},Capability::Pending,{"Generación de informes pendiente","Report generation pending"}},
-  {201,"config.audio",{"Audio / E-S","Audio / I-O"},"",1,{"",""},Capability::Demo,{"Detecta dispositivos y edita rutas; adquisición desactivada","Lists devices and edits routes; acquisition disabled"}},
+  {201,"config.audio",{"Audio / E-S","Audio / I-O"},"",1,{"",""},Capability::Ready,{"Dispositivos y rutas de entrada; Play abre dBFS, Stop/Pause cierra; TF pendiente","Input devices and routes; Play opens dBFS, Stop/Pause closes; TF pending"}},
   {202,"config.tf",{"Ajustes TF seleccionada","Selected TF settings"},"",1,{"",""},Capability::Demo,{"Edita parámetros de la TF demo; no inicia audio","Edits demo TF parameters; does not start audio"}},
-  {290,"calibration.spl",{"Calibración SPL / micrófono","SPL / microphone calibration"},"",1,{"",""},Capability::Pending,{"Calibración física y metadatos pendientes","Physical calibration and metadata pending"}},
+  {290,"calibration.spl",{"Calibración SPL / micrófono","SPL / microphone calibration"},"",1,{"",""},Capability::Ready,{"Calibracion RMS por backend/dispositivo/canal","RMS calibration per backend/device/channel"}},
   {292,"calibration.loop",{"Calibración de loop","Loop calibration"},"",1,{"",""},Capability::Pending,{"Adquisición e invalidación por ruta pendientes","Acquisition and route invalidation pending"}},
   {293,"config.generator",{"Ajustes de generador","Generator settings"},"",1,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
   {291,"config.averaging",{"Promedios en directo","Live averaging"},"",1,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
@@ -43,39 +43,42 @@ inline const std::vector<Command>& catalog(){
   {391,"plot.fft",{"Ventanas FFT / FTW","FFT windows / FTW"},"",2,{"",""},Capability::Pending,{"Motor y datos complejos compatibles pendientes","Engine and compatible complex data pending"}},
   {392,"plot.cursor.lock",{"Cursor bloqueado / deltas","Locked cursor / deltas"},"",2,{"",""},Capability::Pending,{"Interacción y deltas pendientes","Interaction and deltas pending"}},
   {393,"plot.theme",{"Tema / grosor de trazos","Theme / trace width"},"",2,{"",""},Capability::Pending,{"Preferencias de apariencia pendientes","Appearance preferences pending"}},
-  {401,"view.measurement",{"Medición","Measurement"},"T",3,{"",""},Capability::Demo,{"Espacio de demostración; sin motor validado","Demo workspace; no validated engine"}},
-  {402,"view.dsp",{"DSP / Ajuste","DSP / Adjust"},"D",3,{"",""},Capability::Demo,{"Espacio de demostración; sin motor validado","Demo workspace; no validated engine"}},
-  {403,"view.design",{"Mya Mapp Vision 3D","Mya Mapp Vision 3D"},"V",3,{"",""},Capability::Demo,{"Espacio de demostración; sin motor validado","Demo workspace; no validated engine"}},
+  {401,"view.measurement",{"Medición","Measurement"},"",3,{"",""},Capability::Demo,{"Espacio de demostración; sin motor validado","Demo workspace; no validated engine"}},
+  {402,"view.dsp",{"DSP / Ajuste","DSP / Adjust"},"",3,{"",""},Capability::Demo,{"Espacio de demostración; sin motor validado","Demo workspace; no validated engine"}},
+  {403,"view.design",{"Mya Mapp Vision 3D","Mya Mapp Vision 3D"},"",3,{"",""},Capability::Demo,{"Espacio de demostración; sin motor validado","Demo workspace; no validated engine"}},
   {404,"view.lab",{"Laboratorio","Laboratory"},"",3,{"",""},Capability::Demo,{"Espacio de demostración; sin motor validado","Demo workspace; no validated engine"}},
   {405,"view.left",{"Barra izquierda","Left bar"},"B",3,{"",""},Capability::Ready,{"",""}},
   {406,"view.right",{"Barra derecha","Right bar"},"O",3,{"",""},Capability::Ready,{"",""}},
-  {407,"view.ir",{"Mostrar IR demo","Show demo IR"},"",3,{"",""},Capability::Demo,{"",""}},
+  {407,"view.ir",{"Impulso superior en TF","Top impulse in TF"},"",3,{"",""},Capability::Demo,{"",""}},
   {408,"view.coherence",{"Coherencia demo","Demo coherence"},"C",3,{"",""},Capability::Demo,{"",""}},
   {409,"view.reset",{"Restaurar vista","Restore view"},"Option/Alt+5",3,{"",""},Capability::Ready,{"",""}},
+  {980,"measurement.view.tf",{"Vista TF","TF view"},"T",3,{"",""},Capability::Demo,{"Impulso, fase y magnitud sinteticos; no TF medida","Synthetic impulse, phase and magnitude; not a measured TF"}},
+  {981,"measurement.view.ir",{"Vista IR demo","Demo IR view"},"",3,{"",""},Capability::Demo,{"Vista propia de impulso sintetico; adquisicion IR pendiente","Standalone synthetic impulse; measured IR pending"}},
   {420,"view.rta",{"Espectro RTA","RTA spectrum"},"",3,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
   {421,"view.spectrogram",{"Espectrograma","Spectrogram"},"",3,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
   {422,"view.rt60",{"RT60 por bandas","RT60 by band"},"",3,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
   {502,"measurement.find",{"Buscar retardo TF","Find TF delay"},"L / F",4,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
-  {503,"measurement.track.all",{"Track global","Track all"},"",4,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
+  {503,"measurement.track.all",{"Track general / todas las TF","Track all project TFs"},"",4,{"",""},Capability::Pending,{"Tiempo de todas las TF del proyecto; motor pendiente, sin incluir AVG","Timing for every project TF; engine pending, excludes AVG"}},
   {504,"generator.pink",{"Ruido rosa","Pink noise"},"G",4,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
   {505,"generator.sweep",{"Sweep","Sweep"},"S",4,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
-  {506,"start",{"Iniciar todos","Start all"},"",4,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
-  {507,"stop",{"Detener todos","Stop all"},"",4,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
-  {508,"pause",{"Pausar todos","Pause all"},"",4,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
+  {526,"measurement.averager.reset",{"Reiniciar promedio / bufer de medida","Reset measurement averager / buffer"},"V",4,{"",""},Capability::Pending,{"Sin motor/promedio TF o IR real; no borra capturas ni recarga biblioteca","No real TF/IR averaging engine; does not delete captures or reload library"}},
+  {506,"start",{"Iniciar todos","Start all"},"",4,{"",""},Capability::Ready,{"Entradas dBFS solamente; TF pendiente","Input dBFS only; TF pending"}},
+  {507,"stop",{"Detener todos","Stop all"},"",4,{"",""},Capability::Ready,{"Entradas dBFS solamente; TF pendiente","Input dBFS only; TF pending"}},
+  {508,"pause",{"Pausar todos","Pause all"},"",4,{"",""},Capability::Ready,{"Entradas dBFS solamente; TF pendiente","Input dBFS only; TF pending"}},
   {509,"tf.create",{"Crear TF","Create TF"},"",4,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
   {510,"average.create",{"Crear promedio","Create average"},"",4,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
   {511,"timer",{"Temporizador","Timer"},"",4,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
   {512,"internal.loop",{"Loop interno","Internal loop"},"",4,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
   {513,"gain.track",{"Seguimiento de ganancia","Gain tracking"},"",4,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
   {514,"track.tf",{"Track individual","Track individual TF"},"",4,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
-  {515,"start.tf",{"Iniciar TF","Start TF"},"",4,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
+  {515,"start.tf",{"Iniciar TF","Start TF"},"",4,{"",""},Capability::Ready,{"Entradas dBFS solamente; TF pendiente","Input dBFS only; TF pending"}},
   {516,"find.advanced",{"Buscador avanzado","Advanced delay finder"},"",4,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
-  {517,"pink.settings",{"Ajustes de ruido rosa","Pink noise settings"},"",4,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
-  {518,"sweep.settings",{"Ajustes de sweep","Sweep settings"},"",4,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
+  {517,"pink.settings",{"Opciones de ruido rosa","Pink noise options"},"",4,{"",""},Capability::Ready,{"Panel sin generacion; parametros sin motor deshabilitados","Panel only; engine parameters disabled"}},
+  {518,"sweep.settings",{"Opciones de sweep","Sweep options"},"",4,{"",""},Capability::Ready,{"Panel sin generacion; parametros sin motor deshabilitados","Panel only; engine parameters disabled"}},
   {519,"phase.results",{"Resultados de fase automática","Auto phase results"},"",4,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
   {520,"measurement.delay.reset",{"Restaurar delay manual TF","Reset manual TF delay"},"",4,{"",""},Capability::Demo,{"",""}},
   {521,"measurement.polarity",{"Polaridad de medición","Measurement polarity"},"",4,{"",""},Capability::Pending,{"Inversión de adquisición pendiente; distinta de DSP","Acquisition inversion pending; separate from DSP"}},
-  {203,"window.meters",{"Medidores","Meters"},"E, E",5,{"",""},Capability::Demo,{"Ventana sin audio ni calibración; no mide SPL","Window without audio or calibration; does not measure SPL"}},
+  {203,"window.meters",{"Medidores","Meters"},"E, E",5,{"",""},Capability::Demo,{"Medidores independientes por vista; Play abre entradas dBFS, SPL pendiente","Independent meters per view; Play opens dBFS inputs, SPL pending"}},
   {602,"window.drawer.close",{"Cerrar panel de ajustes","Close settings drawer"},"Esc",5,{"",""},Capability::Ready,{"",""}},
   {701,"help.shortcuts",{"Atajos y manejo","Shortcuts and operation"},"",6,{"",""},Capability::Ready,{"",""}},
   {702,"help.status",{"Estado del prototipo","Prototype status"},"",6,{"",""},Capability::Ready,{"",""}},
@@ -135,6 +138,13 @@ inline const std::vector<Command>& catalog(){
   {961,"sidebar.meters",{"dB Meter","dB Meter"},"",3,{"Barra izquierda","Left sidebar"},Capability::Demo,{}},
   {912,"library.view.rta",{"RTA (biblioteca contextual)","RTA (contextual library)"},"",0,{"Biblioteca","Library"},Capability::Ready,{}},
   {913,"library.view.traces",{"Trazos: individuales y AVG","Traces: individual and AVG"},"",0,{"Biblioteca","Library"},Capability::Ready,{}},
+  {971,"meter.main.visible",{"Medidor principal","Main meter"},"Option/Alt+K",3,{"",""},Capability::Ready,{}},
+  {972,"meter.main.clock",{"Medidor / reloj","Meter / clock"},"K",3,{"",""},Capability::Ready,{}},
+  {973,"meter.main.config",{"SPL Config / opciones de medidor","SPL Config / meter options"},"",1,{"",""},Capability::Ready,{"Configuracion del principal; estimadores pendientes","Principal configuration; estimators pending"}},
+  {974,"meter.max.reset",{"Reset Max","Reset Max"},"",4,{"",""},Capability::Ready,{}},
+  {975,"meter.leq.reset",{"Reset Leq","Reset Leq"},"",4,{"",""},Capability::Ready,{}},
+  {969,"average.start",{"Iniciar AVG","Start AVG"},"",4,{"",""},Capability::Pending,{"Estimador AVG pendiente","AVG estimator pending"}},
+  {970,"loop.settings",{"Opciones de loop interno","Internal loop options"},"",1,{"",""},Capability::Ready,{"Panel sin audio; calibracion y parametros de motor deshabilitados","Panel only; calibration and engine parameters disabled"}},
   {965,"dsp.auto.delay",{"Auto Delay","Auto Delay"},"",3,{"DSP","DSP"},Capability::Pending,{"Estimador temporal pendiente","Time estimator pending"}},
   {966,"dsp.compare",{"Comparar","Compare"},"",3,{"DSP","DSP"},Capability::Pending,{"Variantes y comparación verificable pendientes","Verifiable comparison and variants pending"}},
   {967,"dsp.proposals",{"Propuestas","Proposals"},"",3,{"DSP","DSP"},Capability::Pending,{"Propuestas verificables y decisión del ingeniero pendientes","Verifiable proposals and engineer decision pending"}},
@@ -165,13 +175,13 @@ inline std::string compactName(const Command& c,Language language){
 inline const Command* find(int id){for(const auto& c:catalog())if(c.id==id)return &c;return nullptr;}
 inline const std::array<Text,7>& menus(){static const std::array<Text,7> names{{{"Archivo","File"},{"Configuración","Configuration"},{"Opciones","Options"},{"Vista","View"},{"Comandos","Commands"},{"Ventanas","Windows"},{"Ayuda","Help"}}};return names;}
 inline constexpr std::array<int,19> topBindings{{401,402,403,404,102,101,201,703,812,813,814,815,801,802,818,817,290,502,832}};
-inline constexpr std::array<int,30> measurementBindings{{420,401,203,422,512,511,511,502,516,504,517,505,518,509,510,810,519,520,521,503,401,407,203,506,507,508,201,407,293,103}};
+inline constexpr std::array<int,30> measurementBindings{{420,401,203,422,512,511,511,502,516,504,517,505,518,509,510,810,519,520,521,503,980,981,203,506,507,508,201,407,293,103}};
 inline constexpr std::array<int,4> tfBindings{{502,514,513,515}};
 // Secondary menu placements: command IDs are reused, never copied or aliased.
 inline constexpr std::array<std::array<int,2>,3> extraMenus{{{{4,103}},{{1,203}},{{5,409}}}};
 struct Context {
- bool libraryReady=true,libraryTF=true;int librarySelection=0,libraryFolders=0,libraryCaptures=0,libraryView=1;bool sidebarMeters=false,metersVisible=false,allowNoSmoothing=true;
- int mode=0,selectedTF=1;bool drawer=false,left=true,right=true,ir=true,coherence=true,linked=true,polarity=false,bypass=false;
+ bool mainMeterVisible=true,meterClock=false,meterMax=false,meterLeq=false;bool libraryReady=true,libraryTF=true;int librarySelection=0,libraryFolders=0,libraryCaptures=0,libraryView=1;bool sidebarMeters=false,metersVisible=false,allowNoSmoothing=true;
+ int mode=0,selectedTF=1,measurementView=0;bool drawer=false,left=true,right=true,ir=true,coherence=true,linked=true,polarity=false,bypass=false;
  std::array<int,2> graphTypes{{1,2}};int irScale=0;
  std::array<int,2> smoothing{{1,1}};Language language=Language::ES;
 };
@@ -180,6 +190,13 @@ inline State state(const Command& c,const Context& x){
  State s{c.capability!=Capability::Pending,false,c.reason};
  if(c.capability==Capability::Pending)return s;
  if((c.id>=900&&c.id<=908)&&!x.libraryReady){s.enabled=false;s.reason={"Biblioteca no disponible; revisa el error","Library unavailable; check the error"};}
+ if((c.id==517||c.id==518||c.id==970)&&x.mode!=0){s.enabled=false;s.reason={"Disponible en Medicion","Available in Measurement"};}
+ if(c.id==971)s.checked=x.mainMeterVisible;
+ if(c.id==972){s.checked=x.meterClock;s.enabled=x.mode==0&&x.mainMeterVisible&&x.right;if(!s.enabled)s.reason={"Mostrar principal en Medicion","Show main meter in Measurement"};}
+ if(c.id==974){s.enabled=x.meterMax;s.reason={"Sin maximo valido; no borra Leq","No valid maximum; does not reset Leq"};}
+ if(c.id==975){s.enabled=x.meterLeq;s.reason={"Sin buffer Leq; no borra Max","No Leq buffer; does not reset Max"};}
+ if(c.id==980||c.id==981){s.enabled=c.id==980||x.mode==0;s.checked=x.mode==0&&x.measurementView==(c.id==981?1:0);}
+ if(c.id==407&&x.measurementView!=0)s.enabled=false;
  if(c.id==203)s.checked=x.metersVisible;
  if(c.id==960)s.checked=!x.sidebarMeters;if(c.id==961)s.checked=x.sidebarMeters;
  if(c.id>=912&&c.id<=914){s.enabled=x.libraryReady;s.checked=x.libraryView==(c.id==912?3:c.id==913?1:2);}
@@ -189,10 +206,10 @@ inline State state(const Command& c,const Context& x){
  if(c.id==903&&(x.librarySelection!=1||x.libraryFolders!=1)){s.enabled=false;s.reason={"Selecciona una carpeta destino","Select a destination folder"};}
  if(c.id==904&&x.librarySelection<1){s.enabled=false;s.reason={"Selecciona capturas o carpetas","Select captures or folders"};}
  if((c.id==905||c.id==906||c.id==908)&&x.libraryCaptures<1){s.enabled=false;s.reason={"Selecciona capturas","Select captures"};}
- if((c.id==103||c.id==202||c.id==520)&&(x.selectedTF<1||x.selectedTF>4)){
+ if((c.id==103||c.id==202||c.id==515||c.id==520)&&(x.selectedTF<1||x.selectedTF>4)){
   s.enabled=false;s.reason={"Selecciona una TF individual; AVG no implementado","Select an individual TF; AVG not implemented"};
  }
- if((c.id==103||c.id==520||(c.id>=310&&c.id<=326))&&x.mode!=0){
+ if((c.id==103||c.id==515||c.id==520||(c.id>=310&&c.id<=326))&&x.mode!=0){
   s.enabled=false;s.reason={"Disponible en Medición","Available in Measurement"};
  }
  if(c.id>=850&&c.id<=859&&x.mode==2){s.enabled=false;s.reason={"Selecciona un gráfico","Select a plot"};}
@@ -215,14 +232,16 @@ inline bool dispatch(int id,const Context& context,const std::function<void(int)
 // Shared keyboard policy. Widget focus is decided by the JUCE adapter.
 inline int shortcut(char key,bool command,bool alt,bool shift,bool plotFocus,bool editing){
  if(editing)return 0;
- if(alt&&!command&&key=='5')return 409;
- if(alt&&!command&&(key=='t'||key=='T'))return 303;
+ if(alt&&!command&&!shift&&(key=='k'||key=='K'))return 971;
+ if(alt&&!command&&!shift&&key=='5')return 409;
+ if(alt&&!command&&!shift&&(key=='t'||key=='T'))return 303;
  if(plotFocus&&(key=='+'||key=='-')){if(alt&&!command)return 0;return (command?(alt?854:852):850)+(key=='-'?1:0);}
- if(command||alt)return 0;
+ if(command||alt||shift)return 0;
  key=static_cast<char>(std::tolower(static_cast<unsigned char>(key)));
- switch(key){case 'b':return 405;case 'o':return 406;case 'c':return 408;case ' ':return 103;case 'l':case 'f':return 502;case 'g':return 504;case 's':return 505;case 't':return 401;case 'd':return 402;case 'v':return 403;default:break;}
- (void)shift;return 0;
+ switch(key){case 'k':return 972;case 'b':return 405;case 'o':return 406;case 'c':return 408;case ' ':return 103;case 'l':case 'f':return 502;case 'g':return 504;case 's':return 505;case 't':return 980;case 'v':return 526;default:break;}
+ return 0;
 }
+inline bool isPlainMeterKey(int code,bool command,bool control,bool alt,bool shift){return (code=='e'||code=='E')&&!command&&!control&&!alt&&!shift;}
 class MeterSequence {
  double last=-1;
 public:

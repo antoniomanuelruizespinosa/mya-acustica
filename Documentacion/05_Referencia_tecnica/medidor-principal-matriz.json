@@ -1,0 +1,531 @@
+{
+  "revision": "MYA-005-R3",
+  "nota": "Inventario de grupos de opciones de ayuda consultada; disponible no significa estimacion de audio. Sin adquisicion/calibracion, lecturas --. No paridad funcional completa con Smaart.",
+  "opciones": [
+    {
+      "key": "source",
+      "section": "General",
+      "opcion": "Entrada fisica y canal",
+      "configuracion_o_presentacion": true,
+      "estimador_audio_implementado": false,
+      "alcance": "Mismo Card de MeterState; sin reasignacion automatica",
+      "fuentes_locales": [
+        "spl-meter.html",
+        "spl-meter-show.html",
+        "spl-config-stspl.html"
+      ]
+    },
+    {
+      "key": "primary",
+      "section": "General",
+      "opcion": "Tarjeta principal compartida",
+      "configuracion_o_presentacion": true,
+      "estimador_audio_implementado": false,
+      "alcance": "Mismo estado que flotantes; no copia de lectura",
+      "fuentes_locales": [
+        "spl-meter.html",
+        "spl-meter-show.html",
+        "spl-config-stspl.html"
+      ]
+    },
+    {
+      "key": "type",
+      "section": "General",
+      "opcion": "dBFS Peak / SPL Fast / Slow / Peak / Leq",
+      "configuracion_o_presentacion": true,
+      "estimador_audio_implementado": false,
+      "alcance": "Configuracion futura existente; estimadores pendientes",
+      "fuentes_locales": [
+        "spl-meter.html",
+        "spl-meter-show.html",
+        "spl-config-stspl.html"
+      ]
+    },
+    {
+      "key": "weight",
+      "section": "General",
+      "opcion": "Ponderacion Z / A / C",
+      "configuracion_o_presentacion": true,
+      "estimador_audio_implementado": false,
+      "alcance": "Configuracion; SPL/Leq/Peak C sin calibracion ni estimador",
+      "fuentes_locales": [
+        "spl-meter.html",
+        "spl-meter-show.html",
+        "spl-config-stspl.html"
+      ]
+    },
+    {
+      "key": "leq.period",
+      "section": "General",
+      "opcion": "Periodo Leq 1..86400 s",
+      "configuracion_o_presentacion": true,
+      "estimador_audio_implementado": false,
+      "alcance": "Preferencia configurable; no integrador",
+      "fuentes_locales": [
+        "spl-meter.html",
+        "spl-meter-show.html",
+        "spl-config-stspl.html"
+      ]
+    },
+    {
+      "key": "clock",
+      "section": "General",
+      "opcion": "Reloj y formato 12/24 horas",
+      "configuracion_o_presentacion": true,
+      "estimador_audio_implementado": false,
+      "alcance": "Hora local; K alterna sin afectar datos",
+      "fuentes_locales": [
+        "spl-meter.html",
+        "spl-meter-show.html",
+        "spl-config-stspl.html"
+      ]
+    },
+    {
+      "key": "visible",
+      "section": "General",
+      "opcion": "Mostrar medidor principal",
+      "configuracion_o_presentacion": true,
+      "estimador_audio_implementado": false,
+      "alcance": "Visible por defecto; Option K restaura",
+      "fuentes_locales": [
+        "spl-meter.html",
+        "spl-meter-show.html",
+        "spl-config-stspl.html"
+      ]
+    },
+    {
+      "key": "floating",
+      "section": "General",
+      "opcion": "Medidores flotantes",
+      "configuracion_o_presentacion": true,
+      "estimador_audio_implementado": false,
+      "alcance": "Doble E existente; mismo MeterState",
+      "fuentes_locales": [
+        "spl-meter.html",
+        "spl-meter-show.html",
+        "spl-config-stspl.html"
+      ]
+    },
+    {
+      "key": "calibration",
+      "section": "General",
+      "opcion": "Calibrar entrada SPL",
+      "configuracion_o_presentacion": false,
+      "estimador_audio_implementado": false,
+      "alcance": "Adquisicion y calibracion fisica pendientes",
+      "fuentes_locales": [
+        "spl-meter.html",
+        "spl-meter-show.html",
+        "spl-config-stspl.html"
+      ]
+    },
+    {
+      "key": "runtime.fs",
+      "section": "General",
+      "opcion": "Lectura dBFS Peak",
+      "configuracion_o_presentacion": false,
+      "estimador_audio_implementado": false,
+      "alcance": "Sin adquisicion: --",
+      "fuentes_locales": [
+        "spl-meter.html",
+        "spl-meter-show.html",
+        "spl-config-stspl.html"
+      ]
+    },
+    {
+      "key": "runtime.spl",
+      "section": "General",
+      "opcion": "SPL Fast/Slow A/C/Z y Peak C",
+      "configuracion_o_presentacion": false,
+      "estimador_audio_implementado": false,
+      "alcance": "Necesita entrada calibrada y estimadores",
+      "fuentes_locales": [
+        "spl-meter.html",
+        "spl-meter-show.html",
+        "spl-config-stspl.html"
+      ]
+    },
+    {
+      "key": "runtime.leq",
+      "section": "General",
+      "opcion": "Leq A/C/Z y barra de llenado",
+      "configuracion_o_presentacion": false,
+      "estimador_audio_implementado": false,
+      "alcance": "Sin integrador: barra vacia",
+      "fuentes_locales": [
+        "spl-meter.html",
+        "spl-meter-show.html",
+        "spl-config-stspl.html"
+      ]
+    },
+    {
+      "key": "runtime.overload",
+      "section": "General",
+      "opcion": "Overload separado de alarma",
+      "configuracion_o_presentacion": false,
+      "estimador_audio_implementado": false,
+      "alcance": "Estado de entrada sin adquisicion",
+      "fuentes_locales": [
+        "spl-meter.html",
+        "spl-meter-show.html",
+        "spl-config-stspl.html"
+      ]
+    },
+    {
+      "key": "max.reset",
+      "section": "General",
+      "opcion": "Reset Max separado de Leq",
+      "configuracion_o_presentacion": true,
+      "estimador_audio_implementado": false,
+      "alcance": "Operacion de estado; deshabilitada sin maximo real",
+      "fuentes_locales": [
+        "spl-meter.html",
+        "spl-meter-show.html",
+        "spl-config-stspl.html"
+      ]
+    },
+    {
+      "key": "leq.reset",
+      "section": "General",
+      "opcion": "Reset Leq por entrada",
+      "configuracion_o_presentacion": true,
+      "estimador_audio_implementado": false,
+      "alcance": "Operacion de estado separada; sin buffer no disponible",
+      "fuentes_locales": [
+        "spl-meter.html",
+        "spl-meter-show.html",
+        "spl-config-stspl.html"
+      ]
+    },
+    {
+      "key": "display.colours",
+      "section": "Display",
+      "opcion": "Color texto y fondo por tarjeta",
+      "configuracion_o_presentacion": true,
+      "estimador_audio_implementado": false,
+      "alcance": "Preferencia compartida; no cambia paleta TF",
+      "fuentes_locales": [
+        "spl-config-display.html"
+      ]
+    },
+    {
+      "key": "display.thresholds",
+      "section": "Display",
+      "opcion": "Umbrales de color verde/aviso/rojo por tipo",
+      "configuracion_o_presentacion": false,
+      "estimador_audio_implementado": false,
+      "alcance": "No confundir con umbrales de alarma; falta estado calibrado",
+      "fuentes_locales": [
+        "spl-config-display.html"
+      ]
+    },
+    {
+      "key": "display.applyall",
+      "section": "Display",
+      "opcion": "Aplicar colores de nivel a todos los tipos",
+      "configuracion_o_presentacion": false,
+      "estimador_audio_implementado": false,
+      "alcance": "No transferir limites entre unidades",
+      "fuentes_locales": [
+        "spl-config-display.html"
+      ]
+    },
+    {
+      "key": "history.foreground",
+      "section": "Display",
+      "opcion": "Grosor de historial frontal",
+      "configuracion_o_presentacion": false,
+      "estimador_audio_implementado": false,
+      "alcance": "Sin historial SPL",
+      "fuentes_locales": [
+        "spl-config-display.html"
+      ]
+    },
+    {
+      "key": "history.background",
+      "section": "Display",
+      "opcion": "Grosor de historial de fondo",
+      "configuracion_o_presentacion": false,
+      "estimador_audio_implementado": false,
+      "alcance": "Sin historial SPL",
+      "fuentes_locales": [
+        "spl-config-display.html"
+      ]
+    },
+    {
+      "key": "display.topmost",
+      "section": "Display",
+      "opcion": "Flotantes siempre delante",
+      "configuracion_o_presentacion": true,
+      "estimador_audio_implementado": false,
+      "alcance": "Preferencia de ventana existente",
+      "fuentes_locales": [
+        "spl-config-display.html"
+      ]
+    },
+    {
+      "key": "alarm.thresholds",
+      "section": "Alarmas",
+      "opcion": "Aviso / alarma por tipo y ponderacion",
+      "configuracion_o_presentacion": true,
+      "estimador_audio_implementado": false,
+      "alcance": "Configuracion existente; sin lectura no se dispara",
+      "fuentes_locales": [
+        "spl-config-alarms.html"
+      ]
+    },
+    {
+      "key": "alarm.hysteresis",
+      "section": "Alarmas",
+      "opcion": "Histeresis",
+      "configuracion_o_presentacion": true,
+      "estimador_audio_implementado": false,
+      "alcance": "Configuracion en unidad del tipo",
+      "fuentes_locales": [
+        "spl-config-alarms.html"
+      ]
+    },
+    {
+      "key": "alarm.colours",
+      "section": "Alarmas",
+      "opcion": "Fondos aviso/alarma y pulso/fijo",
+      "configuracion_o_presentacion": true,
+      "estimador_audio_implementado": false,
+      "alcance": "Colores personalizables; no limites 105/110 universales",
+      "fuentes_locales": [
+        "spl-config-alarms.html"
+      ]
+    },
+    {
+      "key": "alarm.enabled",
+      "section": "Alarmas",
+      "opcion": "Activar/desactivar alarma configurada",
+      "configuracion_o_presentacion": true,
+      "estimador_audio_implementado": false,
+      "alcance": "Vinculada a metrica, ponderacion y fuente",
+      "fuentes_locales": [
+        "spl-config-alarms.html"
+      ]
+    },
+    {
+      "key": "alarm.multiple",
+      "section": "Alarmas",
+      "opcion": "Alarmas globales / multiples entradas / eliminar",
+      "configuracion_o_presentacion": false,
+      "estimador_audio_implementado": false,
+      "alcance": "No hay tabla global de alarmas calibradas",
+      "fuentes_locales": [
+        "spl-config-alarms.html"
+      ]
+    },
+    {
+      "key": "alarm.duration",
+      "section": "Alarmas",
+      "opcion": "Duracion de parpadeo despues del evento",
+      "configuracion_o_presentacion": false,
+      "estimador_audio_implementado": false,
+      "alcance": "No implementada; histeresis no es duracion",
+      "fuentes_locales": [
+        "spl-config-alarms.html"
+      ]
+    },
+    {
+      "key": "alarm.logging",
+      "section": "Alarmas",
+      "opcion": "Eventos y marcadores de alarma",
+      "configuracion_o_presentacion": false,
+      "estimador_audio_implementado": false,
+      "alcance": "Sin logger/historial",
+      "fuentes_locales": [
+        "spl-config-alarms.html"
+      ]
+    },
+    {
+      "key": "custom.types",
+      "section": "Metricas",
+      "opcion": "Crear / editar / eliminar metricas",
+      "configuracion_o_presentacion": false,
+      "estimador_audio_implementado": false,
+      "alcance": "Catalogo de cinco configuraciones; no motor personalizado",
+      "fuentes_locales": [
+        "spl-config-custom-metrics.html"
+      ]
+    },
+    {
+      "key": "custom.cminusA",
+      "section": "Metricas",
+      "opcion": "Leq C-A",
+      "configuracion_o_presentacion": false,
+      "estimador_audio_implementado": false,
+      "alcance": "Sin integradores compatibles",
+      "fuentes_locales": [
+        "spl-config-custom-metrics.html"
+      ]
+    },
+    {
+      "key": "custom.octave",
+      "section": "Metricas",
+      "opcion": "SPL/Leq por octava y frecuencia central",
+      "configuracion_o_presentacion": false,
+      "estimador_audio_implementado": false,
+      "alcance": "Sin filtros/estimadores de bandas",
+      "fuentes_locales": [
+        "spl-config-custom-metrics.html"
+      ]
+    },
+    {
+      "key": "custom.exposureN",
+      "section": "Metricas",
+      "opcion": "Exposicion N",
+      "configuracion_o_presentacion": false,
+      "estimador_audio_implementado": false,
+      "alcance": "Sin dosimetria; no medicion de cumplimiento",
+      "fuentes_locales": [
+        "spl-config-custom-metrics.html"
+      ]
+    },
+    {
+      "key": "custom.exposureO",
+      "section": "Metricas",
+      "opcion": "Exposicion O",
+      "configuracion_o_presentacion": false,
+      "estimador_audio_implementado": false,
+      "alcance": "Sin dosimetria; no medicion de cumplimiento",
+      "fuentes_locales": [
+        "spl-config-custom-metrics.html"
+      ]
+    },
+    {
+      "key": "logging.inputs",
+      "section": "Registro",
+      "opcion": "Entradas calibradas / seleccion de tarjeta",
+      "configuracion_o_presentacion": false,
+      "estimador_audio_implementado": false,
+      "alcance": "Sin calibracion ni logger",
+      "fuentes_locales": [
+        "spl-config-logging.html"
+      ]
+    },
+    {
+      "key": "logging.interval",
+      "section": "Registro",
+      "opcion": "Intervalo de registro",
+      "configuracion_o_presentacion": false,
+      "estimador_audio_implementado": false,
+      "alcance": "Sin logger",
+      "fuentes_locales": [
+        "spl-config-logging.html"
+      ]
+    },
+    {
+      "key": "logging.metadata",
+      "section": "Registro",
+      "opcion": "Operador / empresa / recinto",
+      "configuracion_o_presentacion": false,
+      "estimador_audio_implementado": false,
+      "alcance": "Sin formato de log implementado",
+      "fuentes_locales": [
+        "spl-config-logging.html"
+      ]
+    },
+    {
+      "key": "logging.folder",
+      "section": "Registro",
+      "opcion": "Carpeta / formato de log por entrada",
+      "configuracion_o_presentacion": false,
+      "estimador_audio_implementado": false,
+      "alcance": "No se crean logs de sonido",
+      "fuentes_locales": [
+        "spl-config-logging.html"
+      ]
+    },
+    {
+      "key": "logging.start",
+      "section": "Registro",
+      "opcion": "Iniciar / detener registro",
+      "configuracion_o_presentacion": false,
+      "estimador_audio_implementado": false,
+      "alcance": "Sin motor de registro",
+      "fuentes_locales": [
+        "spl-config-logging.html"
+      ]
+    },
+    {
+      "key": "logging.resume",
+      "section": "Registro",
+      "opcion": "Reanudar al iniciar / rotacion diaria",
+      "configuracion_o_presentacion": false,
+      "estimador_audio_implementado": false,
+      "alcance": "No arranque automatico de audio",
+      "fuentes_locales": [
+        "spl-config-logging.html"
+      ]
+    },
+    {
+      "key": "logging.events",
+      "section": "Registro",
+      "opcion": "Alarmas / overload / reset Leq",
+      "configuracion_o_presentacion": false,
+      "estimador_audio_implementado": false,
+      "alcance": "Sin eventos registrados",
+      "fuentes_locales": [
+        "spl-config-logging.html"
+      ]
+    },
+    {
+      "key": "comp.virtual",
+      "section": "Compensacion",
+      "opcion": "Entrada de posicion virtual / captura",
+      "configuracion_o_presentacion": false,
+      "estimador_audio_implementado": false,
+      "alcance": "Sin adquisicion calibrada",
+      "fuentes_locales": [
+        "spl-compensation.html"
+      ]
+    },
+    {
+      "key": "comp.location",
+      "section": "Compensacion",
+      "opcion": "Entrada de medicion / calcular",
+      "configuracion_o_presentacion": false,
+      "estimador_audio_implementado": false,
+      "alcance": "Sin adquisicion calibrada",
+      "fuentes_locales": [
+        "spl-compensation.html"
+      ]
+    },
+    {
+      "key": "comp.offset",
+      "section": "Compensacion",
+      "opcion": "Offsets A/C y resultados",
+      "configuracion_o_presentacion": false,
+      "estimador_audio_implementado": false,
+      "alcance": "No copiar cifras del manual",
+      "fuentes_locales": [
+        "spl-compensation.html"
+      ]
+    },
+    {
+      "key": "comp.manage",
+      "section": "Compensacion",
+      "opcion": "Anadir / renombrar / quitar compensada",
+      "configuracion_o_presentacion": false,
+      "estimador_audio_implementado": false,
+      "alcance": "No hay fuentes compensadas ni datos de log",
+      "fuentes_locales": [
+        "spl-compensation.html"
+      ]
+    },
+    {
+      "key": "comp.generator",
+      "section": "Compensacion",
+      "opcion": "Acceso a generador",
+      "configuracion_o_presentacion": false,
+      "estimador_audio_implementado": false,
+      "alcance": "Sin generacion; no se activa automaticamente",
+      "fuentes_locales": [
+        "spl-compensation.html"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+MYA-005-R3 — MATRIZ DE OPCIONES DEL MEDIDOR PRINCIPAL
+Fuente: ayuda local Smaart Suite, revisada el26/10/2026. No se copia la ayuda.
+Disponible = configuracion/presentacion o accion condicional de estado. TODOS los estimadores de audio siguen pendientes.
+No se afirma paridad completa con Smaart ni medicion/calibracion validada.
+
+CLAVE	SECCION	OPCION	ESTADO	ALCANCE	FUENTE
+source	General	Entrada fisica y canal	CONFIG/PRESENTACION	Mismo Card de MeterState; sin reasignacion automatica	spl-meter.html,spl-meter-show.html,spl-config-stspl.html
+primary	General	Tarjeta principal compartida	CONFIG/PRESENTACION	Mismo estado que flotantes; no copia de lectura	spl-meter.html,spl-meter-show.html,spl-config-stspl.html
+type	General	dBFS Peak / SPL Fast / Slow / Peak / Leq	CONFIG/PRESENTACION	Configuracion futura existente; estimadores pendientes	spl-meter.html,spl-meter-show.html,spl-config-stspl.html
+weight	General	Ponderacion Z / A / C	CONFIG/PRESENTACION	Configuracion; SPL/Leq/Peak C sin calibracion ni estimador	spl-meter.html,spl-meter-show.html,spl-config-stspl.html
+leq.period	General	Periodo Leq 1..86400 s	CONFIG/PRESENTACION	Preferencia configurable; no integrador	spl-meter.html,spl-meter-show.html,spl-config-stspl.html
+clock	General	Reloj y formato 12/24 horas	CONFIG/PRESENTACION	Hora local; K alterna sin afectar datos	spl-meter.html,spl-meter-show.html,spl-config-stspl.html
+visible	General	Mostrar medidor principal	CONFIG/PRESENTACION	Visible por defecto; Option K restaura	spl-meter.html,spl-meter-show.html,spl-config-stspl.html
+floating	General	Medidores flotantes	CONFIG/PRESENTACION	Doble E existente; mismo MeterState	spl-meter.html,spl-meter-show.html,spl-config-stspl.html
+calibration	General	Calibrar entrada SPL	PENDIENTE/DESHABILITADA	Adquisicion y calibracion fisica pendientes	spl-meter.html,spl-meter-show.html,spl-config-stspl.html
+runtime.fs	General	Lectura dBFS Peak	PENDIENTE/DESHABILITADA	Sin adquisicion: --	spl-meter.html,spl-meter-show.html,spl-config-stspl.html
+runtime.spl	General	SPL Fast/Slow A/C/Z y Peak C	PENDIENTE/DESHABILITADA	Necesita entrada calibrada y estimadores	spl-meter.html,spl-meter-show.html,spl-config-stspl.html
+runtime.leq	General	Leq A/C/Z y barra de llenado	PENDIENTE/DESHABILITADA	Sin integrador: barra vacia	spl-meter.html,spl-meter-show.html,spl-config-stspl.html
+runtime.overload	General	Overload separado de alarma	PENDIENTE/DESHABILITADA	Estado de entrada sin adquisicion	spl-meter.html,spl-meter-show.html,spl-config-stspl.html
+max.reset	General	Reset Max separado de Leq	CONFIG/PRESENTACION	Operacion de estado; deshabilitada sin maximo real	spl-meter.html,spl-meter-show.html,spl-config-stspl.html
+leq.reset	General	Reset Leq por entrada	CONFIG/PRESENTACION	Operacion de estado separada; sin buffer no disponible	spl-meter.html,spl-meter-show.html,spl-config-stspl.html
+display.colours	Display	Color texto y fondo por tarjeta	CONFIG/PRESENTACION	Preferencia compartida; no cambia paleta TF	spl-config-display.html
+display.thresholds	Display	Umbrales de color verde/aviso/rojo por tipo	PENDIENTE/DESHABILITADA	No confundir con umbrales de alarma; falta estado calibrado	spl-config-display.html
+display.applyall	Display	Aplicar colores de nivel a todos los tipos	PENDIENTE/DESHABILITADA	No transferir limites entre unidades	spl-config-display.html
+history.foreground	Display	Grosor de historial frontal	PENDIENTE/DESHABILITADA	Sin historial SPL	spl-config-display.html
+history.background	Display	Grosor de historial de fondo	PENDIENTE/DESHABILITADA	Sin historial SPL	spl-config-display.html
+display.topmost	Display	Flotantes siempre delante	CONFIG/PRESENTACION	Preferencia de ventana existente	spl-config-display.html
+alarm.thresholds	Alarmas	Aviso / alarma por tipo y ponderacion	CONFIG/PRESENTACION	Configuracion existente; sin lectura no se dispara	spl-config-alarms.html
+alarm.hysteresis	Alarmas	Histeresis	CONFIG/PRESENTACION	Configuracion en unidad del tipo	spl-config-alarms.html
+alarm.colours	Alarmas	Fondos aviso/alarma y pulso/fijo	CONFIG/PRESENTACION	Colores personalizables; no limites 105/110 universales	spl-config-alarms.html
+alarm.enabled	Alarmas	Activar/desactivar alarma configurada	CONFIG/PRESENTACION	Vinculada a metrica, ponderacion y fuente	spl-config-alarms.html
+alarm.multiple	Alarmas	Alarmas globales / multiples entradas / eliminar	PENDIENTE/DESHABILITADA	No hay tabla global de alarmas calibradas	spl-config-alarms.html
+alarm.duration	Alarmas	Duracion de parpadeo despues del evento	PENDIENTE/DESHABILITADA	No implementada; histeresis no es duracion	spl-config-alarms.html
+alarm.logging	Alarmas	Eventos y marcadores de alarma	PENDIENTE/DESHABILITADA	Sin logger/historial	spl-config-alarms.html
+custom.types	Metricas	Crear / editar / eliminar metricas	PENDIENTE/DESHABILITADA	Catalogo de cinco configuraciones; no motor personalizado	spl-config-custom-metrics.html
+custom.cminusA	Metricas	Leq C-A	PENDIENTE/DESHABILITADA	Sin integradores compatibles	spl-config-custom-metrics.html
+custom.octave	Metricas	SPL/Leq por octava y frecuencia central	PENDIENTE/DESHABILITADA	Sin filtros/estimadores de bandas	spl-config-custom-metrics.html
+custom.exposureN	Metricas	Exposicion N	PENDIENTE/DESHABILITADA	Sin dosimetria; no medicion de cumplimiento	spl-config-custom-metrics.html
+custom.exposureO	Metricas	Exposicion O	PENDIENTE/DESHABILITADA	Sin dosimetria; no medicion de cumplimiento	spl-config-custom-metrics.html
+logging.inputs	Registro	Entradas calibradas / seleccion de tarjeta	PENDIENTE/DESHABILITADA	Sin calibracion ni logger	spl-config-logging.html
+logging.interval	Registro	Intervalo de registro	PENDIENTE/DESHABILITADA	Sin logger	spl-config-logging.html
+logging.metadata	Registro	Operador / empresa / recinto	PENDIENTE/DESHABILITADA	Sin formato de log implementado	spl-config-logging.html
+logging.folder	Registro	Carpeta / formato de log por entrada	PENDIENTE/DESHABILITADA	No se crean logs de sonido	spl-config-logging.html
+logging.start	Registro	Iniciar / detener registro	PENDIENTE/DESHABILITADA	Sin motor de registro	spl-config-logging.html
+logging.resume	Registro	Reanudar al iniciar / rotacion diaria	PENDIENTE/DESHABILITADA	No arranque automatico de audio	spl-config-logging.html
+logging.events	Registro	Alarmas / overload / reset Leq	PENDIENTE/DESHABILITADA	Sin eventos registrados	spl-config-logging.html
+comp.virtual	Compensacion	Entrada de posicion virtual / captura	PENDIENTE/DESHABILITADA	Sin adquisicion calibrada	spl-compensation.html
+comp.location	Compensacion	Entrada de medicion / calcular	PENDIENTE/DESHABILITADA	Sin adquisicion calibrada	spl-compensation.html
+comp.offset	Compensacion	Offsets A/C y resultados	PENDIENTE/DESHABILITADA	No copiar cifras del manual	spl-compensation.html
+comp.manage	Compensacion	Anadir / renombrar / quitar compensada	PENDIENTE/DESHABILITADA	No hay fuentes compensadas ni datos de log	spl-compensation.html
+comp.generator	Compensacion	Acceso a generador	PENDIENTE/DESHABILITADA	Sin generacion; no se activa automaticamente	spl-compensation.html

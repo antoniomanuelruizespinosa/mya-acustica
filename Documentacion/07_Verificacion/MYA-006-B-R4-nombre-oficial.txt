@@ -1,0 +1,59 @@
+MYA-006-B-R4 — NOMBRE OFICIAL EXACTO
+27/10/2026. Encargo exclusivo de identidad sobre B-R3.
+
+RESULTADO
+Nombre oficial: Mya Acústica Analizer. Analizer exactamente; no Analyzer.
+Una unica identidad en MyaIdentity.h alimenta cabecera nativa, nombre de aplicacion,
+ventana principal y flotante, titulos de inicio/Acerca de y textos de marca.
+Inicio y Acerca de conservan sus DOS lineas y medidas: Mya Acústica + Analizer.
+No cambio de distribucion, colores, tipografia, tamanos de paneles ni botones.
+Textos identifican entrega B-R4. Descriptor sin mayusculas forzadas, acento conservado.
+Permiso de microfono nombra la app correctamente; no se solicito permiso ni audio.
+
+IDENTIFICADORES Y DATOS CONSERVADOS
+CMake target/proyecto: MyaAcustica. Producto/ejecutable tecnico: Mya Acustica.
+CFBundleIdentifier: com.mya.acustica.prototype, intacto.
+CFBundleName y CFBundleDisplayName: Mya Acústica Analizer (Plist merge).
+El paquete entregado se llama Mya Acústica Analizer.app y contiene el ejecutable
+Mya Acustica. Se verifica exactamente esa entrada CFBundleExecutable, sin binarios
+residuales de otras compilaciones. Version tecnica0.3.0 y companyName conservados.
+Todos los File de preferencias/sesiones mantienen ubicacion y nombre originales.
+Sin migracion, cambio de carpetas, remapeo de entradas o reseteo de medidores.
+No se modifica ningun motor/calibracion/guardado de B-R3.
+Icono15 original y derivados sin cambios, PNG embebido e ICNS iguales a B-R3.
+Identificadores de recursos como myaanalyzericonv1_png y nombres de PNG se conservan:
+son referencias tecnicas, no textos visibles a corregir.
+Checkpoints historicos sin reescribir; base aprobada165huellas vuelve a verificar.
+
+VERIFICACION
+Compilacion macOS arm64 Debug/JUCE8.0.12 PASS. CTest13/13 PASS.
+Renderer de componentes reales PASS/exit0, ninguna asercion JUCE en logs finales.
+Nombre completo comprobado exacto en identidad; concatenar marca+descriptor da
+Mya Acústica Analizer. Titulos y datos de Info.plist verificados.
+Inicio/Acerca de: anchos de texto comprobados con las mismas fuentes JUCE usadas
+al pintar (25/18 y23/17) contra las anchuras400/396; capturas inspeccionadas sin
+recortes. Logo, renglones y controles permanecen en las mismas coordenadas.
+Cabecera Mac: ancho de cadena medido por NSFont real que usa el instalador nativo,
+incluyendo separacion/icono:177px. Cabe centrado con margen conservador incluso
+al ancho minimo1120px. Marco del texto se deriva de esa misma medicion.
+No se crea ventana nativa para esta prueba: colocacion interactiva final queda para
+Revisión cuando abra la nueva entrega. No se afirma prueba Windows realizada.
+CoreMIDI imprime el diagnostico preexistente al enumerar en renderer, no apertura.
+
+PREFERENCIAS — OBSERVACION DE AUDITORIA
+No se escribieron preferencias reales. Siete JSON siguen identicos a la base limpia.
+medidores-flotantes.json difiere de aquel checkpoint solo en x/y/width/height;
+su timestamp precede la creacion del codigo de identidad de esta tarea. Se conserva
+esa geometria existente, no se revierte contra el checkpoint ni se atribuye al rename.
+La logica y rutas de persistencia no cambian; todas las regresiones B-R3 pasan.
+
+ENTREGA SEPARADA
+work/MYA-006-B-R4/build/Mya Acústica Analizer.app
+SHA256 ejecutable Contents/MacOS/Mya Acustica:
+22f6fa1be5fab10859d163dfb3409d6bfe2c8dfd5d63d66e07e84bfd35f58869
+Icono original SHA256:
+558f80c1ef4ce2b4d2292f755d6d4ebe244579c5181956f39634f8124bbe9c2e
+Fuente exacta, diferencias frente a B-R3, Info.plist, identidad, pruebas y capturas
+en work/MYA-006-B-R4/. Entregas B-R3 y anteriores conservadas.
+No lanzamiento/reinicio ni audio desde Desarrollo. Revisión coordina abrirla.
+Fisica94/114 y offset siguen pendientes; este cambio no declara exito de calibracion.

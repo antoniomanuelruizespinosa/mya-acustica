@@ -1,0 +1,30 @@
+PROPUESTA DE RESPALDO GIT SEGURO — 27/10/2026
+Solo repositorio Mya Acustica: antoniomanuelruizespinosa/mya-acustica, privado.
+Local main fb3912b8... (dos commits); remoto main8fa21558... (MYA-005).
+Codigo B-R2/B-R3 no esta en esos commits. Checkpoint aprobado es respaldo local,
+con preferencias privadas, y NO debe subirse como carpeta ni archivo completo.
+
+PREPARADO LOCALMENTE, SIN COMMIT/PUSH
+work/MYA-006-B-R3/historial-local-main.bundle: historial main local completo,
+verificado por git bundle verify; no incluye refs automaticas de Codex.
+work/MYA-006-B-R3/respaldo-codigo-documentacion.tar.gz: working tree permitido,
+fuentes/tests/assets/CMake/documentacion propia/.gitignore/.github y huellas.
+Lista explicita lista-rutas-versionables.txt. Se excluyen work/build/bundles/vendor,
+preferencias Aplicacion/*.json, Biblioteca/Capturas, diagnosticos, capturas/PDFs/
+manuales externos, credenciales y symlinks. No payload de sesion o captura privada.
+El bundle historico por si solo NO contiene el working tree B-R3: ambos respaldos
+se complementan. El archivo tar no es un commit ni prueba de subida a GitHub.
+
+PROPUESTA PARA SUBIDA POSTERIOR
+1 Verificar origin exacto y permisos; obtener main remoto sin modificar working tree
+  de Antonio. Comparar arboles/ancestros, sin asumir fast-forward entre esas cabezas.
+2 En checkout limpio del MISMO repo basado en main remoto, preparar rama de respaldo.
+  Aplicar solo la lista revisada de codigo/documentacion, nunca git add indiscriminado
+  ni copiar checkpoint privado. Revisar diff staged, exclusiones y deteccion de secretos.
+3 Commit descriptivo con limites: base visual aprobada, pruebas offline, calibracion
+  fisica pendiente. Conservar historia remota como padre; si historias difieren,
+  no arreglarlo con force push ni mezclar otro repo.
+4 Subir rama nueva sin force y abrir PR para Revisión. Verificar SHA remoto y lista
+  de archivos antes de afirmar respaldo remoto. Main solo tras revision acordada.
+No se ejecuto ninguno de estos pasos de publicacion/commit en esta tarea. Los
+permisos del conector permiten proponerlo; no sustituyen la solicitud de subir.

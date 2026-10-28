@@ -1,0 +1,98 @@
+MYA-005-R3 — PRINCIPAL COMPARTIDO / OPCIONES / MARCAS M/R
+26/10/2026. Build Debug macOS/JUCE8.0.12 correcto. 8/8 pruebas PASS.
+ACEPTACION VISUAL DE ANTONIO: PENDIENTE. Sin adquisicion ni calibracion reales.
+
+MEDIDOR PRINCIPAL
+Compacto96px, visible por defecto encimaTF/RTA/IR. Entrada y tipo, lectura grande,
+Max, indicador/reset, acceso flotantes. No crea otra tarjeta ni copia un valor:
+primaryId selecciona una Card existente deMeterState; principal y flotantes leen
+la MISMA configuracion/runtime porID. Si se elimina, se muestra la primera restante.
+Sin datos validos: -- y Max--, indicador gris, sin alarma ni Leq inventado. El
+contenedor runtime compartido no tiene ingesta de audio conectada en este bloque.
+El reloj es hora local real, claramente rotulada; no se interpreta como medicion.
+K alterna reloj con foco de trabajo; OptionK oculta/restaura. En edicion no se
+interceptan. Preferencias guardadas y formatos12/24h. E,E flotantes conserva perfil.
+Click lectura abre SPL Config; contextual ofrece reloj, resetMax/Leq, calibracion,
+flotantes y ocultar. ResetMax y ResetLeq son operaciones separadas de estado,
+deshabilitadas enUI sin resultado/buffer. No se borraLeq al resetearMax y overload
+no se confunde con alarma. No se fuerza ninguna lectura ni estado calibrado.
+
+CONFIGURACION Y LIMITES
+Pestanas General/Display/Alarmas/Metricas/Registro/Compensacion. Se comparte
+seleccion de tarjeta, nombre, fuente/canal, cinco tipos de configuracion existentes,
+ponderacionZ/A/C, periodoLeq1..86400s (preferencia; sin integrador), colores de
+texto/fondo/aviso/alarma, umbrales por tipo y unidad, histeresis y pulso/fijo.
+Se conserva la evaluacionMeterAlarm y su validacion de fuente/tipo/calibracion.
+Campos de umbral vacios si no estan vinculados; 105/110 legados NO son limites
+universales ni se trasladan a dBFS. No se sobrescriben preferencias existentes.
+Directamente en principal, SPL/Leq se muestran pendientes/deshabilitados porque
+no hay calibracion/adquisicion; en Config se preparan parametros futuros. PeakC
+corresponde a configuracionSPLPeak conC, sin estimador. Leq muestra barra vacia,
+no un porcentaje de buffer ficticio. Ventanas flotantes reutilizan colores/periodo;
+preferencia siempre delante disponible. No se lanzaron flotantes para esta prueba.
+
+MATRIZ OBLIGATORIA
+Documentacion/05_Referencia_tecnica/medidor-principal-matriz.txt
+Documentacion/05_Referencia_tecnica/medidor-principal-matriz.json
+45 GRUPOS de opciones contrastados con8 temas de ayuda local:16 configuracion/
+presentacion disponibles,29 pendientes visibles/deshabilitados. NO significa
+45 funciones de medicion implementadas ni paridad completa conSmaart. TODOS
+los estimadores de audio siguen pendientes. Tabla incluye: display por tipo y
+applyall, historial, alarmas globales/duracion/eventos, custommetrics, C-A, octavas,
+exposicionN/O, registro/intervalo/metadatos/archivos/reanudacion y compensacionA/C.
+No se crean logs, capturas compensadas ni cifras de los ejemplos de la ayuda.
+Fuentes consultadas y hashes: work/MYA-005-R3/fuentes-ayuda-sha256.txt. No se copia
+la ayuda ni se modifica Smaart. Calibracion/generacion/estimadores quedan bloqueados.
+
+MARCAS M/R
+Dos lineas grises discontinuas0.75px en los UMBRALES CONFIGURADOS. Visibles sin
+nivel o con nivel bajo; no indican cruce/alarma. Pico retenido blanco continuo1.5px
+sigue siendo movil/independiente. Defaults−12/−6, personalizaciones respetadas.
+TFMeterChannel::position es transformacion unica dBFS->X para segmentos, guias y
+pico. Sin cambios de ancho/alto, paletaTF, suavizado/relieve/escala o centro de
+numero. Texto centrado usa tinta oscura sobre relleno y clara sobre zona vacia
+para mantener lectura cuando el extremo iluminado pasa por el texto.
+
+DISTRIBUCION CONSERVADA
+Cabecera superior y TODOS sus accesos intactos; no se aplica propuesta no aprobada.
+CuatroTF+AVG caben completas con alineacion plegada a1440x960 y1760x1080. A960px
+si se despliega alineacion, y a900px de altura, la lista usa scroll propio: ninguna
+TF/AVG ni accion inferior se elimina. A1080px tambien caben al desplegar. Gráficos
+conservan limites/proporciones y bounds; ocultar/restaurar principal no los cambia.
+Los popovers conservan anclaje y no cubren el principal mientras esta visible.
+No se inicia otro bloque de perfiles, backend ni estimadorDelayFinder/Track.
+
+VALIDACION
+8/8 CTest: persistencia de tarjeta compartida/ID, colores y periodo; compatibilidad
+legacy, tipo/unidad de alarmas, ResetMax separado deLeq/overload, K/OptionK y
+proteccion de edicion, layout y scroll. Prueba posiciones conocidas−12/−6 y−18/−3
+con misma transformacion; umbrales−3 guardados preservados. Modelos DSP/IR/TF y
+biblioteca conservados. Renderer comprueba master visible/reloj/ocultar/restaurar
+sin alterar reticulas, fuentes diferenciadas,8 dobleclicM/R, Loop/Pink/Sweep sin
+cambiar parametros/archivos ni cubrirprincipal y guias calculadas de cada barra.
+No se abre/reinicia la instancia deAntonio ni MainWindow, no se emite audio ni
+se cambia Smaart/Propi. DiagnosticoCoreMIDI de enumeracion del entorno ya existente;
+renderer terminaPASS. Sin push/merge/commit. No Windows/acustica fisica validados.
+
+PNG DE COMPONENTES REALES — FINAL PARA REVISION
+work/MYA-005-R3/final/workspace-1440x960.png
+work/MYA-005-R3/final/workspace-1760x1080.png
+work/MYA-005-R3/final/workspace-spl-config.png
+work/MYA-005-R3/final/workspace-spl-display.png
+work/MYA-005-R3/final/workspace-spl-alarmas.png
+work/MYA-005-R3/final/workspace-spl-metricas.png
+work/MYA-005-R3/final/workspace-spl-registro.png
+work/MYA-005-R3/final/workspace-spl-compensacion.png
+work/MYA-005-R3/final/workspace-principal-reloj.png
+work/MYA-005-R3/final/input-meters-DEMO.png
+work/MYA-005-R3/final/input-meters-umbrales-personalizados-DEMO.png
+Incluye otros completosDEMO, popovers y alineacion abierta. NivelesDEMO aislados
+solo en fixtureM/R; principal permanece--. Curvas ya eranDEMO del prototipo.
+
+EVIDENCIA Y BUILD
+work/MYA-005-R3/before/: baseR2; renders anteriores work/MYA-005-R2/final/.
+Diffs, hashes, compilacion.log, pruebas.log, render.log y matriz-comandos.tsv.
+134 comandos,52 pendientes. Nuevos archivos PrincipalMeter.h y MeterOptionsInventory.h;
+MeterState/Meters comparten preferencias/runtime. CoreAudio/AudioRouting no cambia.
+Build sin lanzar, identificaMYA-005-R3:
+/Users/antoniomanuelruizespinosa/Documents/ChatGPT/Mya Acústica/work/mya-cpp-build/MyaAcustica_artefacts/Debug/Mya Acustica.app

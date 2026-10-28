@@ -1,0 +1,75 @@
+MYA-006-B-R1 — CORRECCION DE ASERCION EN ERROR DE GUARDADO
+26/10/2026. Respuesta a Revisión. No audio, lanzamiento ni reinicio de app.
+
+HALLAZGO Y RECTIFICACION
+El log original B contiene JUCE Assertion failure in juce_TemporaryFile.cpp:115
+aunque CTest terminaba11/11 PASS. Ese exit0 no acreditaba ausencia de aserciones.
+Desarrollo omitio esta incidencia al informar B; la entrega original y su log se
+conservan en work/MYA-006-B/ como evidencia historica. Entrega corregida B-R1 aparte.
+
+CAUSA EXACTA, JUCE8.0.12 LOCAL
+SplCalibrationStore::confirm creaba TemporaryFile externo y usaba
+  temp.getFile().replaceWithText(json)
+para escribirlo. File::replaceWithText (juce_File.cpp:798..802) crea OTRO temporal,
+llama appendText sin comprobar su bool y llama siempre overwriteTargetFileWithTemporary.
+La prueba usaba absent/parent/cal.json, con carpeta padre inexistente: appendText
+falla, no crea el temporal interno; overwriteTargetFileWithTemporary comprueba
+exists()==false y ejecuta jassertfalse en juce_TemporaryFile.cpp:115.
+No era constructor con target vacio, ni fuga de stream/destructor, ni RMS/calculo.
+La ruta inexistente es una entrada de error valida para probar el guardado. Lo
+incorrecto era delegar el fallo de escritura a un helper que ignora ese resultado.
+
+IMPACTO REAL
+La carpeta de preferencias existe durante el uso habitual, de modo que esta
+asercion no prueba un fallo de las lecturas RMS o de calibraciones guardadas con
+exito. Pero la MISMA ruta de error puede aparecer si desaparece la carpeta, se
+pierden permisos o falla el almacenamiento. Por eso se corrige codigo de produccion,
+no se elimina ni maquilla la prueba. En el caso reproducido no se sustituyo el
+archivo ni el offset: fallo el helper y hubo cortocircuito antes del reemplazo externo.
+Ademas, el helper ignoraba errores de escritura parcial: comprobar write/flush
+antes de reemplazar tambien evita aceptar un temporal incompleto en esos casos.
+No se observo corrupcion de calibraciones reales, ni se efectuaron pruebas fisicas.
+
+CORRECCION
+FileOutputStream escribe directamente el temporal externo. Se comprueban apertura,
+writeText y estado tras flush; el stream se cierra ANTES del reemplazo (tambien
+necesario en Windows). Solo se solicita reemplazo si la escritura fue satisfactoria
+y existe el temporal. Los fallos devuelven false con mensaje; records/reconocimiento
+solo se actualizan despues del reemplazo correcto. Formato/convencion JSON intactos.
+Sin tocar RMS, tolerancias, fuentes, configuracion de medidores, geometria, atajos,
+barra nativa, icono o arranque. Unicos textos UI cambiados: identificacion B-R1.
+
+PRUEBAS Y ORACULO
+Se conserva la prueba de padre ausente. Se agrega caso determinista:
+1 guardar una calibracion valida en directorio de fixture aislado;
+2 mover ese directorio a un respaldo del mismo fixture;
+3 ocupar su ruta con archivo regular;
+4 intentar guardar calibracion DIFERENTE (offset separado>1dB);
+5 exigir false, mensaje de error, mismo offset en memoria y mismos bytes previos
+  en el respaldo, sin modificar el archivo que bloquea la ruta.
+Todo en fixture work/mya-cpp-build/rms-calibration-test-data, sin preferencias reales.
+
+El test rms_calibration ahora compila con JUCE_LOG_ASSERTIONS=1: sin esto, Debug
+puede emitir DBG y el Logger no intercepta la asercion. Logger cuenta mensajes,
+assert exige contador0 y se imprime JUCE assertion failures observed:0.
+CTest FAIL_REGULAR_EXPRESSION="JUCE Assertion failure" convierte tambien cualquier
+mensaje de asercion (incluso fuera del ciclo de vida del Logger) en prueba fallida.
+Se mantienen -UNDEBUG/asserts activos; no se silencia ni se acepta la asercion.
+
+RESULTADO FINAL
+Build PASS. CTest11/11 PASS; contador JUCE0 y ninguna linea real de asercion en log.
+Renderer termina exit0, PASS B y regresiones R3. Conserva diagnostico preexistente
+CoreMIDI al enumerar dispositivos; no es una asercion ni apertura de audio.
+Valores RMS/20dB, cancelacion/persistencia, independencia y protocolo94/114 intactos.
+No verificacion fisica nueva ni reinicio; Revisión coordina el siguiente cambio.
+
+ENTREGA NUEVA, SIN SOBRESCRIBIR B ORIGINAL
+work/MYA-006-B-R1/build/Mya Acustica.app
+SHA256 Contents/MacOS/Mya Acustica:
+85326c320578ecce8787f570d1e762665455b382083cc0df2ab18501a0facf15
+Icono15 original embebido verificado, SHA256:
+558f80c1ef4ce2b4d2292f755d6d4ebe244579c5181956f39634f8124bbe9c2e
+Identidad, fuente exacta, diferencias B->B-R1, logs, renders y manifiesto SHA256 en
+work/MYA-006-B-R1/. Protocolo fisico vigente: MYA-006-B-protocolo-94-114.txt.
+B-R1 sustituye B para revision de codigo/compilado; pendientes fisicos y UI global
+siguen vigentes. No se reescribe el log B antiguo como si hubiera pasado sin aserciones.

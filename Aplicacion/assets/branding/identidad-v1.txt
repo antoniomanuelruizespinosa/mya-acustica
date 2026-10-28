@@ -1,0 +1,8 @@
+Mya Acústica Analizer
+2026-10-26. Icono provisional aprobado explícitamente por Antonio: «me gusta».
+Fuente: propuesta15, M blanca, impulso cian y círculo abierto cian sobre baldosa oscura.
+Archivo: mya-analyzer-icon-v1.png. No rediseñar ni cambiar paleta/distribución UI.
+Generado con image_gen integrado. Prompt de adaptación: extraer símbolo15 conservando M blanca angular, impulso y círculo cian interrumpido arriba/abajo; icono cuadrado, fondo oscuro redondeado y esquinas transparentes; sin texto ni número; márgenes equilibrados, bordes limpios.
+Usar símbolo sin texto como icono; marca Mya Acústica Analizer y descriptor Analizer en Acerca de. Verificar tamaños pequeños en integración y no declarar build Windows probado en Mac.
+
+27/10/2026 — Corrección expresa de Antonio: nombre oficial «Mya Acústica Analizer». Usar Analizer exactamente, sustituyendo Analyzer en textos visibles futuros. Icono15 y diseño aprobados se conservan. Entregas históricas no se reescriben.

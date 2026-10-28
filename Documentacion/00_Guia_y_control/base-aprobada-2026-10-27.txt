@@ -1,0 +1,15 @@
+BASE APROBADA 27/10/2026 — B-R2 LIMPIA
+Antonio aprueba continuar desde esta base visual. Sesion guardada mediante Guardar demo.
+TF1..4 ocultas; fase/magnitud seleccionan TF1 oculta; impulso sin trazos visibles.
+Captura demo conservada en biblioteca, no borrada: la pantalla limpia no significa biblioteca vacia.
+Preferencias JSON verificadas y respaldadas junto con fuentes/tests/assets/documentacion/bundle.
+Manifest SHA256 verificado. Respaldo LOCAL: no equivale a commit ni subida GitHub.
+B-R2:12/12 pruebas automaticas documentadas; prueba fisica94/114 NO completada.
+Sin calibraciones-spl.json encontrado. No offset fisico validado.
+Interfaz aprobada no se cambia sin peticion. Proximos cambios en nueva entrega separada.
+Siguiente prioridad: regresion de guardado/reapertura limpia y rutas al desconectar/reconectar;
+luego validar entrada estable y calibracion94/114 con hardware. TF real requiere pruebas
+sinteticas de magnitud/fase/delay/coherencia antes de mediciones de recinto.
+DSP/IA/3D no se consideran validados por las pruebas del medidor RMS.
+
+Checkpoint: /Users/antoniomanuelruizespinosa/Documents/ChatGPT/Mya Acústica/work/checkpoints/BASE-APROBADA-2026-10-27-B-R2-LIMPIA

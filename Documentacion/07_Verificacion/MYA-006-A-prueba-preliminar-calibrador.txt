@@ -1,0 +1,28 @@
+MYA-006-A — EVIDENCIA FISICA PRELIMINAR CON CALIBRADOR
+26/10/2026. Comunicada por 1-Revision y Control desde la prueba de Antonio.
+Este agente registra el relato y las lecturas comunicadas; no tomo estas capturas
+ni opero el dispositivo o el calibrador.
+
+CONDICIONES COMUNICADAS
+OctaCapture a 48000 Hz / buffer512; Input1, medidor M1 de pico digital dBFS.
+Antonio coloco el calibrador a94 tras la instruccion de Revision y posteriormente
+lo cambio a114. No se solicito cambio de ganancia entre ambas observaciones.
+No se dispone aqui de serie temporal, ajustes completos ni verificacion independiente
+de que todas las condiciones permanecieran constantes.
+
+DOS LECTURAS PUNTUALES DE PANTALLA
+Nivel nominal del calibrador94: M1 aproximadamente -21.8 dBFS.
+Nivel nominal del calibrador114: M1 aproximadamente -2.1 dBFS.
+Diferencia observada: (-2.1)-(-21.8) = 19.7 dB frente a20 dB nominales.
+A -2.1 dBFS se observo la barra en naranja/rojo; no alcanzo0 dBFS en ese instante.
+Esto no descarta picos o saturacion fuera del instante capturado.
+
+ALCANCE Y LIMITES
+Evidencia preliminar de respuesta al cambio nominal del calibrador, basada en dos
+lecturas puntuales. No acredita estabilidad, precision certificada, linealidad en
+un rango amplio, ausencia de clip en toda la prueba ni SPL calibrado.
+La diferencia de0.3 dB respecto del salto nominal no se atribuye al software.
+No se guarda ni calcula un offset de calibracion a partir de estas lecturas de pico.
+No se modifica codigo, ganancia, 48V, rutas ni preferencias de calibracion.
+Pendiente repeticion con serie temporal y estadistica, comprobacion de condiciones
+y procedimiento de calibracion RMS apropiado. TF/SPL calibrado siguen pendientes.

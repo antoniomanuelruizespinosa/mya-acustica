@@ -1,0 +1,318 @@
+{
+  "root": "/Applications/Smaart Suite.app/Contents/Resources/Help",
+  "version_instalada": "9.6.4",
+  "html_examinados": 161,
+  "paginas_menu_con_atajo": 51,
+  "fuentes_con_huella": [
+    {
+      "archivo": "activate-delay-finder.html",
+      "sha256": "e4a53e5680dcd1ae39d4aebcf547cd9783a70542dfc5d98a9b7988cbd255e948"
+    },
+    {
+      "archivo": "advanced-preferences.html",
+      "sha256": "690a88797a83d1cbbf321b4dea939a2eff5e34fd0dde50019d09e6ae0f623ec1"
+    },
+    {
+      "archivo": "capture-all.html",
+      "sha256": "0e121d4dfdf06412d57ac640d746364da66a9af20cf02d92b07cb60f6b03ac52"
+    },
+    {
+      "archivo": "capture.html",
+      "sha256": "483d91a968c3b64325095d5a5557976fbd19e0bf15634b0ff12f98795926c8cb"
+    },
+    {
+      "archivo": "clear-db-offsets.html",
+      "sha256": "a8d64a429d5000648e349ae7b69944971aaae6f25075f5d8e73834eed3a07bb7"
+    },
+    {
+      "archivo": "client-window-command.html",
+      "sha256": "3c9e4cc46fb20dabe3a616601934c9c1809961fb96af0292540e6d6ed31d459e"
+    },
+    {
+      "archivo": "command-bar-config.html",
+      "sha256": "faf6b37cebd8eaf379d4b5c8eee6bab3c89050dc19e328d1d8a8bfa7e3fe2923"
+    },
+    {
+      "archivo": "command-bar-show.html",
+      "sha256": "e73e2ed4c7b374d578cc4f19fe6f9116891cd4ea9c1877b9061157d741b70dae"
+    },
+    {
+      "archivo": "control-bar-show.html",
+      "sha256": "d1957362f3414d14d0945d02d8df5db0dfe4176879c1558561ca049edf2209df"
+    },
+    {
+      "archivo": "copy-to-ascii.html",
+      "sha256": "e95b94ea7f6bc4a6249c6d90fdb85468710aa0dedd83915713c3d9777cc1a835"
+    },
+    {
+      "archivo": "cursor-commands.html",
+      "sha256": "e692dbba158713f260a2b93cc33354f2b8c3d98ad6e7da834c9cb1291a684755"
+    },
+    {
+      "archivo": "cursor-preferences.html",
+      "sha256": "db7cb13452c3af71046f9eb3783db51ce2ee994412e35ee4b1e8591fb75f77aa"
+    },
+    {
+      "archivo": "cursor-readout.html",
+      "sha256": "76f977c4d94cc9973a9b93a8d0013f49d7ef49f336770fccbf3ccb9b29072db1"
+    },
+    {
+      "archivo": "cycle-forward-reverse.html",
+      "sha256": "ac875853461bfdf91a3a2c75cded27af1d931a41315d06f1523454c60c0e2cf1"
+    },
+    {
+      "archivo": "cycle-preferred-plot.html",
+      "sha256": "bb26e00f9d3157fa2bd7cfa4861e828ba547aa011f6f62bf4e3bd9282d33bba3"
+    },
+    {
+      "archivo": "cycle-skin.html",
+      "sha256": "c976b6e8390cd67296f61b81769c49d0876e13b34f3ff2238bc4f1dd9e1539fb"
+    },
+    {
+      "archivo": "data-bar-menus.html",
+      "sha256": "271755159794edbada1ad66887d749db00fda79785343ffd39a2afc65dae9329"
+    },
+    {
+      "archivo": "data-bar-show.html",
+      "sha256": "b449cdaa548352326f9fd60444a1086c1ba398236f7b5dd091a2c3020867c6bb"
+    },
+    {
+      "archivo": "delete-selected-trace.html",
+      "sha256": "9906b10441b8005462d2f69de72fced1a358d77df379ce15c57ee6b7ac36ca5e"
+    },
+    {
+      "archivo": "docked-spl-meter-grid.html",
+      "sha256": "39a78735634d232cc209d624a91760461593b94d88368d9cb28976827c615ee9"
+    },
+    {
+      "archivo": "front-trace-up-down.html",
+      "sha256": "dc5bc3c35433af6739504548807272038da9319747cb6752362ea2aad121e7af"
+    },
+    {
+      "archivo": "general-preferences.html",
+      "sha256": "86ded45b181b5e563131207e0c301a30488954f1e30b61f124ad7596dbb9ac68"
+    },
+    {
+      "archivo": "graph-legends.html",
+      "sha256": "b9fc8ba14b03e11219bc8d5b1d69a3b09a4dfb8f30b2ca5bddb9fe1f6de3b5f1"
+    },
+    {
+      "archivo": "hide-all.html",
+      "sha256": "ce0436afe81ff02a8413caf4f5f0eaadcf33e15104dcd2906e9f3eadff49417d"
+    },
+    {
+      "archivo": "hide-trace.html",
+      "sha256": "8f2d3561961ffb6df382f0abf993a8b05c7ee3f7a266b02407bbad600301cdcd"
+    },
+    {
+      "archivo": "i-o-config-command.html",
+      "sha256": "5637805715030385884e16b8c03015f7218e124cc80868c7f3fa6873100cccc8"
+    },
+    {
+      "archivo": "impulse-response-graph-settings.html",
+      "sha256": "1c2b2a0390f853435bf5bd36801983ac8b2209d140798ccd8b3c319b1cbf041d"
+    },
+    {
+      "archivo": "impulse-response-mode-ui.html",
+      "sha256": "3a5793f16de6c8557bc11a86f696fc35f975f677a426818d64c223c015486dc9"
+    },
+    {
+      "archivo": "increase_decrease-delay.html",
+      "sha256": "e7631126dfc7c66a7a886dcc3ecc629783483a71521e9bed674985ab5bcd2f33"
+    },
+    {
+      "archivo": "input-config.html",
+      "sha256": "dd73a010c4cac7be2e1bdbbac61f7e95b1183dd74d4ea2dc861c94742367d05b"
+    },
+    {
+      "archivo": "input-meters-window.html",
+      "sha256": "fa56dd63c9319b0bd460b6b591f38830ad6a2de4ec20712230816414d1a9916d"
+    },
+    {
+      "archivo": "input-meters.html",
+      "sha256": "5703c2d70108c71b763d2684c4dae845f89bc2894febd8b73a282139b5c0562a"
+    },
+    {
+      "archivo": "ir-graph-legend.html",
+      "sha256": "c3ddf60c5feaba9c02452f082f374369e5956f791f41102f23af268c3f045aed"
+    },
+    {
+      "archivo": "ir-main-graph-area.html",
+      "sha256": "e32039351b26992d5af7de139d2bb5e5890c844691a89455cb348f4ddb3807bf"
+    },
+    {
+      "archivo": "ir-mode-control-bar.html",
+      "sha256": "c4edb0f76e83491f2259dcd5fd27c0fdbe1e6002466cecfee02db0cfd1b50ffa"
+    },
+    {
+      "archivo": "keyboard-shortcuts.html",
+      "sha256": "4376cb25b58f0747207e95b8fedf1bd3ee431f48addf286d74892f7fa5a7f20b"
+    },
+    {
+      "archivo": "main-graph-area.html",
+      "sha256": "36e656c75b41131a9e4b81087d5eeaad8a6b802f6a74dba48c8eea1b7d1b71f8"
+    },
+    {
+      "archivo": "measurement-config.html",
+      "sha256": "9a9d5f9d59fb2f2d93e8a09f6dd890e4d52165e84c5d428a44ba0ebe7bf75ca1"
+    },
+    {
+      "archivo": "multi-spectrum-view.html",
+      "sha256": "996ae8c69a5a7c72ee9eaa8d24248c600277b719f21bd8a846585bcddadbfaeb"
+    },
+    {
+      "archivo": "new-spec-avg.html",
+      "sha256": "af7bbcc4ff3dcc80f8441b22923505b460bdeeb220f272e7bae2a3a5709d9bcb"
+    },
+    {
+      "archivo": "new-spectrum.html",
+      "sha256": "80891deaabbc4b0ce9db677d5d084bd037f517bfb13e92423ee589cec582236f"
+    },
+    {
+      "archivo": "new-tf-avg.html",
+      "sha256": "4ede778abf031502c4676bde74c065c89de14698bf59239d63a740118e0d8d04"
+    },
+    {
+      "archivo": "new-tf.html",
+      "sha256": "61cae9ee584f1003f29888277c6d51e6e3e7bdef73ed02dad54ff13fd3552471"
+    },
+    {
+      "archivo": "notational_conventions.html",
+      "sha256": "aee60041d3bf0df00c4ccc5fc2886509d5a053659ec3128c849af829902cc713"
+    },
+    {
+      "archivo": "real-time-control-bar.html",
+      "sha256": "1ecf74446ab9278c24617a5b97fc503c31e1d71949be0c0c41f71e6c87b11527"
+    },
+    {
+      "archivo": "realtime-and-ir-modes.html",
+      "sha256": "8abcca4ee3f4f754ea3517d62e577cf014f030d7fdb3756c685c380e9c3e7895"
+    },
+    {
+      "archivo": "recapture.html",
+      "sha256": "55e455664dbac2702a7ca6ae32e66d94d07087ca6ab1aa84497a5a601d26e27d"
+    },
+    {
+      "archivo": "release-notes-suite.html",
+      "sha256": "bc3ed930829b4dc5f76697f6c9148c4acf11b1dff984a1609ffa67ae432e98e0"
+    },
+    {
+      "archivo": "reset-averager.html",
+      "sha256": "8105885cfccd57ab232a1a9fa3ef6574c5e17ad16bc323eb6470938c5b23fda5"
+    },
+    {
+      "archivo": "signal-generator-settings.html",
+      "sha256": "583e1784876e1a662eca7ce94c1e6f16eb7937c19ca28f45bd1360ed83b6d74d"
+    },
+    {
+      "archivo": "skins-menu.html",
+      "sha256": "615199b4063c10df714aafa0e93a179b55fd75b11171fe4945c460134be9291e"
+    },
+    {
+      "archivo": "sound-level-calibration.html",
+      "sha256": "ae0756ff9b8a18b4ce7d1c4ca70d4fad971eaca141b5c150ec5cf5bb06441594"
+    },
+    {
+      "archivo": "spectrum-and-transfer-function-views.html",
+      "sha256": "58528f2f6cfa6b5bcba7546fbede8824c95ee52cd5492eece39635c6c01dab9c"
+    },
+    {
+      "archivo": "spectrum-graph-settings.html",
+      "sha256": "d7f04e8730aa5b78bfc4d46dbcf4e67327afec658cdb0322997c4dbabdd8a1e7"
+    },
+    {
+      "archivo": "spectrum-measurement-settings.html",
+      "sha256": "8a2b292a59f6fa43bf3c2d1229beb5d1458078add6ccc6c9dc2f2a12a70da88c"
+    },
+    {
+      "archivo": "spl-config-stspl.html",
+      "sha256": "b135b61a4890eff33f3b26cf152b2d485ada7cea49ca1e4c8a6693236d102d15"
+    },
+    {
+      "archivo": "spl-meter-show.html",
+      "sha256": "cb6e7ba59aed9a11b4fc4aae55b67e94d75d65f4500f5c4d5ab820df7bb65111"
+    },
+    {
+      "archivo": "spl-meter.html",
+      "sha256": "df6d969a61c47e8b048759a8e14b872148a93a9e6882aaebfc082375fb9daedd"
+    },
+    {
+      "archivo": "spl-meters-show.html",
+      "sha256": "e8cafbe8a9eaa5a6db0eaf435d8ae6d4587afe05ba995acf8b266c5ac85e5193"
+    },
+    {
+      "archivo": "spl-meters-standalone.html",
+      "sha256": "ee8174bdf15cacdac39a5add461669c610948479cee251347f626a607f9159e6"
+    },
+    {
+      "archivo": "tab-bar-hide-show.html",
+      "sha256": "0ecf8bebcecc45899e6c61c6b93d684ad0878f7f0d8dbdacf9cee7cfa7c8f32d"
+    },
+    {
+      "archivo": "target-curves-dialog.html",
+      "sha256": "3b623f1bd99296749177e591951c12edecd1777e8b94d3446f9566bd9f041b16"
+    },
+    {
+      "archivo": "target-curves-show.html",
+      "sha256": "bf6b68b32f81d8442fd86709670e659014a719eb51aeb0c5caeb3541a0384f51"
+    },
+    {
+      "archivo": "toggle-coherence-trace.html",
+      "sha256": "7a639308023414b7c1b291808e581c663d3cae926ddde0e9bce0d5e982e8f4bd"
+    },
+    {
+      "archivo": "toggle-delay-tracking.html",
+      "sha256": "80e6b0ee66217b646d07790900668dc298a6197563127876d9b576e9a11cfde5"
+    },
+    {
+      "archivo": "toggle-live-ir.html",
+      "sha256": "ef48693272978aa36529789a989843d5592c8052bc21406e69b0a39e47d84140"
+    },
+    {
+      "archivo": "toggle-peak-hold.html",
+      "sha256": "4baabf21ca0dc5e834d163d52e981e8c598e19c044d993eb4fd0ac7f448e2f31"
+    },
+    {
+      "archivo": "toggle-spl_clock.html",
+      "sha256": "4331e93c7b78880d46da314cc813badf240a8771a17e8176cea47923f34250ac"
+    },
+    {
+      "archivo": "trace-import.html",
+      "sha256": "562ea5182c02691256f6f721c7e6ea72b58c5aeadc1a453f5deebfbd1b8d41e4"
+    },
+    {
+      "archivo": "track-all.html",
+      "sha256": "5c5875f5239a88a7e01a8e38ce161597679d7a7599b99a78a327b880622780a0"
+    },
+    {
+      "archivo": "transfer-function-graph-settings.html",
+      "sha256": "8f725ca8d321f7cd2438e0a3a42c7612acabce6502be4d5c742b7bfd051a647f"
+    },
+    {
+      "archivo": "transfer-function-measurement-settings.html",
+      "sha256": "f8fca7711cb3d1779d32afd61aa6c4568560cbb17b28a902d57af2d597313b73"
+    },
+    {
+      "archivo": "view-capture.html",
+      "sha256": "22b6bd8a24ecba13295b1499682240b11cacb2bfc364fd58356477af9d234eac"
+    },
+    {
+      "archivo": "view-presets-1-9.html",
+      "sha256": "321106bce664438bbc27eaee7d3528b7e25279c88cc0e91b652bc8cacc108c01"
+    },
+    {
+      "archivo": "zoom-in-out-x-y.html",
+      "sha256": "7558910ab353049c2207729360c2f7c2ec3cb5fbb88cf5194c24850add80981a"
+    },
+    {
+      "archivo": "zoom-preferences.html",
+      "sha256": "8a5e0ebe982695b818ab1dfdd6e3803ccecc046248980f72000fb4da814f58e6"
+    },
+    {
+      "archivo": "zoom.html",
+      "sha256": "dd4bbcd777e867389d440696f02c0be7ab7e636a58265428d19da4475439a7d1"
+    }
+  ],
+  "referencias_no_encontradas": [],
+  "nota": "Faltantes no se usan como evidencia; tabla general conserva trazabilidad."
+}

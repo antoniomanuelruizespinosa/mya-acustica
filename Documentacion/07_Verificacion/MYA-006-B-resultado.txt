@@ -1,0 +1,124 @@
+MYA-006-B — RMS DIGITAL, CALIBRACION DE AMPLITUD Y SPL RMS
+26/10/2026. Implementacion entregada para Revisión. Validacion fisica pendiente.
+
+RESULTADO
+Integracion sobre R3 vigente, sin restaurar Main/CMake del checkpoint B antiguo.
+RMS digital y primer SPL RMS sin ponderacion disponibles por backend/dispositivo/
+canal. Captura >=5 s, estabilidad, propuesta/confirmacion/cancelacion y persistencia.
+No audio abierto por Desarrollo, no reinicio, salidas, generacion, cambio de ganancia,
+48V, calibrador, Smaart ni Propi. Revisión coordina abrir la nueva version sin autoPlay.
+
+ENTREGA IDENTIFICADA
+work/MYA-006-B/build/Mya Acustica.app (macOS Debug, JUCE8.0.12, C++17).
+SHA256 ejecutable Contents/MacOS/Mya Acustica:
+883eee4b0be0cf551d589cb95bf59908ade6c56b8342b35e79ae54b69e81f465
+Icono15 aprobado original, SHA256:
+558f80c1ef4ce2b4d2292f755d6d4ebe244579c5181956f39634f8124bbe9c2e
+PNG original embebido en ejecutable verificado; ICNS presente en bundle. Icono,
+helper de barra nativa Mac y estructura del inicio conservados; textos identifican B.
+work/MYA-006-B/IDENTIDAD.json, fuente/, cambios-desde-R3.tsv, SHA256SUMS.txt,
+logs/build.txt, logs/ctest.txt, logs/render.txt y capturas/ forman la evidencia.
+Copia de fuente de entrega sin preferencias de Antonio ni biblioteca de capturas.
+Checkpoint R3: work/checkpoints/MYA-006-A-R3-antes-B/; no sobrescrito.
+
+USO Y ESTADOS
+Calibrar SPL RMS desde comando290/menu, E/S, SPL Config o contextual de una celda.
+La celda lateral/flotante abre SU fuente, sin modificar la seleccion del principal.
+El dialogo no abre audio al entrar. Play entrada seleccionada es explicito, solo
+entrada elegida, ningun canal de salida. Play global incluye fuentes de FS y SPL RMS;
+Play de TF conserva su pareja M/R. Cambiar fuente requiere Play, no reapertura oculta.
+Referencia94/114 o manual0..180; microfono identificable y ganancia declarada obligados.
+La confirmacion de cadena es declaracion humana, NO lectura/seguimiento de hardware.
+Dialogo muestra RMS digital (~1 s), offset actual/fecha, RMS capturado, offset
+propuesto, progreso basado en muestras recibidas y estado. Medir no escribe.
+Campos de fuente/metadatos/referencia quedan bloqueados durante captura/propuesta.
+Confirmar exige captura valida, fuente fresca, sesion continua, sin clip, cola
+procesada y misma cadena declarada. Se comprueba el tramo parcial >=50ms tambien.
+Cancelar/cerrar/cambiar seccion aborta captura sin reemplazar archivo anterior.
+Stop, pausa, perdida de dispositivo/callbacks, huecos o cambio de sesion invalidan.
+No se confirma silenciosamente una propuesta antigua al reconectar.
+
+CONVENCION Y ADQUISICION
+Ldigital=10log10(sum(x*x)/N); offset=Lreferencia-Ldigital; SPL=Ldigital+offset.
+Precision doble en energia y recuento de muestras; sin correccion extra3.0103dB.
+El seno tiene por su energia la diferencia RMS/peak3.0103dB una sola vez.
+10 tramos >=0,5 s, cerrados en limite de callback; captura>=5 s y dispersion
+max-min<=0,5 dB. Silencio/nivelRMS<=-100 dBFS rechazado. Son elecciones Mya,
+no requisitos atribuidos a Smaart ni tolerancias certificadas de instrumentacion.
+Rechaza clipping (muestra abs>=1), ausentes/no finitos, saltos de secuencia,
+tiempo invalido/no monotono o hueco>250ms, frecuencia o fuente cambiada e inestabilidad.
+Ready sigue monitorizando hasta confirmar. La energia calibrada inicial permanece
+fija; la dispersion incluye los tramos posteriores hasta la confirmacion.
+RMS de lectura: dos ultimos tramos completos>=0,5 s (~1 s rectangular); arranque
+requiere ambos. Duracion exacta depende de frecuencia/buffer y limites de callback.
+Silencio digital se muestra como RMSdigital -infinito, nunca SPL numerico inventado.
+Frames con energia/secuencia/tiempo pasan por SPSC preasignada. Callback sin disco/UI
+ni asignacion dinamica; drenaje UI acotado. Se comprueba frescura de timestamp del
+callback, no la hora de vaciado de una cola antigua. M/R siguen sample peak original.
+
+PERSISTENCIA E INDEPENDENCIA
+Aplicacion/calibraciones-spl.json, schema1, convention=rms-sample-power-v1.
+Por backend/dispositivo/canal: microfono, ganancia declarada, referencia, fecha
+ISO8601 con zona, digital, offset, duracion, dispersion; curva aplicada=false y
+hardwareGainObserved=false. Temporal y reemplazo atomico; error conserva anterior.
+Archivo corrupto/convenio desconocido/claves duplicadas no se sobrescribe.
+Reconocimiento de misma cadena NO persistido: al iniciar/reabrir stream se exige
+confirmarlo para reutilizar un offset. Metadatos distintos no reconocen el antiguo.
+No hay deteccion de ganancia fisica ni una promesa de Gain Tracking.
+Principal/lateral/flotante mantienen sus modelos, IDs, archivos, entrada/metrica/
+ponderacion/colores/disposicion/alarma/maximo/reset independientes. Una fuente fisica
+comparte su offset, no la configuracion de las vistas. Recalibrar o retirar
+reconocimiento invalida maximos/lecturas SOLO de tarjetas SPL RMS de esa fuente.
+Metric6 = SPL RMS sin ponderacion; peso1 obligatorio. Tipos2..5 siguen sin estimador.
+SPL RMS se elige explicitamente tras calibrar, no se cambia la metrica de otras vistas.
+Nota de retorno a R3: R3 no entiende metric6. Para volver a R3 tras configurar SPL RMS,
+Revisión debe recuperar su copia previa de los tres archivos de medidores; no abrir
+R3 sobre preferencias B esperando que interprete esa metrica. No se hizo downgrade.
+
+UI Y ALCANCE PRESERVADO
+Celdas completas sin cabeceras/pies, paginas contextuales, dimensiones independientes,
+laterales ajustables, fase/magnitud iguales, AVG/color, navegacion desplegable,
+barra nativa e inicio R3 conservados. Solo nuevos accesos/calibracion/metric6/textos B.
+Corregida lectura numerica estricta en campos de configuracion/alarma relacionados:
+JSON::parse solo admite objeto/array en JUCE; ahora numeros aislados se validan
+mediante array de un elemento, finitud y ausencia de texto sobrante. Coma decimal
+admitida. El error previo bloqueaba aplicar configuracion aunque el modelo fuese valido.
+Auditoria de atajos R3 permanece historica, con nota B:290 pasa a Ready sin nuevoatajo.
+Sin cambios de atajos, motores TF/Find/Track/AVG/RTA/IR ni otras funciones pendientes.
+
+VERIFICACION EFECTUADA
+Build final PASS. CTest 11/11 PASS, con asserts activos tambien en Release.
+Prueba nueva rms_calibration: seno1kHz/48kHz, DC, energia ponderada por muestras,
+recuento/duracion, clip, NaN/Inf/null, silencio, inestabilidad, discontinuidades,
+fuente/canal/rate, watermark, validacion hasta confirmar, cancelacion, recuperacion
+RMS, guardado/restauracion, reconocimiento no persistido, archivo corrupto/convenio/
+duplicados/error de escritura, fuentes independientes y persistencia metric6.
+Numeros obtenidos con float de entrada y doble de energia:
+- seno peak0,01: -43,0102999298 dBFS RMS; offset a94:137,010299930 dB;
+- seno peak0,1: -23,0102999393 dBFS RMS;
+- MISMO offset:113,999999990 dB; incremento:19,9999999905 dB.
+Tolerancia numerica de aserciones1e-6 dB, no tolerancia fisica certificada.
+Las otras10 pruebas R3 pasan (medidores/vistas/entradas/preferencias/comandos/
+biblioteca/graficas/impulso/layout). Render de componentes reales PASS sin audio:
+94/114/manual, captura, Ready/confirmar, cancelar, cambio de generacion, reconocimiento
+mismo micro/ganancia, rechazo metadatos y clipping, Play bloqueado en renderer;
+regresion de distribucion/celdas/navegacion/AVG/fuentes/atajos y paneles R3.
+Capturas inspeccionadas: dialogo listo, rechazo de clip y dialogo en workspace.
+Los ejemplos Card[Core]/Mic demo y valores numericos de esas capturas son SINTETICOS.
+CoreMIDI imprime el diagnostico preexistente al enumerar dispositivos en renderer;
+no es evidencia de apertura de audio ni fallo de asercion. Renderer termina exit0.
+
+PENDIENTE DE REVISION Y PRUEBA FISICA
+Ver MYA-006-B-protocolo-94-114.txt. Probar94 y despues114 SIN recalibrar para comprobar
+incremento20dB con misma cadena; una calibracion posterior a114 solo es ensayo aparte.
+Pendientes hardware/permiso/reconexion reales, tolerancias y errores de instrumentacion,
+aceptacion visual/operacion completa y Windows/ASIO. No se afirma equivalencia con
+Smaart ni cumplimiento metrologico. Picos preliminares -21,8/-2,1 no se usan como RMS.
+Sin A/C, conformidad Z, Fast/Slow, SPL Peak, Leq o curva de microfono aplicada.
+La curva espectral es compensacion separada, fuera de B; no altera este offset.
+
+RECTIFICACION POSTERIOR — MYA-006-B-R1
+El log B contenia una asercion JUCE en prueba de error de escritura aunque11/11
+terminaban PASS. No acreditaba ausencia de aserciones; ver informe
+MYA-006-B-R1-asercion-guardado.txt y entrega corregida work/MYA-006-B-R1/.
+Se conserva B original como evidencia, no es el build recomendado para continuar.
