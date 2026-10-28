@@ -1,4 +1,4 @@
-# Mya Acustica
+# Mya Acústica Analyzer
 
 Prototipo privado de aplicación de medición acústica para macOS y Windows, desarrollado en C++17 y JUCE 8.0.12.
 
