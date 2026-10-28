@@ -97,8 +97,10 @@ private:
   auto stored=juce::JSON::parse(manifest());bool committed=stored["revision"].toString()==after.revision;
   std::vector<Move> moves;
   for(const auto& m:*v["moves"].getArray()){
-   auto from=juce::File::createFileWithoutCheckingPath(root.getFullPathName()+"/"+m["from"].toString().replaceCharacter('\\','/'));auto to=juce::File::createFileWithoutCheckingPath(root.getFullPathName()+"/"+m["to"].toString().replaceCharacter('\\','/'));
-   if(!safeStorageFile(from)||!safeStorageFile(to)||!relativePath(m["from"].toString())||!relativePath(m["to"].toString())){error=juce::String::fromUTF8("Rutas de recuperación inválidas");return false;}moves.push_back({from,to});
+   auto fromRel=m["from"].toString().replaceCharacter('\\','/');auto toRel=m["to"].toString().replaceCharacter('\\','/');
+   if(!relativePath(fromRel)||!relativePath(toRel)){error=juce::String::fromUTF8("Rutas de recuperación no relativas");return false;}
+   auto from=root.getChildFile(fromRel);auto to=root.getChildFile(toRel);
+   if(!safeStorageFile(from)||!safeStorageFile(to)){error=juce::String::fromUTF8("Rutas de recuperación fuera de la biblioteca");return false;}moves.push_back({from,to});
   }
   if(committed){for(const auto& m:moves)if(!m.to.exists()||m.from.exists()){error=juce::String::fromUTF8("Transacción incompleta; revisar archivos conservados");return false;}}
   else{
