@@ -33,7 +33,7 @@ int main(int argc,char** argv){
   auto beforeDoc=JSON::parse(reopened.manifest());auto afterDoc=beforeDoc.clone();afterDoc.getDynamicObject()->setProperty("revision",Uuid().toString());
   for(auto& item:*afterDoc["nodes"].getArray())if(item["id"].toString()==id)item.getDynamicObject()->setProperty("parentId",a);
   auto from=reopened.dataFile(id);auto to=reopened.dataFile(a).getChildFile(reopened.find(id)->diskName);
-  auto* journal=new DynamicObject();journal->setProperty("before",beforeDoc);journal->setProperty("after",afterDoc);auto* relocation=new DynamicObject();relocation->setProperty("from",from.getRelativePathFrom(dir));relocation->setProperty("to",to.getRelativePathFrom(dir));Array<var> moves;moves.add(var(relocation));journal->setProperty("moves",moves);
+  auto* journal=new DynamicObject();journal->setProperty("before",beforeDoc);journal->setProperty("after",afterDoc);auto* relocation=new DynamicObject();relocation->setProperty("from",from.getRelativePathFrom(dir).replaceCharacter('/','\\'));relocation->setProperty("to",to.getRelativePathFrom(dir).replaceCharacter('/','\\'));Array<var> moves;moves.add(var(relocation));journal->setProperty("moves",moves);
   assert(dir.getChildFile("transaccion.json").replaceWithText(JSON::toString(var(journal))));assert(from.moveFileTo(to));
   if(committed)assert(reopened.manifest().replaceWithText(JSON::toString(afterDoc)));
   CaptureLibrary recovered(dir);if(!recovered.ready())std::cerr<<"Recovery error: "<<recovered.lastError()<<" at "<<dir.getFullPathName()<<std::endl;assert(recovered.ready());assert(!dir.getChildFile("transaccion.json").exists());assert(recovered.dataFile(id).loadFileAsString()==original);assert(recovered.find(id)->parent==(committed?a:b));
