@@ -39,12 +39,15 @@ void executeCommand(int id){
  else switch(id){
  case 506:beginInputs(15);break;
  case 504:if(pinkLoopActive)stopInputs("Ruido rosa detenido; salida en silencio.");else{int selected=source.getSelectedId()-1;beginInputs(internalLoopEnabled&&selected>=0&&selected<4?1u<<selected:0,{},LiveInputEngine::Signal::Pink);}break;
- case 505:if(sweepActive)stopInputs("Sweep detenido; salida en silencio.");else beginInputs(0,{},LiveInputEngine::Signal::Sweep);break;
+ case 505:if(sweepActive)stopInputs("Sweep detenido; salida en silencio.");else{int selected=source.getSelectedId()-1;beginInputs(selected>=0&&selected<4?1u<<selected:0,{},LiveInputEngine::Signal::Sweep);}break;
  case 512:{bool enable=!internalLoopEnabled;if(inputEngine.running()||permissionPending)stopInputs("Cambio de loop: audio detenido.");internalLoopEnabled=enable;status=enable?"Loop interno preparado; pulsa Pink para generar referencia virtual.":"Loop interno desactivado; referencia fisica seleccionada.";break;}
  case 515:{int n=source.getSelectedId()-1;if(n>=0&&n<4){beginInputs(1u<<n);}break;}
  case 507:stopInputs();break;
  case 508:stopInputs("Entradas en pausa. Pulsa Play para reabrir.");break;
- case 526:inputEngine.discardPendingTF();liveTF.reset();liveTFState=0;status=inputEngine.running()?"TF en directo reiniciada con V; esperando nuevas muestras M/R.":"TF en directo borrada con V; entradas detenidas.";break;
+ case 526:inputEngine.discardPendingTF();inputEngine.discardPendingRoutes();liveTF.reset();for(auto& engine:tfEngines)engine.reset();for(auto& finder:tfDelayFinders)finder.reset();liveTFState=0;status=inputEngine.running()?"TF reiniciadas con V; esperando nuevas muestras M/R.":"TF en directo borradas con V; entradas detenidas.";break;
+ case 502:{int n=source.getSelectedId()-1;if(n>=0&&n<4){if(!inputEngine.running())beginInputs(1u<<n);auto k=(size_t)n;tfTracking[k]=false;tfFinding[k]=true;tfDelayFinders[k].configure(.75);status="Find TF "+String(n+1)+" / adquiriendo correlacion M/R...";}break;}
+ case 503:{bool enable=std::none_of(tfTracking.begin(),tfTracking.end(),[](bool active){return active;});if(enable&&!inputEngine.running())beginInputs(15);for(size_t n=0;n<tfTracking.size();++n){tfTracking[n]=enable;if(enable)tfDelayFinders[n].configure(.5);else tfDelayFinders[n].reset();}status=enable?"Track general activo / todas las TF configuradas":"Track general detenido";break;}
+ case 514:{int n=source.getSelectedId()-1;if(n>=0&&n<4){if(!inputEngine.running())beginInputs(1u<<n);auto k=(size_t)n;tfFinding[k]=false;tfTracking[k]=!tfTracking[k];if(tfTracking[k])tfDelayFinders[k].configure(.5);else tfDelayFinders[k].reset();status=tfTracking[k]?"Track TF "+String(n+1)+" activo":"Track TF "+String(n+1)+" detenido";}break;}
  case 101:load();break;case 102:save();break;case 103:captureTrace();break;
  case 201:audioSettings();if(auto* window=getTopLevelComponent())window->toFront(true);break;case 202:engineSettings(source.getSelectedId()-1);break;
  case 971:meterState.mainVisibility(!meterState.state().mainVisible);break;case 972:meterState.clockMode(!meterState.state().clock);break;case 973:principalMeterOptions();break;case 974:if(auto* c=meterState.primaryCard())meterState.resetMax(c->id);break;case 975:if(auto* c=meterState.primaryCard())meterState.resetLeq(c->id);break;
@@ -56,8 +59,10 @@ void executeCommand(int id){
   break;
  }
  case 380:case 381:commands.language=id==380?MyaCommands::Language::ES:MyaCommands::Language::EN;if(graphWindow&&graphWindow->isVisible()){int tab=graphWindow->selectedTab();tfGraphSettings(tab,false);}menuItemsChanged();break;
- case 980:select(0);measurementView=0;plotChoice.setSelectedId(1,dontSendNotification);tfSettings.showIR=true;cursorPlot=-1;activePlot=1;status="Vista TF / magnitud, fase y coherencia de la TF seleccionada con Play; impulso DEMO";break;
- case 981:measurementView=1;cursorPlot=-1;activePlot=0;status="IR DEMO sintetica / no medicion real; motor IR pendiente";break;
+ case 980:select(0);measurementView=0;plotChoice.setSelectedId(1,dontSendNotification);tfSettings.showIR=true;cursorPlot=-1;activePlot=1;status="Vista TF / magnitud, fase, coherencia e IR reales";break;
+ case 981:measurementView=1;cursorPlot=-1;activePlot=0;status="Vista IR real de la TF activa";break;
+ case 420:select(0);measurementView=2;cursorPlot=-1;status="RTA real / entrada de medida de la TF activa";break;
+ case 421:select(0);measurementView=3;cursorPlot=-1;status="Espectrograma real / entrada de medida de la TF activa";break;
  case 401:case 402:case 403:case 404:select(id-401);break;
  case 405:leftVisible=!leftVisible;break;case 406:rightVisible=!rightVisible;break;
  case 407:plotChoice.setSelectedId(plotChoice.getSelectedId()==1?2:1,sendNotificationSync);break;
@@ -92,6 +97,6 @@ void setupCommands(){
  for(size_t i=0;i<8;++i){int id=MyaCommands::topBindings[i];buttons[i]->onClick=[this,id]{commands.invoke(id);navigationOverlay.setVisible(false);navigationTab.setButtonText("v");if(getPeer()!=nullptr)grabKeyboardFocus();};}
  // Checkboxes share the exact command action; values remain selected from current state.
  commands.bind(showCoherence,408,true);
- averageChoice.setEnabled(false);averageChoice.setTooltip("Motor de promedio pendiente / Averaging engine pending");
+ averageChoice.setEnabled(true);
  commands.refresh();
 }
