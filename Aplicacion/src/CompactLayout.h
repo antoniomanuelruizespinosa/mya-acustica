@@ -4,7 +4,7 @@
 namespace CompactLayout {
 inline constexpr int libraryTabHeight=24;
 inline int libraryColumnWidth(int width){return (width-2)/2;}
-inline constexpr int tfRow=124,tfCard=120,tfFooter=4,tfCardsHeight=4*tfRow,avgTop=tfCardsHeight+4,avgHeight=26,tfContentHeight=avgTop+avgHeight+4;
+inline constexpr int tfRow=102,tfCard=98,tfFooter=4,tfCardsHeight=4*tfRow,avgTop=tfCardsHeight+4,avgHeight=26,tfContentHeight=avgTop+avgHeight+4;
 inline constexpr int tfTop=370;
 inline int tfStart(bool mainVisible=true){return mainVisible?tfTop:274;}
 inline int signalTop(int height){return height-134;}
