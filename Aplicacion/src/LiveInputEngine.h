@@ -181,11 +181,12 @@ public:
    auto failure=session->device->open(mask,outputMask,rate,size);
    if(failure.isNotEmpty()){error=endpoint->name+": "+failure;stop();return false;}
    if(session->device->getActiveInputChannels()!=mask||session->device->getActiveOutputChannels()!=outputMask){error="Backend no respeto los canales de entrada/salida solicitados";stop();return false;}
+   // start() may invoke the audio callback immediately; finish Sweep setup first.
+   session->sweep.configure(session->device->getCurrentSampleRate(),sweepStartHz,sweepEndHz,sweepDuration);
    session->openedAt=clock();session->device->start(session.get());
    if(session->fault.load()==Fault::BackendError)return fail(*session,"Error notificado por backend al iniciar",clock());
    if(session->fault.load()==Fault::UnexpectedRestart)return fail(*session,"Backend reinicio callback al iniciar",clock());
    if(!session->device->isPlaying())return fail(*session,"Dispositivo no entro en reproduccion de entrada",clock());
-   session->sweep.configure(rate,sweepStartHz,sweepEndHz,sweepDuration);
    description+=endpoint->name+" "+juce::String(session->device->getCurrentSampleRate(),0)+" Hz / "+juce::String(session->device->getCurrentBufferSizeSamples())+(outputSignal!=Signal::None?" / "+juce::String(outputSignal==Signal::Pink?"rosa":"sweep")+" "+(outputChannel==InputLevels::maxChannels+1?"todas las salidas":("Output "+juce::String(outputChannel)))+" "+juce::String(outputSignal==Signal::Pink?pinkLevelDb:sweepLevelDb,0)+" dBFS; ":"; ");
    sessions.push_back(std::move(session));
   }
