@@ -13,11 +13,16 @@ public:
  void visibilityChanged() override;
  void paint(juce::Graphics& g) override;
  void resized() override;
+ std::function<void(bool)> onResolutionChanged;
+ int smoothingChoice() const { return smoothing.getSelectedId(); }
+ bool multiWindow() const { return resolution.getSelectedId() == 1; }
+ void setDisplayOptions(bool multi, int smooth);
 private:
  void timerCallback() override;
  DataProvider dataProvider;
  std::vector<Trace> traces;
  std::map<int,std::vector<float>> history;
  juce::ComboBox speed;
+ juce::ComboBox resolution, smoothing;
  double lastUpdateMs=0;
 };

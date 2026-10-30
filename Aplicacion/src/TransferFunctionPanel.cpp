@@ -19,7 +19,10 @@ float phaseY(double degrees,juce::Rectangle<float> area){
 
 TransferFunctionPanel::TransferFunctionPanel(DataProvider provider):dataProvider(std::move(provider)){
  speed.addItemList({"Fast","Slow","Prom.16"},1);speed.setSelectedId(1);speed.setTooltip("Respuesta temporal de magnitud, fase y coherencia");speed.onChange=[this]{history.clear();lastUpdateMs=0;};addAndMakeVisible(speed);
+ resolution.addItem("FFT 64 FPPO",1);resolution.addItem("FFT 16k",2);resolution.setSelectedId(1);resolution.setTitle(juce::String::fromUTF8("Resolución FFT de todas las curvas FT"));resolution.onChange=[this]{history.clear();if(onResolutionChanged)onResolutionChanged(multiWindow());};addAndMakeVisible(resolution);
+ smoothing.addItemList({"Smth Off","Smth 1/48","Smth 1/24","Smth 1/12","Smth 1/6","Smth 1/3"},1);smoothing.setSelectedId(2);smoothing.setTitle("Suavizado de todas las curvas FT");smoothing.onChange=[this]{history.clear();};addAndMakeVisible(smoothing);
 }
+void TransferFunctionPanel::setDisplayOptions(bool multi,int smooth){resolution.setSelectedId(multi?1:2,juce::sendNotificationSync);smoothing.setSelectedId(juce::jlimit(1,6,smooth),juce::dontSendNotification);history.clear();}
 TransferFunctionPanel::~TransferFunctionPanel(){stopTimer();}
 
 void TransferFunctionPanel::setActive(bool shouldBeActive){
@@ -44,7 +47,7 @@ void TransferFunctionPanel::timerCallback(){
  repaint();
 }
 
-void TransferFunctionPanel::resized(){speed.setBounds(getWidth()>=450?150:8,getWidth()>=450?2:24,110,21);}
+void TransferFunctionPanel::resized(){int right=getWidth()-8;speed.setBounds(juce::jmax(8,right-456),2,104,21);smoothing.setBounds(right-220,2,106,21);resolution.setBounds(right-340,2,114,21);}
 
 std::optional<float> TransferFunctionPanel::frequencyPosition(double hz,juce::Rectangle<float> area){
  if(!std::isfinite(hz)||hz<minHz||hz>maxHz||area.isEmpty())return {};

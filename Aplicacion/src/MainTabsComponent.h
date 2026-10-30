@@ -7,6 +7,7 @@ class MainTabsComponent : public juce::Component {
 public:
  explicit MainTabsComponent(RTAPanel::DataProvider provider);
  void showRTA(bool visible);
+ RTAPanel& rtaPanel() { return rta; }
  void resized() override;
 private:
  RTAPanel rta;

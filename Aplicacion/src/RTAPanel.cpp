@@ -4,7 +4,11 @@
 
 RTAPanel::RTAPanel(DataProvider provider) : dataProvider(std::move(provider)) {
  speed.addItemList({"Fast","Slow","Prom.16"},1);speed.setSelectedId(1);speed.setTooltip("Respuesta temporal de la curva RTA");speed.onChange=[this]{history.clear();lastUpdateMs=0;};addAndMakeVisible(speed);
+ resolution.addItem("FFT 64 FPPO",1);resolution.addItem("FFT 16k",2);resolution.setSelectedId(1);resolution.setTitle(juce::String::fromUTF8("Resolución FFT de toda la pantalla RTA"));resolution.onChange=[this]{history.clear();if(onResolutionChanged)onResolutionChanged(multiWindow());};addAndMakeVisible(resolution);
+ smoothing.addItemList({"Smth Off","Smth 1/48","Smth 1/24","Smth 1/12","Smth 1/6","Smth 1/3"},1);smoothing.setSelectedId(2);smoothing.setTitle("Suavizado de todas las curvas RTA");smoothing.onChange=[this]{history.clear();};addAndMakeVisible(smoothing);
 }
+
+void RTAPanel::setDisplayOptions(bool multi,int smooth){resolution.setSelectedId(multi?1:2,juce::sendNotificationSync);smoothing.setSelectedId(juce::jlimit(1,6,smooth),juce::dontSendNotification);history.clear();}
 
 void RTAPanel::setActive(bool active) {
  if (active && !isTimerRunning()) { timerCallback(); startTimerHz(30); }
@@ -26,7 +30,7 @@ void RTAPanel::timerCallback() {
  repaint();
 }
 
-void RTAPanel::resized(){speed.setBounds(juce::jmax(8,getWidth()-145),8,130,23);}
+void RTAPanel::resized(){int right=getWidth()-8;speed.setBounds(right-112,8,108,23);smoothing.setBounds(right-226,8,108,23);resolution.setBounds(right-348,8,116,23);}
 
 void RTAPanel::paint(juce::Graphics& g) {
  using namespace juce;
@@ -57,5 +61,5 @@ void RTAPanel::paint(juce::Graphics& g) {
   g.setColour(trace.colour); g.strokePath(path, PathStrokeType(trace.selected ? 2.2f : 1.3f));
  }
  g.setColour(traces.empty() ? orange : green); g.setFont(13.f);
- g.drawText(traces.empty() ? "RTA sin señal: pulsa Play en una TF configurada" : "RTA en directo / 64 FPPO", 10, 7, bounds.getWidth() - 160, 23, Justification::centredLeft);
+ g.drawText(traces.empty() ? "RTA sin señal: pulsa Play en una TF configurada" : "RTA en directo", 10, 7, jmax(0,bounds.getWidth() - 365), 23, Justification::centredLeft);
 }
