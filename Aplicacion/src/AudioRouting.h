@@ -6,6 +6,9 @@ struct AudioEndpoint {
  juce::StringArray inputs, outputs;
 };
 inline std::vector<AudioEndpoint> discoverAudioEndpoints(){
+#if defined(MYA_OFFSCREEN_RENDER)
+ return {}; // A visual fixture does not inspect hardware or initialise CoreMIDI.
+#else
  juce::AudioDeviceManager manager;
  juce::OwnedArray<juce::AudioIODeviceType> types;
  manager.createAudioDeviceTypes(types);
@@ -20,6 +23,7 @@ inline std::vector<AudioEndpoint> discoverAudioEndpoints(){
   }
  }
  return endpoints;
+#endif
 }
 inline const AudioEndpoint* findEndpoint(const std::vector<AudioEndpoint>& devices,const juce::String& key){
  for(const auto& d:devices)if(d.key==key)return &d;
@@ -31,6 +35,10 @@ class AudioDeviceWatcher : public juce::ChangeBroadcaster, private juce::AudioIO
  juce::OwnedArray<juce::AudioIODeviceType> types;
  void audioDeviceListChanged() override {sendChangeMessage();}
 public:
- AudioDeviceWatcher(){juce::AudioDeviceManager manager;manager.createAudioDeviceTypes(types);for(auto* type:types){type->scanForDevices();type->addListener(this);}}
+ AudioDeviceWatcher(){
+#if !defined(MYA_OFFSCREEN_RENDER)
+  juce::AudioDeviceManager manager;manager.createAudioDeviceTypes(types);for(auto* type:types){type->scanForDevices();type->addListener(this);}
+#endif
+ }
  ~AudioDeviceWatcher() override {for(auto* type:types)type->removeListener(this);}
 };
