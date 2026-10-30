@@ -64,6 +64,7 @@ private:
   Signal signal=Signal::None;
   bool virtualReference=false;
   std::atomic<float> pinkScale{1.f};
+  std::atomic<float> sweepScale{1.f};
   std::atomic<float> referenceScale{1.f};
   LoopPink pink;
   LoopSweep sweep;
@@ -85,7 +86,7 @@ private:
    for(int ch=0;ch<outputs;++ch)if(output&&output[ch])std::fill_n(output[ch],samples,0.f);
    float outputPeak=0.f;
    // JUCE packs enabled physical outputs; mono pink uses the same sample on each.
-   if(signal!=Signal::None&&outputs>=1&&output&&output[0]){float scale=pinkScale.load(std::memory_order_relaxed);for(int i=0;i<samples;++i){float value=(signal==Signal::Pink?pink.next():sweep.next())*scale;for(int ch=0;ch<outputs;++ch)if(output[ch])output[ch][i]=value;outputPeak=std::max(outputPeak,std::abs(value));}if(signal==Signal::Sweep&&sweep.complete())sweepFinished.store(true,std::memory_order_release);}
+   if(signal!=Signal::None&&outputs>=1&&output&&output[0]){float scale=(signal==Signal::Pink?pinkScale:sweepScale).load(std::memory_order_relaxed);for(int i=0;i<samples;++i){float value=(signal==Signal::Pink?pink.next():sweep.next())*scale;for(int ch=0;ch<outputs;++ch)if(output[ch])output[ch][i]=value;outputPeak=std::max(outputPeak,std::abs(value));}if(signal==Signal::Sweep&&sweep.complete())sweepFinished.store(true,std::memory_order_release);}
    lastOutputs.store(outputs,std::memory_order_relaxed);lastOutputPeak.store(outputPeak,std::memory_order_release);
    const double now=clock();lastCallbackMs.store(now,std::memory_order_release);
    lastInputs.store(inputs,std::memory_order_relaxed);lastSamples.store(samples,std::memory_order_relaxed);
@@ -142,9 +143,9 @@ public:
  const juce::String& summary()const{return runningFlag?description:error;}
  juce::String details()const{auto text=description;if(runningFlag)for(const auto& s:sessions)text+="\n"+diagnostic(*s,clock());return text;}
  unsigned drops()const{unsigned n=0;for(const auto& s:sessions)n+=s->dropped.load(std::memory_order_relaxed);return n;}
- void setPinkLevelDb(double db){db=juce::jlimit(-60.,-20.,db);pinkLevelDb=db;float scale=(float)std::pow(10.,(db+40.)/20.);for(auto& s:sessions)s->pinkScale.store(scale,std::memory_order_release);}
+ void setPinkLevelDb(double db){if(!std::isfinite(db))return;db=juce::jlimit(-60.,-20.,db);pinkLevelDb=db;float scale=(float)std::pow(10.,(db+40.)/20.);for(auto& s:sessions)if(s->signal==Signal::Pink)s->pinkScale.store(scale,std::memory_order_release);}
  double pinkLevel()const{return pinkLevelDb;}
- void setSweepLevelDb(double db){db=juce::jlimit(-60.,-20.,db);sweepLevelDb=db;for(auto& s:sessions)if(s->signal==Signal::Sweep)s->pinkScale.store((float)std::pow(10.,(db+40.)/20.),std::memory_order_release);}
+ void setSweepLevelDb(double db){if(!std::isfinite(db))return;db=juce::jlimit(-60.,-20.,db);sweepLevelDb=db;for(auto& s:sessions)if(s->signal==Signal::Sweep)s->sweepScale.store((float)std::pow(10.,(db+40.)/20.),std::memory_order_release);}
  double sweepLevel()const{return sweepLevelDb;}
  void setSweep(double startHz,double endHz,double duration){sweepStartHz=juce::jlimit(10.,20000.,startHz);sweepEndHz=juce::jlimit(sweepStartHz+1.,24000.,endHz);sweepDuration=juce::jlimit(.1,60.,duration);}
  double sweepStart()const{return sweepStartHz;} double sweepEnd()const{return sweepEndHz;} double sweepSeconds()const{return sweepDuration;}
@@ -167,7 +168,7 @@ public:
   for(const auto& group:plan.groups){
    auto* endpoint=findEndpoint(endpoints,juce::String::fromUTF8(group.key.c_str()));
    if(!endpoint){error="Dispositivo no disponible";stop();return false;}
-   auto session=std::make_unique<Session>();session->setRouteCount(std::max((size_t)1,routes.size()));session->key=endpoint->key;session->clock=clock;session->signal=outputSignal;session->pinkScale.store((float)std::pow(10.,((outputSignal==Signal::Sweep?sweepLevelDb:pinkLevelDb)+40.)/20.));session->referenceScale.store((float)std::pow(10.,referenceGainDb/20.));
+   auto session=std::make_unique<Session>();session->setRouteCount(std::max((size_t)1,routes.size()));session->key=endpoint->key;session->clock=clock;session->signal=outputSignal;session->pinkScale.store((float)std::pow(10.,(pinkLevelDb+40.)/20.));session->sweepScale.store((float)std::pow(10.,(sweepLevelDb+40.)/20.));session->referenceScale.store((float)std::pow(10.,referenceGainDb/20.));
    if(endpoint->key==tfDeviceKey&&tfMic>0&&(tfRef>0||internalReference)){session->captureMic=tfMic;session->captureRef=tfRef;session->virtualReference=internalReference;if(internalReference)session->referenceScale.store(1.f);}
    if(!active.empty()){for(size_t i=0;i<routes.size()&&i<active.size();++i)if(active[i]&&routes[i].device==endpoint->key.toStdString()){session->captureMics[i]=routes[i].mic;session->captureRefs[i]=internalReference?0:routes[i].ref;}session->virtualReference=internalReference;}
    else if(session->captureMic>0){session->captureMics[0]=session->captureMic;session->captureRefs[0]=session->captureRef;}
@@ -245,7 +246,7 @@ public:
  #if defined(MYA_INPUT_ENGINE_TEST)
  // Drive the ACTUAL callback/queue/poll path with a clock, no device creation/open.
  void fixtureStart(juce::String key,double rate,const std::vector<int>& channels,bool pinkOutput=false,int tfMic=0,int tfRef=0,bool internalReference=false){fixtureSignal(key,rate,channels,pinkOutput?Signal::Pink:Signal::None,tfMic,tfRef,internalReference);}
- void fixtureSignal(juce::String key,double rate,const std::vector<int>& channels,Signal signal,int tfMic=0,int tfRef=0,bool internalReference=false){stop();error.clear();description.clear();auto s=std::make_unique<Session>();s->setRouteCount(1);s->key=key;s->clock=clock;s->sampleRate=rate;s->openedAt=clock();s->starts=1;s->aboutReady=true;s->stopped=false;s->signal=signal;s->captureMic=tfMic;s->captureRef=tfRef;s->captureMics[0]=tfMic;s->captureRefs[0]=tfRef;s->virtualReference=internalReference;s->pinkScale.store((float)std::pow(10.,(((signal==Signal::Sweep?sweepLevelDb:pinkLevelDb)+40.)/20.)));s->sweep.configure(rate,sweepStartHz,sweepEndHz,sweepDuration);for(int ch:channels){s->physical[(size_t)s->count++]=ch-1;s->weighted[(size_t)ch-1].configure(rate);}sessions.push_back(std::move(s));runningFlag=true;}
+ void fixtureSignal(juce::String key,double rate,const std::vector<int>& channels,Signal signal,int tfMic=0,int tfRef=0,bool internalReference=false){stop();error.clear();description.clear();auto s=std::make_unique<Session>();s->setRouteCount(1);s->key=key;s->clock=clock;s->sampleRate=rate;s->openedAt=clock();s->starts=1;s->aboutReady=true;s->stopped=false;s->signal=signal;s->captureMic=tfMic;s->captureRef=tfRef;s->captureMics[0]=tfMic;s->captureRefs[0]=tfRef;s->virtualReference=internalReference;s->pinkScale.store((float)std::pow(10.,(pinkLevelDb+40.)/20.));s->sweepScale.store((float)std::pow(10.,(sweepLevelDb+40.)/20.));s->sweep.configure(rate,sweepStartHz,sweepEndHz,sweepDuration);for(int ch:channels){s->physical[(size_t)s->count++]=ch-1;s->weighted[(size_t)ch-1].configure(rate);}sessions.push_back(std::move(s));runningFlag=true;}
  void fixtureRoutes(const std::vector<InputLevels::Route>& routes,const std::vector<bool>& active){auto& s=*sessions.front();s.setRouteCount(routes.size());for(size_t i=0;i<routes.size();++i){s.captureMics[i]=i<active.size()&&active[i]?routes[i].mic:0;s.captureRefs[i]=i<active.size()&&active[i]?routes[i].ref:0;}}
  void fixtureCallback(const float* const* input,int inputs,int samples,size_t session=0){sessions[session]->audioDeviceIOCallbackWithContext(input,inputs,nullptr,0,samples,{});}
  void fixtureOutputCallback(const float* const* input,int inputs,float* output,int samples){float* channels[]={output};sessions.front()->audioDeviceIOCallbackWithContext(input,inputs,channels,1,samples,{});}

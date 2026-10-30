@@ -33,6 +33,14 @@ int main(int argc,char** argv){
   for(size_t i=0;i<out.size();++i)assert(out[i]==right[i]&&out[i]==third[i]);
   engine.stop();assert(!engine.running()&&!engine.outputDbfs(key));
   engine.setSweep(20,20000,1.);engine.setSweepLevelDb(-40);engine.fixtureSignal(juce::String(key),48000,{1},LiveInputEngine::Signal::Sweep);out.fill(1.f);engine.fixtureOutputCallback(input,1,out.data(),480);nonzero=false;for(float sample:out){assert(std::isfinite(sample)&&std::abs(sample)<=LoopSweep::maximum);nonzero=nonzero||sample!=0.f;}assert(nonzero&&engine.outputDbfs(key));for(int block=1;block<100;++block)engine.fixtureOutputCallback(input,1,out.data(),480);assert(engine.sweepComplete());out.fill(1.f);engine.fixtureOutputCallback(input,1,out.data(),480);for(float sample:out)assert(sample==0.f);engine.stop();
+  // Changing one generator's level must not affect the other active generator.
+  engine.setPinkLevelDb(-40);engine.setSweepLevelDb(-40);
+  engine.fixtureSignal(juce::String(key),48000,{1},LiveInputEngine::Signal::Sweep);engine.fixtureOutputCallback(input,1,out.data(),480);auto sweepAtMinus40=out;
+  engine.fixtureSignal(juce::String(key),48000,{1},LiveInputEngine::Signal::Sweep);engine.setPinkLevelDb(-20);engine.fixtureOutputCallback(input,1,out.data(),480);assert(out==sweepAtMinus40);engine.setPinkLevelDb(-40);
+  engine.fixtureSignal(juce::String(key),48000,{1},LiveInputEngine::Signal::Pink);engine.fixtureOutputCallback(input,1,out.data(),480);auto pinkAtMinus40=out;
+  engine.fixtureSignal(juce::String(key),48000,{1},LiveInputEngine::Signal::Pink);engine.setSweepLevelDb(-20);engine.fixtureOutputCallback(input,1,out.data(),480);assert(out==pinkAtMinus40);engine.setSweepLevelDb(-40);engine.stop();
+  engine.setPinkLevelDb(-20);engine.fixtureSignal(juce::String(key),48000,{1},LiveInputEngine::Signal::Pink);engine.fixtureOutputCallback(input,1,out.data(),480);for(float sample:out)assert(std::isfinite(sample)&&std::abs(sample)<=0.1f);engine.stop();engine.setPinkLevelDb(-40);
+  engine.setSweepLevelDb(-20);engine.fixtureSignal(juce::String(key),48000,{1},LiveInputEngine::Signal::Sweep);engine.fixtureOutputCallback(input,1,out.data(),480);for(float sample:out)assert(std::isfinite(sample)&&std::abs(sample)<=0.1f);engine.stop();engine.setSweepLevelDb(-40);
  }
  // Single physical Input1: actual IO callback -> SPSC -> peak/RMS poll, no backend open.
  start();assert(engine.poll()&&!engine.rms(key,1));
