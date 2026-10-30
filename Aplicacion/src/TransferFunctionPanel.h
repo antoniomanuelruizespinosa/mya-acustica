@@ -3,6 +3,7 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 
 #include <functional>
+#include <map>
 #include <optional>
 #include <vector>
 
@@ -16,6 +17,7 @@ public:
   bool valid=false;
  };
  struct Trace {
+  int id=-1;
   juce::String name;
   juce::Colour colour;
   bool selected=false;
@@ -28,6 +30,7 @@ public:
  void setActive(bool active);
  void visibilityChanged() override;
  void paint(juce::Graphics& graphics) override;
+ void resized() override;
 
 private:
  void timerCallback() override;
@@ -38,5 +41,8 @@ private:
 
  DataProvider dataProvider;
  std::vector<Trace> traces;
+ std::map<int,Trace> history;
+ juce::ComboBox speed;
+ double lastUpdateMs=0;
  bool active=false;
 };

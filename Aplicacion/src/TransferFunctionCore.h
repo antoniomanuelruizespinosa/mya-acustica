@@ -1,5 +1,6 @@
 #pragma once
 #include "SignalWindow.h"
+#include "MultiWindowSpectrum.h"
 #include <algorithm>
 #include <array>
 #include <atomic>
@@ -7,6 +8,7 @@
 #include <complex>
 #include <cstdint>
 #include <optional>
+#include <memory>
 #include <vector>
 
 namespace TransferFunctionCore {
@@ -46,6 +48,9 @@ class Estimator {
  double delayMs=0;
  int averageDepth=8;
  SignalWindow::Type windowType=SignalWindow::Type::Hann;
+ bool multiWindowEnabled=true;
+ std::unique_ptr<MultiWindowSpectrum> multi=std::make_unique<MultiWindowSpectrum>();
+ std::uint64_t revisionNumber=0;
  std::uint64_t lastSequence=0;
  bool readyFlag=false,sweepMeasurement=false,pendingAlignmentReset=false;
  void rebuildSmoothing(){magnitudeIntegral.fill(0);phaseIntegral.fill({});invalidIntegral.fill(0);if(!readyFlag)return;for(int k=1;k<bins;++k){bool valid=result[(size_t)k].valid;auto h=transfer[(size_t)k]*std::polar(1.,2.*3.14159265358979323846*result[(size_t)k].frequency*delayMs/1000.);magnitudeIntegral[(size_t)k]=magnitudeIntegral[(size_t)(k-1)]+(valid?result[(size_t)k].magnitudeDb:0.);phaseIntegral[(size_t)k]=phaseIntegral[(size_t)(k-1)]+(valid?h:Complex{});invalidIntegral[(size_t)k]=invalidIntegral[(size_t)(k-1)]+!valid;}}
@@ -77,16 +82,18 @@ class Estimator {
   averages=std::min(averages+1,1000000);readyFlag=averages>=averageDepth;
   if(!readyFlag)return;
   for(int k=1;k<bins;++k){auto& p=result[(size_t)k];p.frequency=k*rateHz/fftSize;p.valid=refPower[(size_t)k]>1.e-12&&micPower[(size_t)k]>1.e-12;if(!p.valid){transfer[(size_t)k]={};continue;}Complex h=cross[(size_t)k]/refPower[(size_t)k]*std::polar(1.,-2.*3.14159265358979323846*p.frequency*alignedSamples/rateHz);transfer[(size_t)k]=h;p.magnitudeDb=20.*std::log10(std::max(std::abs(h),1.e-12));p.phaseDegrees=std::arg(h)*180./3.14159265358979323846;p.coherence=std::clamp(std::norm(cross[(size_t)k])/(refPower[(size_t)k]*micPower[(size_t)k]),0.,1.);}
-  rebuildSmoothing();rebuildImpulse();
+  rebuildSmoothing();rebuildImpulse();++revisionNumber;
  }
 public:
- void reset(){filled=averages=0;rateHz=0;lastSequence=0;readyFlag=false;sweepMeasurement=false;pendingAlignmentReset=false;previousRef.fill(0);cross.fill({});refPower.fill(0);micPower.fill(0);result.fill({});transfer.fill({});impulse.fill(0);envelope.fill(0);}
- void setWindowType(SignalWindow::Type type){if(windowType==type)return;windowType=type;reset();}
+ void reset(){filled=averages=0;rateHz=0;lastSequence=0;readyFlag=false;sweepMeasurement=false;pendingAlignmentReset=false;previousRef.fill(0);cross.fill({});refPower.fill(0);micPower.fill(0);result.fill({});transfer.fill({});impulse.fill(0);envelope.fill(0);multi->reset();++revisionNumber;}
+ void setWindowType(SignalWindow::Type type){if(windowType==type)return;windowType=type;reset();multi->setWindowType(type);}
  SignalWindow::Type getWindowType()const{return windowType;}
+ void setMultiWindowEnabled(bool enabled){if(multiWindowEnabled==enabled)return;multiWindowEnabled=enabled;reset();}
+ bool isMultiWindowEnabled()const{return multiWindowEnabled;}
  bool isSweep()const{return sweepMeasurement;}
  void loadSweepSpectrum(const std::vector<Complex>& values,const std::vector<bool>& valid,double rate){if(values.size()!=bins||valid.size()!=bins||rate<=0)return;reset();rateHz=rate;averages=1;readyFlag=sweepMeasurement=true;for(int k=1;k<bins;++k){auto& p=result[(size_t)k];p.frequency=k*rate/fftSize;p.valid=valid[(size_t)k]&&std::isfinite(values[(size_t)k].real())&&std::isfinite(values[(size_t)k].imag());if(!p.valid)continue;transfer[(size_t)k]=values[(size_t)k];p.magnitudeDb=20.*std::log10(std::max(1.e-12,std::abs(transfer[(size_t)k])));p.phaseDegrees=std::arg(transfer[(size_t)k])*180./3.14159265358979323846;p.coherence=0;}rebuildSmoothing();rebuildImpulse();}
- void setDelayMs(double value){if(!std::isfinite(value)||value<0||value>2000)return;if(std::abs(delayMs-value)>1.e-6)pendingAlignmentReset=true;delayMs=value;rebuildSmoothing();rebuildImpulse();}
- void setAverageDepth(int depth){if(depth<1||depth>64||averageDepth==depth)return;averageDepth=depth;reset();}
+ void setDelayMs(double value){if(!std::isfinite(value)||value<0||value>2000)return;if(std::abs(delayMs-value)>1.e-6)pendingAlignmentReset=true;delayMs=value;multi->setDelayMs(value);rebuildSmoothing();rebuildImpulse();}
+ void setAverageDepth(int depth){if(depth<1||depth>64||averageDepth==depth)return;averageDepth=depth;reset();multi->setAverageDepth(depth);}
  int averaging()const{return averageDepth;}
  double delay()const{return delayMs;}
  std::optional<double> findDelayMs()const{
@@ -104,14 +111,15 @@ public:
  }
  bool ready()const{return readyFlag;}
  int averageCount()const{return averages;}
+ std::uint64_t revision()const{return revisionNumber+multi->revision();}
  double sampleRate()const{return rateHz;}
  void feed(const RawBlock& block){
   if(block.count<=0||block.count>blockCapacity||!std::isfinite(block.sampleRate)||block.sampleRate<=0)return;
   if((lastSequence&&block.sequence!=lastSequence+1)||(rateHz>0&&std::abs(block.sampleRate-rateHz)>1.e-6))reset();
   lastSequence=block.sequence;rateHz=block.sampleRate;
-  for(int i=0;i<block.count;++i){double m=block.mic[(size_t)i],r=block.ref[(size_t)i];if(!std::isfinite(m)||!std::isfinite(r)){reset();return;}mic[(size_t)filled]=m;ref[(size_t)filled]=r;if(++filled==fftSize){calculate();filled=0;}}
+  for(int i=0;i<block.count;++i){double m=block.mic[(size_t)i],r=block.ref[(size_t)i];if(!std::isfinite(m)||!std::isfinite(r)){reset();return;}if(multiWindowEnabled)multi->feed(m,r,block.sampleRate);mic[(size_t)filled]=m;ref[(size_t)filled]=r;if(++filled==fftSize){calculate();filled=0;}}
  }
- std::optional<Point> at(double hz)const{if(!readyFlag||hz<=0||rateHz<=0)return {};double index=hz*fftSize/rateHz;int nearest=(int)std::round(index);if(nearest<1||nearest>=bins||!result[(size_t)nearest].valid)return {};auto point=result[(size_t)nearest];point.phaseDegrees=std::arg(transfer[(size_t)nearest]*std::polar(1.,2.*3.14159265358979323846*point.frequency*delayMs/1000.))*180./3.14159265358979323846;return point;}
- std::optional<Point> smoothedAt(double hz,double divisions,bool phase)const{auto point=at(hz);if(!point||divisions<=0)return point;double ratio=std::pow(2.,.5/divisions);int lo=std::max(1,(int)std::ceil(hz/ratio*fftSize/rateHz));int hi=std::min(bins-1,(int)std::floor(hz*ratio*fftSize/rateHz));if(hi<lo||invalidIntegral[(size_t)hi]-invalidIntegral[(size_t)(lo-1)]>0)return {};int count=hi-lo+1;if(phase){auto h=(phaseIntegral[(size_t)hi]-phaseIntegral[(size_t)(lo-1)])/(double)count;if(std::abs(h)<1.e-15)return {};point->phaseDegrees=std::arg(h)*180./3.14159265358979323846;}else point->magnitudeDb=(magnitudeIntegral[(size_t)hi]-magnitudeIntegral[(size_t)(lo-1)])/count;return point;}
+ std::optional<Point> at(double hz)const{if(!readyFlag||hz<=0||rateHz<=0)return {};if(multiWindowEnabled&&!sweepMeasurement&&hz<270.)if(auto narrow=multi->transferAt(hz)){Point point;point.frequency=narrow->frequencyHz;point.magnitudeDb=narrow->magnitudeDb;point.phaseDegrees=std::arg(std::polar(1.,narrow->phaseDegrees*3.14159265358979323846/180.+2.*3.14159265358979323846*point.frequency*delayMs/1000.))*180./3.14159265358979323846;point.coherence=narrow->coherence;point.valid=true;return point;}double index=hz*fftSize/rateHz;int nearest=(int)std::round(index);if(nearest<1||nearest>=bins||!result[(size_t)nearest].valid)return {};auto point=result[(size_t)nearest];point.phaseDegrees=std::arg(transfer[(size_t)nearest]*std::polar(1.,2.*3.14159265358979323846*point.frequency*delayMs/1000.))*180./3.14159265358979323846;return point;}
+ std::optional<Point> smoothedAt(double hz,double divisions,bool phase)const{auto point=at(hz);if(!point||divisions<=0)return point;if(multiWindowEnabled&&!sweepMeasurement&&hz<270.&&multi->transferAt(hz)){int steps=std::clamp((int)std::ceil(MultiWindowSpectrum::pointsPerOctave/divisions),2,64);double total=0;Complex vector{};int count=0;for(int i=0;i<=steps;++i){double offset=((double)i/steps-.5)/divisions;auto sample=at(hz*std::pow(2.,offset));if(!sample)continue;total+=sample->magnitudeDb;vector+=std::polar(1.,sample->phaseDegrees*3.14159265358979323846/180.);++count;}if(count==0)return {};if(phase){if(std::abs(vector)<1.e-12)return {};point->phaseDegrees=std::arg(vector)*180./3.14159265358979323846;}else point->magnitudeDb=total/count;return point;}double ratio=std::pow(2.,.5/divisions);int lo=std::max(1,(int)std::ceil(hz/ratio*fftSize/rateHz));int hi=std::min(bins-1,(int)std::floor(hz*ratio*fftSize/rateHz));if(hi<lo||invalidIntegral[(size_t)hi]-invalidIntegral[(size_t)(lo-1)]>0)return {};int count=hi-lo+1;if(phase){auto h=(phaseIntegral[(size_t)hi]-phaseIntegral[(size_t)(lo-1)])/(double)count;if(std::abs(h)<1.e-15)return {};point->phaseDegrees=std::arg(h)*180./3.14159265358979323846;}else point->magnitudeDb=(magnitudeIntegral[(size_t)hi]-magnitudeIntegral[(size_t)(lo-1)])/count;return point;}
 };
 }

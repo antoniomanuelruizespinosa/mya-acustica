@@ -17,13 +17,15 @@ float phaseY(double degrees,juce::Rectangle<float> area){
 }
 }
 
-TransferFunctionPanel::TransferFunctionPanel(DataProvider provider):dataProvider(std::move(provider)){}
+TransferFunctionPanel::TransferFunctionPanel(DataProvider provider):dataProvider(std::move(provider)){
+ speed.addItemList({"Fast","Slow","Prom.16"},1);speed.setSelectedId(1);speed.setTooltip("Respuesta temporal de magnitud, fase y coherencia");speed.onChange=[this]{history.clear();lastUpdateMs=0;};addAndMakeVisible(speed);
+}
 TransferFunctionPanel::~TransferFunctionPanel(){stopTimer();}
 
 void TransferFunctionPanel::setActive(bool shouldBeActive){
  active=shouldBeActive;
  if(active&&isShowing()){timerCallback();startTimerHz(30);}
- else stopTimer();
+ else {stopTimer();traces.clear();history.clear();lastUpdateMs=0;repaint();}
 }
 
 void TransferFunctionPanel::visibilityChanged(){
@@ -32,9 +34,17 @@ void TransferFunctionPanel::visibilityChanged(){
 }
 
 void TransferFunctionPanel::timerCallback(){
- traces=dataProvider?dataProvider():std::vector<Trace>{};
+ auto incoming=dataProvider?dataProvider():std::vector<Trace>{};
+ double now=juce::Time::getMillisecondCounterHiRes(),dt=lastUpdateMs>0?juce::jlimit(0.0,1.0,(now-lastUpdateMs)/1000.):0.;lastUpdateMs=now;
+ double tau=speed.getSelectedId()==2?1.:speed.getSelectedId()==3?5.4:.125;
+ double alpha=dt>0?1.-std::exp(-dt/tau):1.;
+ std::map<int,Trace> next;
+ for(auto& trace:incoming){auto old=history.find(trace.id);if(old!=history.end()&&old->second.samples.size()==trace.samples.size())for(size_t i=0;i<trace.samples.size();++i){auto& current=trace.samples[i];const auto& previous=old->second.samples[i];if(!current.valid||!previous.valid)continue;current.magnitudeDb=previous.magnitudeDb+alpha*(current.magnitudeDb-previous.magnitudeDb);current.phaseDegrees=previous.phaseDegrees+alpha*std::remainder(current.phaseDegrees-previous.phaseDegrees,360.);current.phaseDegrees=std::remainder(current.phaseDegrees,360.);current.coherence=previous.coherence+alpha*(current.coherence-previous.coherence);}next[trace.id]=trace;}
+ history=std::move(next);traces=std::move(incoming);
  repaint();
 }
+
+void TransferFunctionPanel::resized(){speed.setBounds(getWidth()>=450?150:8,getWidth()>=450?2:24,110,21);}
 
 std::optional<float> TransferFunctionPanel::frequencyPosition(double hz,juce::Rectangle<float> area){
  if(!std::isfinite(hz)||hz<minHz||hz>maxHz||area.isEmpty())return {};
@@ -96,7 +106,7 @@ void TransferFunctionPanel::paint(juce::Graphics& g){
  auto magnitudeArea=juce::Rectangle<float>{bounds.getX()+51.0f,bounds.getY()+paneHeight+23.0f,bounds.getWidth()-63.0f,paneHeight-35.0f};
  if(phaseArea.isEmpty()||magnitudeArea.isEmpty())return;
  g.setColour(text);g.setFont(12.0f);
- g.drawText("FASE / grados",12,2,180,18,juce::Justification::centredLeft);
+ g.drawText("FASE / grados",12,2,135,18,juce::Justification::centredLeft);
  g.drawText("MAGNITUD / dB",12,juce::roundToInt(paneHeight)+2,180,18,juce::Justification::centredLeft);
  drawGrid(g,phaseArea,true);drawGrid(g,magnitudeArea,false);
  g.saveState();g.reduceClipRegion(phaseArea.getSmallestIntegerContainer());drawTraces(g,phaseArea,true);g.restoreState();

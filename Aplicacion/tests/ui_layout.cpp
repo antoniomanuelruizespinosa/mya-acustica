@@ -6,14 +6,14 @@ int main(){
  using namespace CompactLayout;
  for(int height:{900,960,1080,1440,2000}){
   int viewport=tfViewportHeight(height);
-  assert(viewport>=tfCard);if(height>=960)assert(viewport>=tfContentHeight); // Smaller windows retain independent scroll access.
+  assert(viewport>=tfCard); // Each taller TF card remains fully reachable by scrolling.
   int scrollMaximum=std::max(0,tfContentHeight-viewport);
   assert(3*tfRow+tfCard-scrollMaximum<=viewport);
   Box viewportBox{0,tfTop,264,viewport};Box controls{0,actionTop(height),264,27};
   assert(!viewportBox.intersects(controls));
-  for(int row=0;row<4;++row){int top=row*tfRow;assert(top+tfCard<=tfContentHeight);assert(top+24+48<=top+76);assert(top+76+18<=top+tfCard);}
+  for(int row=0;row<4;++row){int top=row*tfRow;assert(top+tfCard<=tfContentHeight);assert(top+24+48<=top+76);assert(top+76+20<=top+100);assert(top+100+20<=top+124);assert(top+124+20<=top+150);assert(top+150+18<=top+tfCard);}
  }
- for(int h:{960,1080})for(bool expanded:{false,true}){assert(tfViewportHeight(h,expanded)>=tfCard);if(h>=1080||!expanded)assert(tfViewportHeight(h,expanded)>=tfContentHeight);Box list{0,tfTop,216,tfViewportHeight(h,expanded)},actions{0,actionTop(h,expanded),216,expanded?164:58},generator{0,signalTop(h),216,28};assert(!list.intersects(actions)&&!actions.intersects(generator));Box controls{0,generatorTop(h),216,66};assert(!controls.intersects(generator)&&controls.y+controls.h<=h-33);}
+ for(int h:{960,1080})for(bool expanded:{false,true}){assert(tfViewportHeight(h,expanded)>=tfCard);Box list{0,tfTop,216,tfViewportHeight(h,expanded)},actions{0,actionTop(h,expanded),216,expanded?164:58},generator{0,signalTop(h),216,28};assert(!list.intersects(actions)&&!actions.intersects(generator));Box controls{0,generatorTop(h),216,66};assert(!controls.intersects(generator)&&controls.y+controls.h<=h-33);}
  for(int width:{184,192,316})for(int ch=0;ch<2;++ch){auto bar=meterBar(width,ch),scale=meterScale(width,ch);assert(bar.w==scale.w&&bar.x==scale.x);assert(!bar.intersects(scale));assert(bar.y+bar.h<=48&&scale.y+scale.h<=48);assert(bar.x+bar.w<=width);}
  for(int width:{680,1000,1600})for(int height:{80,160,400}){
   auto control=smoothing(width);Box ticks{0,height-27,width,16},source{width-115,2,110,18},type{5,2,140,18},coherence{175,2,95,18};
@@ -29,5 +29,5 @@ int main(){
  assert(audio->capability==Capability::Ready);assert(es.startsWith("Audio / E-S")&&es.contains("Play")&&es.contains("Stop/Pause")&&!es.contains("desactivada")&&!es.contains("demo"));
  assert(en.startsWith("Audio / I-O")&&en.contains("Play")&&en.contains("Stop/Pause")&&!en.contains("acquisition disabled")&&!en.contains("demo"));
 
- std::cout<<"PASS: four compact TFs plus AVG and bottom controls fit without scrolling; numeric readout shares full capsule centre; scale and delay do not overlap; smoothing avoids axis labels and header controls; ES/EN tooltip separators and accents decode as UTF-8\n";
+ std::cout<<"PASS: each TF card has separate Prom, FFT and Smth rows; four cards plus AVG remain scroll-accessible; bottom controls do not overlap; smoothing avoids axis labels and header controls\n";
 }
