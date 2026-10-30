@@ -39,3 +39,135 @@ REGLA DE CAMBIO
 No cambiar tamaños, colores, posiciones, atajos o comportamiento aprobado por iniciativa propia.
 Cada encargo incluye lista de archivos y alcance, diferencias antes/después, pruebas pertinentes y aceptación pendiente/completada.
 Un único editor de código por checkout; no rehacer MYA-001..005. Documentar correcciones posteriores sin borrar historia.
+
+CONTINUIDAD LOCAL — 26/10/2026 — CP-MYA-R3-AVG-20261026
+Base vigente R3 con borde AVG terminado y renderizado; aceptacion visual pendiente.
+Checkpoint: work/checkpoints/MYA-005-R3-AVG-antes-adquisicion/IDENTIDAD.txt
+Nueva autorizacion: empezar adquisicion SOLO de entradas y niveles M/R, apertura
+explicita del usuario; sin salida, TF/Find/Track/DSP/IA/3D ni calibracion fisica.
+Dispositivo/canal enumerado, no hardcodeado; ejemplo Antonio cuatro micros con
+referencia habitual Input5 desde consola, NO loop interno. Sin activacion al cargar.
+Paneles/opciones repetidos alternan abrir/cerrar; Guardar/Medir/Calibrar no alternan.
+
+CONTINUIDAD LOCAL — 26/10/2026 — MYA-006-A entregado
+Checkpoint R3-AVG conservado. Entradas dBFS con Play explicito y Stop/Pause; rutas
+persistidas sin autoactivacion. Cuadricula compacta lateral/flotante y Input1 para
+nuevos medidores; cuatro botones izquierdos, paneles alternables y graficas DEMO.
+Build identificado y evidencias: work/MYA-006-A/. No abrir/reiniciar instancia Antonio.
+Informe vigente: Documentacion/07_Verificacion/MYA-006-A-resultado.txt.
+9/9 pruebas sinteticas y render offscreen PASS; hardware OctaCapture/ref5, permiso
+microfono, desconexion real, Windows/ASIO y aceptacion visual PENDIENTES.
+No ampliar a TF/Find/Track/SPL/Leq/DSP/IA/3D ni generacion sin nuevo encargo.
+El mismo MYA-006-A incorpora icono15 adaptado APROBADO SOLO COMO ICONO y Acerca de
+MYA ACUSTICA / ANALYZER. Fuente/derivados en Aplicacion/assets/branding/; CMake genera
+ICNS/ICO y embebe el PNG. Aceptacion global UI/medicion y pruebas fisicas pendientes.
+
+26/10/2026 — MYA-006-A-R1: corregido estado fijo Acquisition stopped del panel
+Measurement Configuration y tooltip Audio/E-S; canal0 legacy muestra Sin asignar
+sin remapear preferencias. Evidencia comunicada por Revision: Antonio abrio OCTA-
+CAPTURE 48000/512, rutas M1..4/R5 y lecturas visibles. Solo apertura/lecturas observadas;
+exactitud, calibracion, desconexion/reconexion y Windows siguen pendientes.
+Informe: Documentacion/07_Verificacion/MYA-006-A-R1-resultado.txt.
+No reiniciar ni interrumpir la instancia/prueba de Antonio; build nuevo para uso manual.
+
+26/10/2026 — Evidencia fisica preliminar adicional comunicada por Revision:
+calibrador nominal94/114 en Input1, OctaCapture48k/512, M1 -21.8/-2.1 dBFS;
+diferencia observada19.7 dB. Dos lecturas puntuales, sin precision certificada ni
+SPL calibrado. No atribuir0.3 dB al software ni guardar offset basado en pico.
+Pendientes repeticion/estadistica y calibracion RMS. Registro completo:
+Documentacion/07_Verificacion/MYA-006-A-prueba-preliminar-calibrador.txt.
+
+26/10/2026 — PRIORIDAD MYA-006-A-R2 ENTREGADA PARA VERIFICACION:
+Principal derecho, lateral y flotante ahora independientes en medidores.json,
+medidores-lateral.json y medidores-flotantes.json. Requisito actualizado sustituye
+la interpretacion anterior de IDs/config mutable compartidos. Grid exacto con
+paginas/scroll, sin autoampliar otra dimension ni perder tarjetas. Franja interior
+superior eliminada y37px recuperados; version/DEMO en pie, navegacion/nativo intactos.
+10/10 tests y render; informe Documentacion/07_Verificacion/MYA-006-A-R2-resultado.txt.
+No reiniciar instancia de Antonio. Calibracion B permanece AUTORIZADA, INCOMPLETA,
+NO integrada: work/checkpoints/MYA-006-B-en-curso-antes-prioridad-medidores/.
+Retomar despues de verificacion de esta correccion prioritaria; adaptar integracion
+RMS a tres modelos de medidores independientes. No considerar B entregada.
+R2 tambien corrige seleccion AVG y explicita origen/selector de capturas. Curva verde
+comprobada como captura visible TF1/02:55:36 de biblioteca demo, NO fallback DSP.
+No se borraron datos. Cursor-- sin fuente visible; modos SoloTF y Sin trazos.
+Acabado numerico suave3D solicitado, con pintura comun sin compartir estado; colores
+propios/alarma conservados. Antes/despues en work/MYA-006-A-R2/render-before-relief y
+render. 10/10 CTest y render completo PASS; B sigue pendiente fuera del build.
+RTA futuro registrado en Documentacion/05_Referencia_tecnica/RTA-espectrograma-
+especificacion-pendiente.txt: Barras/Lineas/Ambas; historial2D convencional y3D del
+mismo espectro; modo combinado. No implementar ni fingir motor en R2; RTA pendiente.
+
+26/10/2026 — Auditoria atajos MYA-006-A-R3: matriz completa en Documentacion/
+05_Referencia_tecnica/atajos-Smaart-Mya/ (109 asignaciones generales,127 casos
+expandidos +2 adicionales de menu;137 comandosMya). V=ResetAverager PENDIENTE,
+NO biblioteca/3D. D reservado por contradiccion Find/Track; DSP sinD. T->980TF real
+como vistaDEMO; Shift no cae en acciones simples ni dobleE. PerfilAntonio conservado.
+CalibracionB sigue en checkpoint, incompleta y sin integrar.
+Preferencia operativa nueva: guardar/detener/cerrar y abrir build nuevo al revisar,
+COORDINADO POR REVISION, sin autoPlay ni reinicio concurrente desde Desarrollo.
+Ver operacion-actualizaciones.txt; sustituye prohibicion individual anterior.
+R3 integra ademas ultima referencia celdas-only: todo ancho, sin cabeceras/pies,
+menus contextuales conservan gestion/paginas/filas/columnas independientes.
+Cabecera nueva REEMPLAZA fila8permanente: misma navegacion en desplegable con pestaña,
+logo/nombre en barra nativaMac, controles/arrastre conservados. Windows nativo sin
+centrado implementado/validado. Inicio real breve sin espera, repetible en Acerca de.
+Informe MYA-006-A-R3-resultado.txt; Revision gestiona abrir nueva version con audio
+parado. No reinicio concurrente. B sigue pendiente/checkpoint; NO restaurar archivos
+viejos sobre cambios R3 al retomarla. Aprobacion global UI y arranque nativo pendientes.
+
+26/10/2026 — MYA-006-B entregado para Revisión
+Integrado sobre R3, sin restaurar checkpoint B antiguo. RMS de energia, calibracion
+por backend/dispositivo/canal con micro/ganancia declarados,94/114/manual, captura
+estable >=5s y confirmacion explicita; primer SPL RMS sin ponderacion. Independencia
+de tres vistas conservada. Sin A/C/Z normalizada/Fast/Slow/Leq/curva/GainTracking.
+11/11 CTest y renderer PASS; ejemplos sinteticos, no prueba fisica.
+Build: work/MYA-006-B/build/Mya Acustica.app; identidad y fuente en esa entrega.
+Informes: MYA-006-B-resultado.txt y MYA-006-B-protocolo-94-114.txt.
+No se abrio audio ni se reinicio app desde Desarrollo. Revisión coordina el cambio
+de version sin autoPlay. Aceptacion visual y calibracion fisica94/114 pendientes.
+R3 no interpreta metric6: para rollback recuperar preferencias previas, no degradar
+los tres archivos B silenciosamente. Auditoria de atajos R3 queda historica;290
+habilitado en B sin nuevo atajo. No rehacer geometria/celdas/cabecera/inicio R3.
+
+26/10/2026 — MYA-006-B-R1 corrige asercion de guardado
+B11/11 ocultaba asercion JUCE en padre ausente. Se corrige escritura/flush comprobados
+antes de reemplazo, prueba de offset/bytes conservados y Logger+CTest que fallan
+ante aserciones. B-R1:11/11 y render PASS, JUCE0. No audio ni reinicio. Build y
+fuente en work/MYA-006-B-R1/, original B conservado. Ver informe B-R1-asercion-guardado.
+
+26/10/2026 — MYA-006-B-R2 vigilancia/diagnostico de callbacks
+Revisión reprodujo bloqueo fisicoB-R1 dos veces; causa real sin identificar por
+mensaje generico. Corregido defecto reproducible: timeout previo al drenaje basado
+en ultimo procesamientoUI. Heartbeat de productor, inicio pendiente separado de
+Stop real y diagnostico por causa/contadores/texto backend. 12/12 y renderer PASS,
+sin hardware ni reinicio. Fuente/compilado en work/MYA-006-B-R2/. Ver informe
+MYA-006-B-R2-callbacks.txt. Revisión coordina siguiente ensayo con Input1/mismo micro/
+ganancia declarada+12. No afirmar desbloqueo fisico hasta probar; si falla, recoger
+Aplicacion/diagnostico-entrada-ultimo.txt. B/B-R1 conservados. UI/R3 preservados.
+
+27/10/2026 — MYA-006-B-R3 persistencia sobre B-R2 limpia aprobada
+Tres fallos reproducidos y corregidos: inicio no cargaba proyecto; nombre offline
+en E/S o TF podia borrar rutas. Inicio recupera sesion sin escribir y aplica despues
+preferencias de maquina; Load explicito restaura proyecto. Ausencias conservanIDs.
+13/13 y renderer PASS; copia aislada de8JSON aprobados queda identica tras restaurar.
+TF1 YA0/0 en base/disco: no se infiere1/5. Checkpoint165huellas intacto. Sin audio
+ni reinicio, fisica94/114 pendiente y sin offset. Build separado work/MYA-006-B-R3/.
+GitHub privado accesible pero sigueMYA005; localHEADfb3912b sin B-R3committed.
+Respaldo local de codigo y propuesta segura preparados, no commit/push. Ver informe
+MYA-006-B-R3-persistencia y propuesta-respaldo-seguro-2026-10-27.txt. UI aprobada intacta.
+
+27/10/2026 — MYA-006-B-R4 identidad oficial
+Nombre exacto Mya Acústica Analizer en cabecera/inicio/Acerca de/app. Icono15 y
+geometria intactos. BundleID com.mya.acustica.prototype y ejecutable tecnico
+Mya Acustica conservados, preferencias en las mismas rutas.13/13 y render PASS;
+texto nativo177px con icono, cabe al minimo1120; inicio/Acerca inspeccionados.
+Build separado work/MYA-006-B-R4/build/Mya Acústica Analizer.app. Sin audio ni
+reinicio; Revisión coordina apertura. Historial/checkpoints sin reescribir.
+28/10/2026 — Corrección de nombre posterior a B-R4: Mya Acústica Analyzer. La
+grafía Analizer de B-R4 queda como dato histórico. Código y README corregidos;
+la aplicación empaquetada B-R4 aún conserva el nombre anterior hasta recompilar.
+28/10/2026 — MYA-006-B-R5 compilada desde Aplicacion/ con Analyzer; 13/13
+pruebas PASS, renderer offline PASS con ruta absoluta, aplicación abierta y
+nombre visible verificado en ventana/menú. Sin audio. Prueba física 94/114
+pendiente según protocolo B; ver MYA-006-B-R5-nombre-analyzer.txt.

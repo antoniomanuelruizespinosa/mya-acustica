@@ -1,0 +1,15 @@
+MYA-007 — Prueba de loop físico, 28-10-2026
+
+Equipo: Roland Octa-Capture por CoreAudio, 48 kHz, 512 muestras. Cable de Main Output 1/L a Input 5. Ganancia de Input 5: 0 dB. Sin altavoces en esa salida.
+
+Ruta temporal en Roland Patch Bay: Output 1-2 = WAVE OUT 1-2. Se restauró al final a DIRECT MIX A y se verificó en el cuadro Patch Bay.
+
+Resultado observado en la aplicación abierta:
+- Generador de prueba: ruido rosa limitado a -40 dBFS pico en el callback de Output 1; Output 2 se escribe en silencio.
+- Con el otro extremo del cable conectado por error a Input 8, Input 5 se mantuvo aproximadamente a -89 dBFS.
+- Tras corregir el cable a Input 5, el panel mostró muestras de Output 1 a -40.4 dBFS y lectura de Input 5 a -49.2 dBFS. El estado cambió a "Retorno detectado / comprobar nivel".
+- Al desactivar el interruptor, las lecturas pasaron a -- y el motor se cerró.
+
+Verificación de software: compiló MyaAcustica y mya_input_engine_test; la prueba de motor pasó. Se comprobó la interfaz mediante accesibilidad con el equipo físico.
+
+Límites: esta prueba confirma retorno de nivel por el cable, no función de transferencia, fase, retardo, respuesta en frecuencia, calibración de loop ni calidad espectral. El primer intento tras abrir el dispositivo volvió a fallar con "Sin primer callback >2000 ms"; un segundo intento abrió el flujo. Conviene investigar esa apertura inicial antes de considerar estable el inicio de medición.

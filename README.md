@@ -1,10 +1,10 @@
-# Mya Acustica
+# Mya Acústica Analyzer
 
-Prototipo privado de aplicación de medición acústica para macOS y Windows, desarrollado en C++17 y JUCE 8.0.12.
+Prototipo de aplicación de medición acústica para macOS y Windows, desarrollado en C++17 y JUCE 8.0.12.
 
 ## Estado
 
-La interfaz y las pruebas trabajan principalmente con datos sintéticos. No se considera validada la adquisición real, la calibración SPL, la optimización IA, el DSP ni la transferencia a procesadores. Consultar `Documentacion/07_Verificacion` para el alcance de cada entrega. Compilar y superar pruebas no equivale a aceptación visual ni validación acústica.
+La versión 0.3.5 incorpora generadores reales de ruido rosa continuo y sweep logarítmico configurable, con selección persistente de tarjeta/salida, nivel independiente, exclusión mutua y silenciamiento al detener o finalizar. La versión también adquiere entradas dBFS y calcula magnitud, fase y coherencia de una TF M/R seleccionada. El loop rosa físico se configura en su propia ventana: TF, tarjeta, micro, salida, referencia, nivel, REF Gain, calibración y reset. Los medidores principal, lateral y flotante ofrecen dBFS Peak y SPL Z/A/C Fast, Slow, Peak y Leq tras confirmar la calibración del canal. A/C son filtros digitales aproximados; Mya no está certificado como sonómetro IEC. El proyecto y las calibraciones se guardan en la carpeta de datos del usuario «Mya Acustica». La captura/deconvolución de sweep, la IR real, la optimización IA, el DSP y la transferencia a procesadores siguen siendo funciones pendientes. Las pruebas de software no sustituyen la validación acústica con equipo real. Consultar `Documentacion/07_Verificacion` para el alcance de cada entrega.
 
 ## Compilar
 
@@ -17,6 +17,10 @@ ctest --test-dir build -C Debug --output-on-failure
 ```
 
 ASIO en Windows es opcional y requiere su SDK: `MYA_ENABLE_ASIO=ON` y `MYA_ASIO_SDK_DIR`. No se incluye el SDK ni se declara validación Windows hasta probarlo.
+
+## Migrar datos de 0.3.2
+
+Con la aplicación cerrada y antes de abrir la 0.3.3 por primera vez, ejecuta `mya_migrate_data "<carpeta-antigua>"` desde una compilación local. La herramienta copia únicamente proyecto, preferencias, calibraciones, Biblioteca y Capturas a la carpeta estable del usuario. Conserva el origen y se detiene si el destino ya existe; en ese caso hay que revisar los datos antes de cualquier traslado manual. La herramienta no se incluye en el DMG.
 
 ## Organización
 

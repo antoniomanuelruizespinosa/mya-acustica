@@ -1,0 +1,125 @@
+MYA-006-A — ENTRADAS dBFS Y MEDIDORES COMPACTOS
+26/10/2026 — Entrega local. Aceptacion visual y prueba fisica pendientes.
+
+BASE Y CONSERVACION
+Checkpoint CP-MYA-R3-AVG-20261026 conservado:
+work/checkpoints/MYA-005-R3-AVG-antes-adquisicion/IDENTIDAD.txt
+No se reinicio ni abrio la instancia del usuario. No se abrio audio fisico en las pruebas.
+Sin push/merge/reset ni modificaciones de Smaart/Propi. Preferencias del usuario conservadas.
+
+IMPLEMENTADO
+- LiveInputEngine abre SOLO entradas al pulsar Play. Constructor, carga de proyecto,
+  restauracion de preferencias y notificacion de dispositivos no abren streams.
+- Play global: union de parejas M/R configuradas y fuentes asignadas de tarjetas FS.
+  Play de tarjeta: solo pareja M/R de esa TF; seleccion correcta tambien con teclado.
+  Los medidores pueden observar cualquier canal ya abierto, aunque otra TF lo comparta.
+- Validacion exacta de dispositivo/backend/canal enumerado. Sin fallback silencioso.
+  Dispositivos multiples independientes para niveles, sin afirmar sincronizacion TF.
+- Apertura con mascara de salidas vacia, comprobada tras abrir. Sin generador, loop,
+  ganancias, 48V, calibracion ni comandos de control de hardware.
+  Frecuencia actual si disponible; en otro caso primera frecuencia admitida y buffer
+  predeterminado del backend. El formato realmente abierto aparece en el estado.
+- Permiso de microfono solo en la activacion explicita; respuesta tardia cancelada si
+  se detiene o cambia una ruta. Descripcion de permiso incluida en Info.plist macOS.
+- Stop/Pause cierran e invalidan niveles. Cambio de ruta activa exige Play de nuevo.
+  Desconexion/error/sin callbacks cierra; reconectar no reabre automaticamente.
+- Callback sin UI/disco/asignaciones dinamicas: pico absoluto por bloque, cola SPSC
+  preasignada (64 frames), consumidor acotado a 64 frames por sondeo. Huecos o perdida
+  invalidan la ventana; contador de perdidas visible en estado. Lecturas con mas de
+  250 ms sin datos muestran --; a los 2 s sin callbacks se detiene la adquisicion.
+- M/R y FS Peak = 20*log10(max(abs(muestra))) sobre bloques recibidos. Cero digital
+  se muestra -infinito, distinto de --. Muestra no finita invalida ese canal.
+  Indicador a escala completa >=1 no equivale a true peak fisico.
+- Rutas persistidas en entradas-niveles.json, sin autoactivar al restaurar. Proyecto
+  demo solo cambia mediante sus acciones de Guardar/Abrir; graficas siguen DEMO.
+- Lateral dB Meter y flotantes: misma cuadrícula compartida, celdas negras compactas,
+  fuente arriba, lectura dominante, Max/reset e indicador, selector de metrica abajo.
+  Menu de filas/columnas 1..64; preferencias de dimensiones mayores siguen admitidas.
+  Se amplia la otra dimension si hace falta capacidad para las tarjetas existentes.
+  Minimo de celda 124x138; desplazamiento cuando no cabe. Sin ampliar barras/graficas.
+- Cuatro botones izquierdos permanecen visibles. Repetir dB Meter vuelve a Trazos;
+  seleccion/arbol de biblioteca conservados. No cierra los flotantes E,E.
+- Nuevas tarjetas: Input1; dispositivo principal/seleccionado explicito si conocido,
+  de lo contrario Input1 sin dispositivo. Preferencias existentes, incluido Input2 o
+  canal0 historico, se respetan. Input1 ausente permanece no disponible, sin remapeo.
+  Fuentes repetidas permitidas; cada tarjeta tiene fuente/metrica/ponderacion propia.
+- Un ID comparte configuracion/runtime entre lateral, principal y flotante. FS se
+  publica solo si dispositivo/canal/metrica coinciden; no se escribe runtime a disco.
+  Cambio de fuente/metrica invalida lecturas/maximos previos. Reset Max independiente.
+  SPL/Leq/A/C son configurables pero no calculados. Alarmas FS condicionadas a su unidad.
+- Repetir un panel de opciones lo cierra; graficos alternan para la misma pestana.
+  Guardar/Medir/Calibrar conservan semantica de accion.
+- Corregido ciclo de vida detectado por render: SettingsDrawer/MeterConfiguration
+  ahora se destruyen antes de MeterState, evitando acceso a listeners destruidos.
+
+VERIFICACION
+- Build macOS Debug, C++17/JUCE 8.0.12, compilacion final sin errores. Avisos externos de deprecacion
+  JUCE/Metal con SDK macOS27, sin modificar vendor; no avisos en el codigo propio.
+- CTest: 9/9 PASS (input_levels, input_meters, smoothing, presentation, commands,
+  library, impulse, ui_layout, preferences).
+- input_levels es SINTETICO: rutas cuatro micros/ref5, union y canales inexistentes,
+  catalogo desconectado/reconectado sin apertura, mapeo disperso1/5, pico conocido,
+  silencio, NaN/Inf/null, clip, huecos, cola llena/vacia y 20.000 frames concurrentes,
+  persistencia Unicode/archivo invalido, Input1 por defecto, Input2 guardado, fuentes
+  repetidas/metricas independientes, publicacion de runtime y validez por fuente.
+- Mapeo de canales comprobado contra JUCE fijado: CoreAudio getChannelInfos visita
+  canales fisicos en orden ascendente y conserva solo los bits activos; callback
+  recibe buffers compactados en ese orden. ASIO/Windows requiere prueba propia.
+- Render offscreen PASS: sin ventana nativa ni audio, guardia que bloquea aperturas,
+  Play de cada tarjeta desde seleccion AVG, principal compartido, opciones alternan,
+  biblioteca al volver, cuadrículas 4x1/1x4/2x2, limites de celda, graficas sin cambios,
+  accesibilidad de TF+AVG y regresiones R3. Se verificaron imagenes 1440x960 y flotante.
+- Diagnostico CoreMIDI previo de JUCE durante enumeracion; no fallo de las pruebas.
+  No se interpreta como validacion fisica ni motivo para abrir audio.
+- Logs/imagenes/build/fuentes/huellas: work/MYA-006-A/.
+
+LIMITES REALES
+Pendiente prueba fisica de OctaCapture y permiso de microfono en equipo del usuario:
+apertura real, M/R de cada entrada, niveles, caida/reconexion, frecuencia/buffer y
+convivencia con otras aplicaciones. No se afirma funcionamiento fisico validado.
+Windows y ASIO no compilados ni probados. Cola/tiempos de inactividad revisados en
+codigo y nucleo sintetico; no se inyecto desconexion de hardware real.
+No hay TF real, RTA, IR medida, Find, Track, SPL calibrado, Leq, generacion, DSP, IA,
+3D ni control de hardware. Capturas y curvas del prototipo siguen sinteticas.
+La aceptacion visual de R3 y de esta entrega sigue pendiente de Antonio/Revision.
+
+PRUEBA MANUAL BREVE (NO EJECUTADA POR EL AGENTE)
+1. Cuando decidas probar este build, abrirlo manualmente. No se sustituye ni reinicia
+   la instancia que ahora utilizas. Identificador visible: MYA-006-A.
+2. Audio / E-S: elegir dispositivo/backend de OctaCapture enumerado para cada TF;
+   M=Input1,2,3,4 y R=Input5 comun si esa es la conexion de referencia desde consola.
+   No activar Int.Loop. No cambiar ganancias, 48V ni calibracion desde este bloque.
+3. Opcional: en dB Meter asignar dispositivo/entrada a cada tarjeta y dBFS Peak.
+   Para mostrar una tarjeta como principal, clic derecho en su fondo > principal.
+4. Play global abre la union elegida. Conceder microfono si el sistema lo solicita.
+   Ver M/R y FS Peak. Sin entrada disponible: --; silencio digital valido: -infinito.
+   Play individual abre solo su pareja; otro canal de tarjeta requiere Play global.
+5. Stop/Pause deben vaciar niveles. Desconectar/reconectar con adquisicion activa
+   debe cerrar y conservar rutas, sin reapertura: pulsar Play para volver a abrir.
+   Anotar resultado fisico y cualquier mensaje de error. Las graficas siguen DEMO.
+6. Repetir dB Meter devuelve Trazos. # cambia filas/columnas; ... añade medidores o
+   reinicia maximos. Clic derecho sobre el fondo de una celda edita configuracion,
+   selecciona principal, mueve o elimina. E,E abre/cierra flotantes.
+
+ADENDA DEL MISMO BUILD — ICONO15 / IDENTIDAD V1
+Orden posterior de Revision: Antonio aprobo explicitamente el ICONO adaptado
+("me gusta"). Esta aprobacion NO cubre interfaz global ni medicion.
+Original aprobado conservado sin cambios:
+Aplicacion/assets/branding/mya-analyzer-icon-v1.png
+SHA256: 558f80c1ef4ce2b4d2292f755d6d4ebe244579c5181956f39634f8124bbe9c2e
+Fuente 1254x1254 RGBA, alpha0..255, cuatro esquinas alpha0. Solo conversion tecnica
+Lanczos a PNG16/32/64/128/256/512/1024, sin recolor, redibujado ni cambio de simbolo.
+A16px se conserva silueta/cian, se pierde detalle fino del impulso y de la M por
+reduccion; a32/64/128 son reconocibles circulo abierto, impulso y M. Inspeccionadas
+miniaturas sobre claro/oscuro. No se genero variante simplificada no aprobada.
+El remuestreo16px deja alpha1/255 en alguna esquina, visualmente imperceptible;
+original y tamanos32+ mantienen esquinas alpha0. Evidencia alpha-and-sizes.json.
+JUCE/CMake ICON_BIG/ICON_SMALL genera Icon.icns macOS y recurso ICO/RC en Windows.
+ICO generado con juceaide y comprobado: tamaños16/32/48/256, RGBA. Configuracion
+Windows revisada, sin compilar ni ejecutar EXE Windows. No confundir con validacion
+Windows del motor o del recurso ya enlazado en un EXE.
+PNG original embebido como MyaBrandAssets; Acerca de muestra imagen y marca
+MYA ACUSTICA (con tilde) / ANALYZER, build y limites. No cambia distribucion principal.
+ICNS presente en Contents/Resources y referenciado por CFBundleIconFile; PNG original
+comprobado dentro del ejecutable. Evidencias de recursos y render Acerca de en
+work/MYA-006-A/branding/ y render-final/. No se abrio/reinicio aplicacion usuario.

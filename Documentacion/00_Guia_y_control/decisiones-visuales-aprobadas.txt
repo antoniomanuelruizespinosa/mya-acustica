@@ -62,3 +62,202 @@ El último requisito SUSTITUYE la coloración de barra entera por umbral: cada M
 Nivel numérico y escala DEBAJO de cada barra, no derecha ni encima; usar ancho liberado para alargarbarra. M/R apilados, extremosredondeados yrelieve.
 Antonio autoriza ahora enviar los cambios confirmados al chat Desarrollo. Se levanta la restricción anterior de no interrumpirlo para este envío.
 Regla reforzada: no cambiar nada no solicitado; requisitosconfirmados se conservan y prevalecen sobre errores de maquetas. En conflictos de este registro cronológico manda última corrección expresa. Concepto08 es referencia de distribución, no contrato de textos incorrectos.
+
+CORRECCIÓN POSTERIOR A MYA-005 — VISTA COMPLETA PARA REVISIÓN
+26/10/2026. Antonio rechaza visualmente la distribución derecha de MYA-005.
+Conservar organización Concepto08: TF/RTA/IR arriba; promedio y transporte con
+Track global; cuatro tarjetasTF compactas; AVG y añadirTF/AVG; pico retenido y
+alineación avanzada plegables; generador compacto y audio/medidores abajo.
+«Tarjetas más estrechas» se interpreta aquí como MENOR ALTURA. Conservar ancho
+lateral ya aprobado. No cambiar gráficos/cálculos/adquisición/biblioteca/atajos.
+La lectura numérica M/R va DENTRO del vúmetro, CENTRADA en la barra COMPLETA,
+independiente del ancho iluminado. SUSTITUYE la indicación anterior de nivel
+numérico debajo. La escala permanece debajo. Mismo colorTF/AVG naranja, pico
+blanco, relieve suave y finales naranja/rojo sólo si se alcanzan sus umbrales.
+Sin datos: --. AVG es reserva explícita y acción deshabilitada sin motor; ninguna
+medición ni promedio ficticios. Se permite fixtureDEMO aislado y rotulado.
+MYA-005-R1 prepara componentes reales para revisar a1440x960 y1760x1080,
+sin audio ni reinicio de la instancia de Antonio. No es aceptación visual final.
+
+ÚLTIMA CORRECCIÓN SOBRE MYA-005-R1 — PICO POR DOBLE CLIC Y ACCIONES ABAJO
+26/10/2026. SUSTITUYE la fila lateral Pico retenido y su desplegable: eliminarlos
+por completo. Doble clic sobre CUALQUIER barra M/R abre opciones de pico ON/OFF,
+duración, reset, brillo y umbrales existentes. Tooltip indica acceso. Mantener
+doble clic de tarjeta/color para ajustesTF y evitar conflicto entre los accesos.
++TF, +AVG y Alineación avanzada van al PIE del lateral, encima de generador/
+audio/medidores; zona central disponible para listaTF/AVG ampliable. Sin motores
+ni instancias ficticias. Se conserva el resto de layout, color y lectura centrada.
+
+CORRECCIÓN ADICIONAL DE BARRA SUPERIOR — CRITERIO VIGENTE
+Restaurar cuatro grupos Frecuencia/Magnitud/Fase/Coherencia repartidos por TODO
+el ancho central, valores cian/verde/rosa/rojo legibles y etiquetas discretas.
+La lectura diminuta arrinconada izquierda queda rechazada. Mantener altura fina
+sin quitar área ni alterar proporciones de gráficos. Conservar valores calculados,
+unidades y fuentes reales; P1/P2, nombres y coherencias diferentes disponibles en
+tooltip o contexto compacto, sin cifras copiadas de la maqueta. Si las coherencias
+proceden de fuentes distintas, no mostrar una sola como si representara a ambas.
+Implementación y renders sólo para revisión; aceptación visual sigue pendiente.
+
+ÚLTIMA CORRECCIÓN DEL PIE — PINK/SWEEP Y GENERADOR ABAJO
+26/10/2026. Sustituir los dos accesos inferiores Audio/E-S y Medidores por Pink
+y Sweep con SU MISMO tamaño/ancho. Fila grande Pink|Sweep inmediatamente encima
+de los controles de generador/salida/nivel/Ajustes, que quedan al fondo absoluto
+del lateral. Eliminar duplicados pequeños Pink/Sweep. Audio y medidores conservan
+menús/atajos existentes, incluido dobleE. +TF/+AVG y Alineación avanzada siguen
+encima de esa fila, dejando espacio central a la listaTF/AVG. Sin activar audio
+ni generación y sin cambiar el resto de decisiones. Aceptación visual pendiente.
+
+ACLARACIÓN DE CONTRATO L/F — SIN AMPLIAR ESTE ENCARGO VISUAL
+26/10/2026. Decisión expresa de Antonio: L toma tiempo deTF seleccionada; F vuelve
+a tomarlo. Revisión y Control comunica observación de ventana DelayFinder de
+Smaart, sólo lectura y sin iniciar medición: progreso0%, FFT64k/1365ms(1average),
+ETC, MeasuredDelay vacío, CurrentDelaySetting6.21ms(7.00ft), DeltaDelay vacío y
+botones Insert/FindDelay/Advanced/Cancel. Referencia de flujo, no datos de Mya.
+Distinguir resultado medido, ajuste actual y diferencia; Insertar es explícito.
+No confundir delay de medición con DSP ni con Track global. Los atajos Smaart no
+se verificaron interactivamente: L/F son decisión de Antonio. Conservar foco de
+edición y perfil teclado. Motor real pendiente; no simular adquisición ni ampliar
+MYA-005-R1 a implementar estimador. Esta entrega conserva comandos pendientes.
+
+CORRECCIÓN DE CABECERA IZQUIERDA — CUADRÍCULA2x2
+26/10/2026. Los botones Trazos, dBMeter, TF+AVG y Sweep/IR deben tener IGUAL
+ancho y altura, en cuadrícula2x2. Mover el botón cuadrado de opciones a la fila
+del buscador, a su derecha, reduciendo el ancho del buscador. Conservar ancho
+del lateral, resto de distribución y funciones. Incluir en render y revisión.
+
+CONTRATO DELAY FINDER — ÚLTIMA ACLARACIÓN
+L o Find abre la ventana deTF seleccionada: tiempo MEDIDO / ajuste ACTUAL /
+DIFERENCIA, distinguidos. Botones Insertar, FindDelay/Volver a medir, Avanzado,
+Cancelar. F repite la búsqueda. Insertar deshabilitado sin resultado válido.
+Resultados exclusivamente del futuro motor; no copiar6.21ms ni números de
+Smaart ni generar datos ficticios. Mantener separación de delayDSP y Trackglobal.
+Esto cierra el contrato de interacción; no encarga implementar el estimador en
+esta corrección visual. Se mantienen capacidades pendientes y edición de texto.
+
+MYA-005-R2 — AVG COMPACTO, TRANSPORTE Y OPCIONES ANCLADAS
+26/10/2026. Nuevo encargo visual explícito de Antonio tras referencia Smaart/Propi.
+AVG en listaTF: círculo naranja editable, nombreAVG y Play a derecha. SIN M/R ni
+delay propio ni recuadro grande «motor pendiente». Pendiente en tooltip/estado y
+Play deshabilitado; no fingir cálculo. Color guardable como preferencia de vista.
+Promedio encima del transporte; Play|Stop|Pause; fila inferior Trackgeneral
+circular|Timer(icono)|Config(herramienta rutas/E-S). Int.Loop compacto integrado
+junto a herramienta, con opciones separadas de activar audio. Individuales intactos.
+TRACK GENERAL toma/sigue tiempo de TODAS lasTF del proyecto abierto, no sólo
+seleccionada/visible; NO AVG. Mantener independientes L/FindTFseleccionada, F
+repetir y Trackindividual. Resultado/seguimiento/inserción siguen separados;
+motor pendiente, ningún seguimiento ni medición simulados.
+Loop/Pink/Sweep: botón de opciones propio abre panel al LADO; repetir MISMO botón
+lo cierra. En borde derecho despliega hacia interior. No ventana central, no
+redimensionar gráficos y no cambiar parámetros por abrir/cerrar.
+LoopSettings de referencia observado por RevisiónyControl: OFF, REF Gain y dB,
+tarjeta/backend, OutputDevice, OutMixer/canal, OutRef/canal, LoopDelayms,
+CalibLoop/ResetLoop. EnMya indicar datos/asignación reales; no copiar valores ni
+ASIO enmac. Sin motor: parámetros/desfase desconocidos y calibración deshabilitada.
+Pink/Sweep grandes al pie conservados; cada uno con acceso propio de opciones
+Ganancia/HPF/LPF. Sólo sus descripcionesAX fueron observadas: no afirmar interiores,
+valores, tipos ni rangos verificados. No activar generación ni loop.
+
+UMBRAL M/R — CONTRASTE Y APROBACIÓN POSTERIOR
+RevisiónyControl comunica discrepancia: configuraciónMya−12/−3dBFS frente a
+SmaartLE9.1p89−12/−6 y objetivo−12 enquickstart. Primero Antonio pidió contrastar
+sin cambiar preferencias; después APRUEBA expresamente nuevos predeterminados:
+naranja−12, rojo−6dBFS. Naranja en lugar de amarillo sigue siendo paletaMya.
+Conservar configuración personalizada guardada; ninguna migración silenciosa.
+Rojo es aviso de margen, NO clip. LógicaCLIPdemostrativa existente>=0dBFS queda
+separada y no valida adquisición. No cambiar colores baseTF ni otros controles.
+Referencias comunicadas por RevisiónyControl (no verificadas nuevamente aquí):
+https://rationalacoustics.de/download/smaart_le_v9.1_user_guide.pdf p89
+https://rationalacoustics.de/download/smaart_suite_quickstart.pdf
+MYA-005-R2 se presenta sólo para revisión; aceptación visual de Antonio pendiente.
+
+MYA-005-R3 — MEDIDOR PRINCIPAL Y MARCAS M/R
+26/10/2026. Antonio autoriza medidor compacto visible por defecto ENCIMA de
+TF/RTA/IR del lateral derecho. Reutilizar MeterState/Meters y configuracion
+compartida, sin duplicar valores ni copiar25.5. Entrada, metrica, lectura grande,
+Max e indicador/reset; SPL/Leq requieren adquisicion/calibracion real. Opciones
+soportadas de configuracion activas; estimadores y extras pendientes visibles,
+deshabilitados y explicados. Matriz contra ayuda local spl-meter*, spl-config-* y
+spl-compensation antes de afirmar cobertura. K reloj, OptionK ocultar/restaurar,
+ediciontexto sin interferencias; E,E flotantes se conserva. ResetMax no borraLeq;
+overload separado de alarma. Alarmas/colores personalizables, no105/110universales.
+TF/AVG, controles inferiores y accesos superiores se conservan; propuesta de
+redistribuir menu/cabecera NO aprobada y no se aplica. Sin ampliar a adquisicion.
+
+Correccion puntual M/R autorizada: DOS lineas finas FIJAS en las posiciones de
+umbrales configurados (defaults−12/−6dBFS). Si hay preferencias personalizadas,
+las marcas las siguen; no sobrescribirlas. Usar MISMA transformacion dBFS aX que
+barra y zonas. Diferenciarlas de pico blanco movil y verlas tambien a nivel bajo.
+Se usan guias grises discontinuas0.75px; pico blanco continuo1.5px. No son alarma
+activa. Mantener colorTF, relieve, valor centrado, escala, dimensiones y layout.
+MYA-005-R3 es entrega para revision; no aceptacion visual ni validacion acustica.
+
+CORRECCION PUNTUAL AVG SOBRE R3 — BORDE DEL COLOR ASIGNADO
+26/10/2026. Antonio autoriza recuadro en filaAVG, con mismo criterio de borde que
+lasTF: naranja por defecto y sincronizado con el colorAVG personalizado. Mantener
+altura26px, posicion y contenido actuales (circulo/color, nombre yPlay); sinM/R,
+sin delay ni redistribucion. Solo pintura del recuadro y repintado al editar color.
+Render actualizado para revision; aceptacion visual pendiente.
+
+26/10/2026 — MYA-006-A, encargo de Revision autorizado por Antonio; implementado,
+pendiente aceptacion visual/fisica. dB Meter lateral y flotantes usan celdas compactas
+con fuente superior, numero dominante, Max/reset e indicador y metrica inferior.
+Filas/columnas configurables, mismos IDs/estado; desplazamiento si no cabe, sin ampliar
+barras o graficas. No se impone 4x1 ni una tarjeta por TF. Nuevos medidores Input1;
+fuente/ponderacion/metrica independientes por tarjeta, preferencias previas respetadas.
+Cuatro botones izquierdos siempre visibles; repetir dB Meter regresa a Trazos sin
+cerrar flotantes. Repetir opciones alterna abrir/cerrar, salvo acciones propiamente dichas.
+Adquisicion limitada a entradas explicitas/dBFS M-R, sin salidas ni control de hardware.
+Graficas DEMO persistentes; SPL/Leq/TF/Find/Track restantes siguen pendientes.
+Evidencia y limites: Documentacion/07_Verificacion/MYA-006-A-resultado.txt.
+
+26/10/2026 — ICONO15 adaptado: Antonio aprobo explicitamente el icono ("me gusta").
+Original en Aplicacion/assets/branding/mya-analyzer-icon-v1.png; identidad-v1.txt
+registra fuente y limites. Aprobacion solo del ICONO, no global UI ni medicion.
+Implantado con JUCE/CMake en bundle macOS y recurso Windows; marca MYA ACUSTICA /
+ANALYZER en Acerca de. Solo conversion tecnica de tamanos, sin redisenar simbolo.
+Windows/ASIO sigue sin prueba en Windows; no reiniciar instancia actual de Antonio.
+
+26/10/2026 — CORRECCION EXPLICITA DE ANTONIO, MYA-006-A-R2:
+Sustituye el requisito previo de compartir IDs/configuracion mutable. Principal
+derecho, lateral y flotantes tienen colecciones/configuraciones/presentacion propias.
+Fuentes adquiridas reutilizables; entrada/metrica/ponderacion/filas/columnas de una
+vista NO cambian otra. Preferencias originales conservadas y copia inicial unica
+para nuevas vistas. Grid exacto con paginas explicitas y scroll; no autoaumentar
+otra dimension ni borrar tarjetas. Alarmas/fondos por tarjeta se conservan.
+Quitar franja decorativa interior MYA ACUSTICA y recuperar37px; preservar barra
+nativa y ocho accesos navegacion sin reordenar. Version/DEMO en pie existente.
+Implementado, pendiente verificacion Antonio; no supone aprobacion global UI.
+Calibracion B guardada en checkpoint y fuera de esta entrega prioritaria.
+
+26/10/2026 — Adiciones explicitas a R2: origen de cada curva identificable y
+seleccionable; no curvas anonimas ni valores de cursor sin datos visibles. Capturas
+biblioteca conservan sus controles y datos. AVG debe ser seleccionable por fila/
+borde/nombre/color y editar color con doble clic, independiente de que su motor siga
+pendiente. Sin datos AVG no se finge visibilidad ni se habilita calculo.
+Antonio pide acabado numerico con relieve suave estilo Propi, conservando colores
+personalizados/alarma/pulso, geometria y M/R. Pintura comun solamente, estados de las
+tres vistas independientes. Renders antes/despues para revision; no aprobacion global.
+
+26/10/2026 — Modos de medicion TF/RTA/IR exclusivos (excepcion a paneles alternables).
+TF conserva impulso/fase/magnitud; IR es vista propia rotulada DEMO/no medida, no
+interruptor del impulsoTF. RTA pendiente y sin seleccionar; futura especificacion
+Barras/Lineas/Ambas, espectrograma2D y3D del mismo historial, combinado. No motores
+inventados ni confusion con MyaMappVision. No nueva aceptacion global UI/medicion.
+
+26/10/2026 — REEMPLAZOS EXPLICITOS PARA MYA-006-A-R3:
+Lateral/flotante solo celdas contiguas de la captura20.01.58, sin cabecera/pie de
+configuracion. Todo ancho dividido por columnas; adaptacion sin scrollhorizontal;
+gestion/paginas/filas/columnas/añadir en menu contextual, sin perder tarjetas ni
+independencia. No cambiar principal/M-R. Acabado/colores deR2 conservados.
+Cabecera nueva: logo15+MYA ACUSTICA centrados en barra superior compacta, controles
+ventana/arrastre conservados; debajo solo pestaña centrada. Fila permanente de ocho
+botones se sustituye por desplegable superpuesto, sin redimensionar graficas al
+abrir; misma pestaña cierra y seleccionar seccion cierra. Todos accesos/menus siguen
+accesibles. Version/DEMO en pie. Sustituye orden previa de conservar fila8visible.
+Mac nativo implementado/compilado pendiente revisionreal; tituloWindows sigue nativo
+sin centrado verificado. No crear banda falsa duplicada para ocultar esa diferencia.
+Inicio provisional real sin espera artificial; preview desde Acerca de si arranque
+rapido. Logo15, nombre, ANALYZER y build; sin audio ni login. Revision visual pendiente.
+
+27/10/2026 — NOMBRE OFICIAL: Mya Acústica Analizer. Escritura exacta solicitada por Antonio; reemplaza el descriptor Analyzer. Aplicar en cabecera, inicio, Acerca de y textos visibles; conservar icono y distribución. Mantener identificadores técnicos y preferencias para evitar pérdida de sesiones.
+28/10/2026 — NOMBRE OFICIAL ACTUAL: Mya Acústica Analyzer. Corrección expresa posterior de Antonio; sustituye la grafía Analizer en la interfaz y la documentación activa. Conservar icono, distribución e identificadores técnicos.

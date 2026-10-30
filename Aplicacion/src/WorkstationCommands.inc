@@ -3,24 +3,26 @@ CommandUI commands;
 MyaCommands::MeterSequence meterSequence;
 bool fineCommandStep=false;
 MyaCommands::Context commandContext() const {
- MyaCommands::Context x;x.mode=mode;x.selectedTF=source.getSelectedId();
+ MyaCommands::Context x;x.mode=mode;x.measurementView=measurementView;x.selectedTF=source.getSelectedId();x.tfCount=(int)micNames.size();
  x.drawer=settingsDrawer&&settingsDrawer->isVisible();x.left=leftVisible;x.right=rightVisible;
  x.ir=plotChoice.getSelectedId()==1;x.coherence=showCoherence.getToggleState();
- x.linked=linkSmooth.getToggleState();x.polarity=polarity;x.bypass=disabled;
- auto lib=libraryPanel.context();x.libraryReady=lib.libraryReady;x.libraryTF=lib.libraryTF;x.librarySelection=lib.librarySelection;x.libraryFolders=lib.libraryFolders;x.libraryCaptures=lib.libraryCaptures;x.libraryView=(int)captureLibrary.state().view;x.sidebarMeters=meterState.state().sidebarMeters;x.metersVisible=meters&&meters->isVisible();x.allowNoSmoothing=tfSettings.allowNone;
+ x.linked=linkSmooth.getToggleState();x.polarity=polarity;x.bypass=disabled;x.internalLoop=internalLoopEnabled;x.pinkActive=pinkLoopActive;x.sweepActive=sweepActive;x.avgActive=avgActive;
+ auto lib=libraryPanel.context();x.libraryReady=lib.libraryReady;x.libraryTF=lib.libraryTF;x.librarySelection=lib.librarySelection;x.libraryFolders=lib.libraryFolders;x.libraryCaptures=lib.libraryCaptures;x.libraryView=(int)captureLibrary.state().view;x.sidebarMeters=dockMeterState.state().sidebarMeters;x.metersVisible=meters&&meters->isVisible();x.allowNoSmoothing=tfSettings.allowNone;
+ x.mainMeterVisible=meterState.state().mainVisible;x.meterClock=meterState.state().clock;if(auto* c=meterState.primaryCard()){x.meterMax=meterState.runtime(c->id).maximum.has_value();x.meterLeq=meterState.runtime(c->id).leqFill.has_value();}
  x.graphTypes=plotTypes;x.irScale=irScale;
  x.smoothing={{plotSmooth[0].getSelectedId(),plotSmooth[1].getSelectedId()}};return x;
 }
 void restoreView(){
+ measurementView=0;
  irFraction=.14;phaseFraction=.5;leftWidth=WorkspaceViewState::leftMin;rightWidth=WorkspaceViewState::rightMin;plotPanX.fill(0.);plotPanY.fill(0.);
- plotZoomX.fill(1.);plotZoomY.fill(1.);activePlot=1;plotTypes={{1,2}};irScale=0;meterState.sidebar(false);impulseScale.setSelectedId(1,dontSendNotification);for(size_t i=0;i<2;++i)plotTypeChoice[i].setSelectedId(plotTypes[i],dontSendNotification);
+ plotZoomX.fill(1.);plotZoomY.fill(1.);activePlot=1;plotTypes={{1,2}};irScale=0;dockMeterState.sidebar(false);impulseScale.setSelectedId(1,dontSendNotification);for(size_t i=0;i<2;++i)plotTypeChoice[i].setSelectedId(plotTypes[i],dontSendNotification);
  plotChoice.setSelectedId(1,dontSendNotification);leftVisible=rightVisible=true;
  if(settingsDrawer)settingsDrawer->setVisible(false);
 }
 void executeCommand(int id){
  if(id>=930&&id<=932){irScale=id-930;impulseScale.setSelectedId(irScale+1,dontSendNotification);plotPanY[0]=0;plotZoomY[0]=1;}
  else if(id==940||id==941||id==950||id==951){size_t panel=id>=950?1:0;plotTypes[panel]=(id==940||id==950)?2:1;plotTypeChoice[panel].setSelectedId(plotTypes[panel],dontSendNotification);plotPanY[panel+1]=0;plotZoomY[panel+1]=1;activePlot=(int)panel+1;}
- else if(id>=900&&id<=914){libraryPanel.command(id);}
+ else if(id>=900&&id<=914){if(id>=912)dockMeterState.sidebar(false);libraryPanel.command(id);}
  else if(id>=310&&id<=316){plotSmooth[0].setSelectedId(id-309,sendNotificationSync);}
  else if(id>=320&&id<=326){plotSmooth[1].setSelectedId(id-319,sendNotificationSync);}
  else if(id>=850&&id<=855){
@@ -35,27 +37,48 @@ void executeCommand(int id){
   else{double step=activePlot==0?.05:(mode==0?displayType(activePlot):activePlot)==1?tfSettings.phaseScroll/tfSettings.span(1):tfSettings.magScroll/tfSettings.span(2);if(fineCommandStep)step*=.2;plotPanY[n]=jlimit(-10.,10.,plotPanY[n]+(id==858?step:-step));}
  }
  else switch(id){
+ case 506:{std::vector<bool> active(micNames.size());for(size_t i=0;i<active.size();++i)active[i]=!deviceKeys[i].isEmpty()&&micInputs[i]>0&&(measurementView==2||internalLoopEnabled||refInputs[i]>0);beginInputs(0,{},LiveInputEngine::Signal::None,true,active);break;}
+ case 504:if(pinkLoopActive)stopInputs("Ruido rosa detenido; salida en silencio.");else{auto active=liveTFActive;int selected=source.getSelectedId()-1;if(internalLoopEnabled&&selected>=0&&(size_t)selected<active.size())active[(size_t)selected]=true;beginInputs(0,{},LiveInputEngine::Signal::Pink,true,active);}break;
+ case 505:if(sweepActive)stopInputs("Sweep detenido; salida en silencio.");else{auto active=liveTFActive;int selected=source.getSelectedId()-1;if(std::none_of(active.begin(),active.end(),[](bool on){return on;})&&selected>=0&&(size_t)selected<active.size())active[(size_t)selected]=true;beginInputs(0,{},LiveInputEngine::Signal::Sweep,true,active);}break;
+ case 512:{bool enable=!internalLoopEnabled;if(inputEngine.running()||permissionPending)stopInputs("Cambio de loop: audio detenido.");internalLoopEnabled=enable;status=enable?"Loop interno preparado; pulsa Pink para generar referencia virtual.":"Loop interno desactivado; referencia fisica seleccionada.";break;}
+ case 515:{int n=source.getSelectedId()-1;if(n>=0&&(size_t)n<micNames.size()){if(deviceKeys[(size_t)n].isEmpty()||micInputs[(size_t)n]<1||(measurementView!=2&&!internalLoopEnabled&&refInputs[(size_t)n]<1)){status="Configura el micro y la referencia de esta TF antes de Play.";break;}auto active=liveTFActive;active[(size_t)n]=true;auto signal=MyaCommands::preservePinkOnTFPlay(commandContext())?LiveInputEngine::Signal::Pink:LiveInputEngine::Signal::None;beginInputs(0,{},signal,true,active);}break;}
+ case 503:{int found=0;for(size_t i=0;i<liveTFs.size();++i)if(measuring((int)i)){auto delay=liveTFs[i].findDelayMs();if(delay){micDelay[i].setValue(*delay);++found;}}status="Track general: "+String(found)+" de "+String((int)std::count(liveTFActive.begin(),liveTFActive.end(),true))+" TF con tiempo medido.";break;}
+ case 514:{int n=source.getSelectedId()-1;if(!measuring(n)){status="Track: activa primero esta TF.";break;}auto delay=liveTFs[(size_t)n].findDelayMs();if(delay){micDelay[(size_t)n].setValue(*delay);status="Track TF "+String(n+1)+": "+String(*delay,2)+" ms.";}else status="Track: espera una referencia estable.";break;}
+ case 509:addTF();break;
+ case 510:avgActive=true;source.setSelectedId((int)micNames.size()+1,sendNotificationSync);status="AVG activado para las TF compatibles.";break;
+ case 969:avgActive=!avgActive;status=avgActive?"AVG de TF activas habilitado":"AVG detenido";break;
+ case 502:{int n=source.getSelectedId()-1;if(!measuring(n)){status="Find: inicia la TF con referencia M/R antes de medir el retardo.";break;}auto found=liveTFs[(size_t)n].findDelayMs();if(!found){status="Find: espera un promedio M/R estable; rango 0–150 ms.";break;}micDelay[(size_t)n].setValue(*found);status="TF "+String(n+1)+": retardo medido "+String(*found,2)+" ms; IR relativo a ese tiempo.";break;}
+ case 507:stopInputs();break;
+ case 508:stopInputs("Entradas en pausa. Pulsa Play para reabrir.");break;
+ case 526:inputEngine.discardPendingTF();for(auto& tf:liveTFs)tf.reset();liveTFState=0;status=inputEngine.running()?"TF en directo reiniciada con V; esperando nuevas muestras M/R.":"TF en directo borrada con V; entradas detenidas.";break;
  case 101:load();break;case 102:save();break;case 103:captureTrace();break;
  case 201:audioSettings();if(auto* window=getTopLevelComponent())window->toFront(true);break;case 202:engineSettings(source.getSelectedId()-1);break;
- case 203:showMeters();break;case 303:tfGraphSettings(1);break;case 963:tfGraphSettings(2);break;case 964:tfGraphSettings(0);break;case 960:case 961:meterState.sidebar(id==961);leftVisible=true;break;
+ case 971:meterState.mainVisibility(!meterState.state().mainVisible);break;case 972:meterState.clockMode(!meterState.state().clock);break;case 973:principalMeterOptions();break;case 974:if(auto* c=meterState.primaryCard())meterState.resetMax(c->id);break;case 975:if(auto* c=meterState.primaryCard())meterState.resetLeq(c->id);break;
+ case 517:signalOptions("pink");break;case 518:signalOptions("sweep");break;case 292:case 970:signalOptions("loop");break;
+ case 203:showMeters();break;case 303:tfGraphSettings(1);break;case 963:tfGraphSettings(2);break;case 964:tfGraphSettings(0);break;case 960:case 961:dockMeterState.sidebar(id==961?!dockMeterState.state().sidebarMeters:false);leftVisible=true;break;
  case 301:{
   linkSmooth.setToggleState(!linkSmooth.getToggleState(),dontSendNotification);
   if(linkSmooth.getToggleState()){plotSmooth[1].setSelectedId(plotSmooth[0].getSelectedId(),dontSendNotification);}
   break;
  }
- case 380:case 381:commands.language=id==380?MyaCommands::Language::ES:MyaCommands::Language::EN;if(graphWindow&&graphWindow->isVisible()){int tab=graphWindow->selectedTab();tfGraphSettings(tab);}menuItemsChanged();break;
+ case 380:case 381:commands.language=id==380?MyaCommands::Language::ES:MyaCommands::Language::EN;if(graphWindow&&graphWindow->isVisible()){int tab=graphWindow->selectedTab();tfGraphSettings(tab,false);}menuItemsChanged();break;
+ case 980:select(0);measurementView=0;plotChoice.setSelectedId(1,dontSendNotification);tfSettings.showIR=true;cursorPlot=-1;activePlot=1;status="Vista TF / magnitud, fase, coherencia e impulso de la TF M/R activa";break;
+ case 981:measurementView=1;cursorPlot=-1;activePlot=0;status=selectedTFEstimator().ready()?"IR M/R medido / tiempo relativo al delay de TF":"IR demo sintetica / inicia TF con referencia para medir";break;
+ case 420:measurementView=2;cursorPlot=-1;activePlot=2;status="RTA: pulsa Play en una TF o Play general para medir el espectro de cada micro.";break;
  case 401:case 402:case 403:case 404:select(id-401);break;
  case 405:leftVisible=!leftVisible;break;case 406:rightVisible=!rightVisible;break;
  case 407:plotChoice.setSelectedId(plotChoice.getSelectedId()==1?2:1,sendNotificationSync);break;
  case 408:showCoherence.setToggleState(!showCoherence.getToggleState(),dontSendNotification);break;
  case 409:restoreView();break;
  case 520:{auto n=(size_t)(source.getSelectedId()-1);micDelay[n].setValue(0);selectedDelay.setValue(0);break;}
- case 602:{if(settingsDrawer)settingsDrawer->setVisible(false);break;}
+ case 290:showCalibration();break;
+ case 602:{closeCalibration();if(settingsDrawer)settingsDrawer->setVisible(false);break;}
  case 701:info(commands.language==MyaCommands::Language::ES?"Atajos / perfil Mya":"Shortcuts / Mya profile",commands.shortcutsHelp());break;
  case 702:info(commands.language==MyaCommands::Language::ES?"Estado real":"Actual status",commands.language==MyaCommands::Language::ES?
-  juce::String::fromUTF8("Datos sintéticos. Audio: detección y rutas; adquisición pendiente.\nDSP: ganancia, delay, polaridad y bypass visual demo. EQ/FIR y propuestas pendientes.\nDiseño: geometría demo, sin predicción SPL validada. Medidores sin audio/calibración.\nProcesadores: API, archivo y ficha manual pendientes por modelo/firmware.\nES/EN cubre menús y comandos; el resto de la interfaz aún es parcial."):
-  "Synthetic data. Audio: discovery and routing; acquisition pending.\nDSP: demo gain, delay, polarity and visual bypass. EQ/FIR and proposals pending.\nDesign: demo geometry, no validated SPL prediction. Meters have no audio/calibration.\nProcessors: API, file and manual sheet pending per model/firmware.\nES/EN covers menus and commands; other interface text is still partial.");break;
- case 703:info(juce::String::fromUTF8("Mya Acústica"),juce::String::fromUTF8("C++ / JUCE · Prototype 0.3\nMYA-005 · Demo / datos sintéticos\nMYA-001: visual acceptance pending / aceptación visual pendiente"));break;
+  juce::String::fromUTF8("Audio: Play individual o general abre las TF configuradas; RTA, magnitud, fase, coherencia e IR usan señal medida. Sweep conserva una medida finita. AVG exige TF activas compatibles. DSP sigue en demo.\nDSP: ganancia, delay, polaridad y bypass visual demo. EQ/FIR y propuestas pendientes.\nDiseño: geometría demo, sin predicción SPL validada. Medidores: FS Peak de entradas abiertas; otras ponderaciones pendientes.\nProcesadores: API, archivo y ficha manual pendientes por modelo/firmware.\nES/EN cubre menús y comandos; el resto de la interfaz aún es parcial."):
+  "Audio: Individual or global Play starts configured TFs; RTA, magnitude, phase, coherence and IR use measured input. Sweep retains a finite measurement. AVG needs compatible active TFs. DSP remains a demo.\nDSP: demo gain, delay, polarity and visual bypass. EQ/FIR and proposals pending.\nDesign: demo geometry, no validated SPL prediction. Meters: FS Peak from opened inputs; other weightings pending.\nProcessors: API, file and manual sheet pending per model/firmware.\nES/EN covers menus and commands; other interface text is still partial.");break;
+ case 703:showMyaAbout();break;
+ case 790:checkForUpdates(true);break;
  case 801:polarity=!polarity;break;case 802:disabled=!disabled;break;
  default:break;
  }
@@ -64,6 +87,7 @@ void executeCommand(int id){
  if(id==405||id==406||id==409||id==960||id==961)persistWorkspace();
  resized();if(graphWindow)graphWindow->repaint();repaint();menuItemsChanged();
 }
+void bindTFRow(size_t k){for(size_t j=0;j<tfActions[k].size();++j){auto& button=tfActions[k][j];commands.bind(button,MyaCommands::tfBindings[j],true,(int)k+1);button.onClick=[this,k,j]{preservingPinkForTFPlay=j==3&&pinkLoopActive;source.setSelectedId((int)k+1,sendNotificationSync);preservingPinkForTFPlay=false;commands.invoke(MyaCommands::tfBindings[j]);};}}
 void setupCommands(){
  commands.context=[this]{return commandContext();};commands.action=[this](int id){executeCommand(id);};
  const auto& top=MyaCommands::topBindings;
@@ -72,9 +96,10 @@ void setupCommands(){
  const auto& measurement=MyaCommands::measurementBindings;
  jassert(measurementButtons.size()==measurement.size());
  for(size_t i=0;i<measurementButtons.size();++i)commands.bind(*measurementButtons[i],measurement[i],true);
- for(auto& row:tfActions)for(size_t j=0;j<row.size();++j)commands.bind(row[j],MyaCommands::tfBindings[j],true);
+ for(size_t k=0;k<tfActions.size();++k)bindTFRow(k);
+ for(size_t i=0;i<8;++i){int id=MyaCommands::topBindings[i];buttons[i]->onClick=[this,id]{commands.invoke(id);navigationOverlay.setVisible(false);navigationTab.setButtonText("v");if(getPeer()!=nullptr)grabKeyboardFocus();};}
  // Checkboxes share the exact command action; values remain selected from current state.
  commands.bind(showCoherence,408,true);
- averageChoice.setEnabled(false);averageChoice.setTooltip("Motor de promedio pendiente / Averaging engine pending");
+ averageChoice.setEnabled(true);averageChoice.setTooltip("Promedio temporal de la TF seleccionada");
  commands.refresh();
 }

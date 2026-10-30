@@ -1,0 +1,82 @@
+MYA-005-R2 — ENTREGA VISUAL PARA REVISIÓN
+26/10/2026. Compilado Debug macOS/JUCE8.0.12; 8/8 pruebas PASS.
+ACEPTACIÓN VISUAL PENDIENTE. BaseR1 conservada; no se rehacen otros bloques.
+
+IMPLEMENTACIÓN
+• AVG ahora fila26px, círculo naranja editable, nombreAVG y Play a derecha.
+  Sin M/R, delay ni recuadro de advertencia. Tooltip declara motor pendiente y
+  Play está deshabilitado. Es reserva de presentación, no un promedio calculado.
+  ColorAVG se guarda en vista-trabajo.json, compatible con preferencias previas
+  sin ese campo (naranja por defecto). No añade datos/instancias falsos.
+• Promedio encima; fila Play/Stop/Pause; debajo Trackgeneral circular, Timer,
+  Config/E-S e Int.Loop con sus opciones propias. Config usa la acción de rutas
+  existente. Timer y activación de audio/seguimiento siguen pendientes.
+  Global cubre TODAS lasTF del proyecto, excluyeAVG; individuales conservados.
+• Pink/Sweep grandes inferiores conservan área98x28px por defecto, con un acceso
+  de opciones independiente a su derecha interior. Activación deshabilitada;
+  opciones sí accesibles. No hay duplicados pequeños de activar Pink/Sweep.
+• Loop/Pink/Sweep: panel no modal hijo de la vista, anclado a6px a la izquierda
+  del botón de opciones en borde derecho. Mismo botón alterna abrir/cerrar;
+  también X. Ninguna ventana nativa ni redimensionamiento de gráficos.
+  Abrir un panel de ajustes existente cierra el popover anterior para evitar
+  superposición. Abriendo/cerrando no se escriben preferencias ni proyecto.
+• Loop: OFF, deslizadorREFGain sin posición/valor disponible y --dB, tarjeta y
+  backend deTF seleccionada según catálogo/asignación real, OutputDevice del
+  proyecto identificado como tal; no confirma loop conectado. OutMixer/OutRef
+  sin asignar al loop; delay --ms. CalibLoop y ResetLoop deshabilitados sin motor.
+  No se copian ASIO, valores dePropi ni un supuesto canal de referencia.
+• Pink/Sweep: ganancia/HPF/LPF mostrados sin valores ni rangos físicos inventados,
+  deshabilitados hasta motor/configuración válida. Las descripciones de referencia
+  no prueban sus interiores: no se afirma que esos rangos/tipos estén verificados.
+  AudioOptionsView no contiene dispositivo, callback de audio ni setter de rutas.
+• CuatroTF+AVG caben a1440x960 y1760x1080 con alineación plegada/desplegada.
+  Cabecera izquierda2x2, valores superiores repartidos, M/R centrados, colores,
+  gráficos, atajos y biblioteca se conservan. No se inicia estimador ni perfiles.
+
+UMBRAL APROBADO
+Nuevo predeterminado TFMeterSettings: naranja−12dBFS / rojo−6dBFS, antes−3.
+Validación/configuración conservadas. Lectura de preferencias no sobrescribe rojo
+personalizado−3 (ni otros válidos). Sin migración silenciosa ni escritura al abrir.
+Rojo=aviso de margen; clipped()>=0 se conserva separado en lógicaDEMO. Sin audio
+real, no afirmar adquisición/clip físico validado. Ningún colorbaseTF cambiado.
+
+VERIFICACIÓN
+8/8 CTest. Prueba M/R ajusta muestra interior a−9; comprueba límites−12/−6,
+−5.9 y−0.1 sinCLIP, 0 con lógicaCLIP; ausencia de muestras; retención/expiración;
+roundtrip de rojo personalizado−3; compatibilidad de preferencias/colorAVG.
+Renderer adicional: ocho dobleclics M/R conservados, tarjeta/color siguen enTF,
+rutas intactas, fuentes distintas correctas y cabecera izquierda igual. Prueba
+clic REAL de botonesLoop/Pink/Sweep tres veces: abre/cierra/reabre, panel al lado,
+no generación, ni cambio de archivos, rutas, ganancia/delay o bounds de gráficos.
+129 comandos únicos,52 pendientes. 517/518/970 habilitan sólo vista de opciones;
+504/505/512, Track, AVG/969, calibración y restantes motores siguen bloqueados.
+Sin apertura/reinicio de la instancia deAntonio, sin emisión de audio ni cambio
+Smaart/Propi. Renderer fuera de pantalla sin MainWindow y con fixture separado;
+diagnósticoCoreMIDI de enumeración ya existente, finaliza PASS. Sin push/merge.
+
+PNG COMPLETOS Y PANELES — COMPONENTES REALES FUERA DE PANTALLA
+work/MYA-005-R2/final/workspace-1440x960.png
+work/MYA-005-R2/final/workspace-1760x1080.png
+work/MYA-005-R2/final/workspace-options-loop.png
+work/MYA-005-R2/final/workspace-options-pink.png
+work/MYA-005-R2/final/workspace-options-sweep.png
+work/MYA-005-R2/final/workspace-alineacion-abierta-1440x960.png
+work/MYA-005-R2/final/workspace-alineacion-abierta-1760x1080.png
+work/MYA-005-R2/final/workspace-opciones-doble-clic.png
+work/MYA-005-R2/final/workspace-DEMO-1440x960.png
+work/MYA-005-R2/final/workspace-DEMO-1760x1080.png
+work/MYA-005-R2/final/input-meters-DEMO.png
+Sin datosM/R: --. Curvas de gráficos siguen siendoDEMO del prototipo. Niveles
+coloreados sólo en fixtureDEMO separado; no se inventa adquisición ni AVG conM/R.
+
+EVIDENCIA / ANTES-DESPUÉS
+work/MYA-005-R2/before/: fuentesR1. RendersR1 en work/MYA-005-R1/final/.
+work/MYA-005-R2/: diffs contraR1, hashes, compilacion.log, pruebas.log, render.log,
+matriz-comandos.tsv y alcance-sin-cambios.log. Registrovisual cronológico actualizado.
+Nuevos AnchoredAudioOptions.h y comandos de abrir opciones, sin motor de audio.
+TFMeterModel sólo cambia el predeterminado rojo; cambios restantes de vista/UI,
+preferencia colorAVG y pruebas. Adquisición, biblioteca, cálculos de gráficos,
+suavizado, atajos y lógicaCLIP intactos respectoR1.
+Build sin lanzar:
+/Users/antoniomanuelruizespinosa/Documents/ChatGPT/Mya Acústica/work/mya-cpp-build/MyaAcustica_artefacts/Debug/Mya Acustica.app
+Ventana identifica MYA-005-R2. Revisión/aceptación deAntonio pendiente.

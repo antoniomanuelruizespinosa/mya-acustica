@@ -1,0 +1,110 @@
+MYA-006-B-R2 — INICIO, CALLBACKS Y DIAGNOSTICOS DE ENTRADA
+26/10/2026. Correccion de vigilancia validada offline; caso fisico aun sin confirmar.
+
+INCIDENCIA RECIBIDA DE REVISION
+Dos intentos B-R1 con OCTA-CAPTURE, calibrador94, Input1, EMX7150 y ganancia declarada
++12dB terminaron con «Entrada detenida o sin callbacks», RMS-- y cadena desmarcada.
+No captura/offset guardado. R3 habia mostrado samplepeak con la tarjeta.
+Desarrollo no repitio esos intentos, no abrio hardware ni reinicio la aplicacion.
+No se presume error de ganancia,48V, calibrador, permisos o tarjeta a partir del
+mensaje generico: B-R1 agrupaba varias causas y no conservaba suficientes datos.
+
+DEFECTO CONCRETO REPRODUCIDO EN CODIGO
+B-R1 hacia antes de vaciar la cola:
+  if(failed || stopped || now - (receivedAt>0?receivedAt:openedAt)>2000) stop
+receivedAt era el timestamp del ultimo bloque PROCESADO por UI. Si la UI tardaba
+>2s entre polls (o antes del primer poll), esa condicion cerraba el dispositivo
+sin comprobar callbacks nuevos, aunque el productor siguiera activo.
+R3 ya tenia el control previo usando la hora de su ultimo poll; B cambio la
+frescura a timestamp del callback, pero mantuvo ese punto de decision incorrecto.
+Defecto reproducible de vigilancia, NO demostracion de que esa fuera la causa
+fisica concreta de los dos intentos reportados (la telemetria antigua no lo permite).
+
+CORRECCION
+- Heartbeat atomico de entrada al callback, separado de la hora del ultimo bloque
+  procesado; se mantiene el limite2000ms para ausencia real de callbacks.
+- Drenaje UI acotado antes de evaluar timeout. Un atraso de UI no equivale a parada
+  del productor. No se cambia sampleRate, buffer, canales, dispositivo ni rutas.
+- Las muestras conservan su timestamp original. Los bloques atrasados no se muestran
+  como actuales; validez de lectura250ms y perdida/huecos siguen invalidando RMS y
+  captura. Recuperar lecturas exige datos nuevos; no hay reapertura automatica.
+- Espera inicial AboutToStart hasta2000ms si no hubo notificacion de parada real.
+  Arranque pendiente y audioDeviceStopped ya no comparten un booleano ambiguo.
+  Publicacion acquire/release de metadatos listos evita leer configuracion a medias.
+- Rechequeo de error/parada despues de drenar, tambien antes de confirmar offsets.
+- El reloj se consulta DESPUES de leer heartbeat para no confundir un callback
+  concurrente reciente con una marca futura por orden de lecturas.
+- Error del backend: se conserva su texto UTF8 acotado en buffer fijo, publicado
+  atomicamente. No escritura a disco, UI, locks ni asignacion dinamica en IO normal.
+
+MOTIVOS AHORA SEPARADOS (EN FOOTER Y DIAGNOSTICO)
+Error notificado por backend; reinicio inesperado del callback;
+backend notifico audioDeviceStopped; no se recibio AboutToStart>2000ms;
+AboutToStart no completado>2000ms; sin primer callback>2000ms;
+callbacks interrumpidos>2000ms; timestamp/reloj invalido.
+El inicio tambien distingue error/reinicio y dispositivo que no entra en estado
+isPlaying. No se reemplazan fallos de open, backend o canales por un timeout.
+
+REGISTRO PARA EL PROXIMO ENSAYO REAL
+Aplicacion/diagnostico-entrada-ultimo.txt (ruta de proyecto compilada en este build).
+Se anade un registro por fallo de inicio/poll desde hiloUI: fechaISO8601/build,
+motivo, fuente backend/dispositivo, starts, stopped, stopNotified, aboutReady,
+callbacks completados, secuencia procesada, dropped, tiempos opened/now/callback/
+processed, edadcallback, rate, canales habilitados, canales/muestras del callback
+y mensaje del backend si lo hubo. Se captura ANTES de perder esos contadores.
+El fichero se agrega, no borra registros anteriores; no contiene muestras de audio.
+Datos ampliados tambien disponibles en tooltip de estado de E/S; footer mantiene
+resumen legible, sin cambiar distribucion. Abrir E/S obtiene snapshot actual.
+Si no hay callbacks: contador0 permite distinguir inicializacion y primer callback.
+Si llegan callbacks sin muestras/canales validos: callbackInputs/callbackSamples
+permiten distinguir ese caso de ausencia de callbacks, sin inventar un nivel.
+
+PRUEBA NUEVA input_engine, SIN HARDWARE
+En compilacion de test solamente, fixture crea Session sin AudioIODevice y sin
+llamar start/open ni enumerar dispositivos. Llama el callback IO REAL y usa la cola,
+peak/RMS/poll REALES del motor. Reloj inyectado permite controlar tiempos sin sleeps.
+Los metodos fixture no existen en el build de aplicacion.
+- Input1 unico: peak, RMS, frescura y caughtUp.
+- UI no hace poll3000ms mientras llegan300callbacks: antigua condicion>2000ms
+  verdadera, nueva mantiene running. Log: callbacks301, procesados65, dropped236;
+  callbackAge0, bloques atrasados rechazados. Recuperacion con nuevos datos.
+- Mismo caso antes del primer poll; no se declara falsamente ausencia de callbacks.
+- Cola con datos viejos y productor detenido2001ms SI se cierra; causa diferenciada.
+- Sin primer callback: gracia1999ms, rechazo2001ms.
+- Stop/error con texto/reinicio distinguidos; noAbout/inicializacion pendiente/gracia
+  y finalizacion asincrona simulada. Parada durante drenaje se detecta despues.
+- Mapeo fisicoInput5 sin caer enInput1; cinco entradas M1..4/R5 con niveles distintos.
+- Callback con count0: sin nivel, contador de callbacks1; no se confunde con contador0.
+- Calibracion>=5s a traves del motor real y caso48kHz/512 con fase continua:240640
+  muestras acumuladas, RMS esperado con tolerancia0,001dB por duracion no entera.
+- Productor de2000callbacks y poll UI en hilos separados con reloj monotono real,
+  sin dispositivo. No falsos fallos de reloj ni parada; SPSC y lecturas recuperan.
+CTest12/12 PASS con asserts activos; tests input_engine/rms_calibration fallan
+ante «JUCE Assertion failure». Ninguna asercion en logs finales; contador RMS JUCE0.
+Renderer de componentes reales PASS/exit0: regresiones R3/B, sin apertura de audio.
+CoreMIDI conserva su diagnostico preexistente al enumerar en renderer, no asercion.
+
+ALCANCE CONSERVADO
+RMS/calibracion/persistencia/formato de offsets y correccion de guardado B-R1 intactos.
+Tres vistas y maximos independientes, graficas/AVG/celdas, barra nativa e inicio
+conservados; solo version B-R2 en textos. Ningun control de ganancia/48V ni generador.
+El reconocimiento de cadena se desmarca al REABRIR audio por cambio de generacion:
+es comportamiento previsto. No explica por si solo el fallo de callbacks.
+
+ENTREGA
+work/MYA-006-B-R2/build/Mya Acustica.app (macOS arm64 Debug, JUCE8.0.12).
+SHA256 Contents/MacOS/Mya Acustica:
+b8a7c8e543ff1ee8ef7882cb14e028bfd7b6e0b3cf0f6b3376d5e7d0ad8212fe
+Icono15 original embebido verificado, sin cambios. Fuente, huellas, diferencias
+respecto B-R1, logs, capturas y reporte en work/MYA-006-B-R2/. B/B-R1 conservados.
+
+SIGUIENTE ENSAYO, SOLO COORDINADO POR REVISION
+Guardar/detener/cerrar version anterior y abrir B-R2 sin autoPlay cuando corresponda.
+Misma fuente Input1/micro/ganancia DECLARADA +12dB, sin cambiarlos desde Desarrollo.
+Play entrada seleccionada UNA vez; esperar RMS digital (~1s de muestras frescas).
+Confirmar cadena DESPUES de Play. Si RMS aparece, seguir protocolo94/114; no usar
+peak como RMS ni confirmar una captura invalida. Si reaparece parada o RMS--,
+conservar texto exacto y el registro de diagnostico de ese intento antes de otro.
+R2 no se presenta como solucion fisica confirmada: requiere ese ensayo para
+identificar causa real o verificar que el defecto de vigilancia era el desencadenante.
+Ninguna calibracion real creada por Desarrollo; no se abrio audio ni se reinicio app.

@@ -26,10 +26,14 @@ int main(int argc,char**){
  assert(!dispatch(103,x,{}));assert(state(*find(103),x).enabled);
  x.selectedTF=5;assert(!state(*find(103),x).enabled);assert(!state(*find(202),x).enabled);assert(!state(*find(520),x).enabled);
  x={};assert(state(*find(405),x).checked);x.left=false;assert(!state(*find(405),x).checked);
+ x={};assert(state(*find(512),x).enabled&&!state(*find(512),x).checked);x.internalLoop=true;assert(state(*find(512),x).checked);x.mode=1;assert(!state(*find(512),x).enabled);
+ x={};assert(state(*find(504),x).enabled&&state(*find(505),x).enabled);x.pinkActive=true;assert(state(*find(504),x).checked&&!state(*find(505),x).checked);x.pinkActive=false;x.sweepActive=true;assert(!state(*find(504),x).checked&&state(*find(505),x).checked);x.mode=1;assert(!state(*find(504),x).enabled&&!state(*find(505),x).enabled);
+ x={};assert(!preservePinkOnTFPlay(x));x.pinkActive=true;x.internalLoop=true;assert(preservePinkOnTFPlay(x));x.internalLoop=false;assert(preservePinkOnTFPlay(x));x.sweepActive=true;assert(!preservePinkOnTFPlay(x));
  assert(state(*find(301),x).checked);x.linked=false;assert(!state(*find(301),x).checked);
  x.drawer=false;assert(!state(*find(602),x).enabled);x.drawer=true;assert(state(*find(602),x).enabled);
  x.smoothing={{4,7}};assert(state(*find(313),x).checked);assert(state(*find(326),x).checked);assert(!state(*find(310),x).checked);
  for(auto lang:{Language::ES,Language::EN}){x.language=lang;assert(state(*find(380),x).checked==(lang==Language::ES));assert(state(*find(381),x).checked==(lang==Language::EN));}
+ assert(shortcut('k',false,false,false,true,false)==972);assert(shortcut('k',false,true,false,true,false)==971);assert(shortcut('k',false,false,false,true,true)==0);assert(shortcut('k',false,true,false,true,true)==0);
  assert(shortcut('b',false,false,false,true,false)==405);assert(shortcut('o',false,false,false,true,false)==406);
  assert(shortcut('l',false,false,false,true,false)==502&&shortcut('f',false,false,false,true,false)==502);
  assert(shortcut('g',false,false,false,true,false)==504&&shortcut('s',false,false,false,true,false)==505);
@@ -38,6 +42,10 @@ int main(int argc,char**){
  assert(shortcut('+',false,false,false,false,false)==0);
  for(char c:std::string("bo cflgstdev+-5"))assert(shortcut(c,false,false,false,true,true)==0);
  assert(shortcut('g',true,false,false,true,false)==0);assert(shortcut('e',false,true,false,true,false)==0);
+ for(int view:{0,1}){x={};x.measurementView=view;assert(state(*find(980),x).checked==(view==0));assert(state(*find(981),x).checked==(view==1));assert(!state(*find(420),x).enabled&&!state(*find(420),x).checked);assert(state(*find(407),x).enabled==(view==0));}
+ assert(shortcut('v',false,false,false,true,false)==526);assert(find(526)->capability==Capability::Ready);x={};int refreshed=0;assert(dispatch(526,x,[&](int id){assert(id==526);++refreshed;}));assert(refreshed==1);x.mode=1;assert(!state(*find(526),x).enabled);assert(find(403)->shortcut.empty()&&find(402)->shortcut.empty());assert(shortcut('d',false,false,false,true,false)==0);assert(shortcut('t',false,false,false,true,false)==980);x.mode=2;assert(state(*find(980),x).enabled);
+ for(char key:std::string("boc lfgsvt")){assert(shortcut(key,false,false,true,true,false)==0);assert(shortcut(key,false,false,false,true,true)==0);}assert(shortcut('k',false,true,true,true,false)==0&&shortcut('t',false,true,true,true,false)==0&&shortcut('5',false,true,true,true,false)==0);assert(shortcut('+',true,true,true,true,false)==854);
+ for(int mask=0;mask<16;++mask){bool command=(mask&1)!=0,control=(mask&2)!=0,alt=(mask&4)!=0,shift=(mask&8)!=0;assert(isPlainMeterKey('e',command,control,alt,shift)==(mask==0));assert(isPlainMeterKey('E',command,control,alt,shift)==(mask==0));assert(!isPlainMeterKey('x',command,control,alt,shift));}
  MeterSequence sequence;assert(sequence.press(0,true)==0);assert(sequence.press(500,true)==203);
  assert(sequence.press(1000,true)==0);assert(sequence.press(1700,true)==0);sequence.reset();assert(sequence.press(1800,true)==0);
  assert(sequence.press(1801,false)==0);assert(sequence.press(1802,true)==0);assert(sequence.press(1900,true)==203);

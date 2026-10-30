@@ -1,0 +1,19 @@
+MYA-006-B-R5 — Corrección de nombre Analyzer — 28/10/2026
+
+Fuente: Aplicacion/ del espacio de trabajo, con corrección expresa de Antonio.
+Build aislado: work/MYA-006-B-R5/build/MyaAcustica_artefacts/Debug/Mya Acustica.app
+Nombre oficial visible: Mya Acústica Analyzer. Identificador técnico y Bundle ID conservados.
+
+Validación: CMake configuró y compiló en macOS; CTest 13/13 correcto.
+El renderer offline terminó correctamente con ruta de salida absoluta y produjo
+about-Mya-Acustica-Analyzer.png; el panel Acerca de muestra Analyzer.
+Info.plist: CFBundleDisplayName y permiso de micrófono contienen Analyzer.
+Aplicación nueva abierta por su ruta: ventana y menú macOS muestran
+Mya Acústica Analyzer; FT 1–4 ocultas y rutas OCTA-CAPTURE ausentes conservadas.
+No se activó Play ni se emitió audio. La primera ejecución del renderer con ruta
+relativa informó aserción JUCE por ruta ilegal; al repetir con ruta absoluta no
+apareció esa aserción. CoreMIDI imprimió un aviso no bloqueante.
+
+Pendiente: prueba física Octa-Capture + EMX-7150 + calibrador 94/114 dB según
+Documentacion/07_Verificacion/MYA-006-B-protocolo-94-114.txt. Sin offset físico
+validado y sin afirmar medición TF o calibración completa.

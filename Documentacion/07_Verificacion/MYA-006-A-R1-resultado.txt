@@ -1,0 +1,40 @@
+MYA-006-A-R1 — ESTADO DE CONFIGURACION Y ENTRADAS LEGACY
+26/10/2026. Correccion acotada tras primera prueba fisica comunicada por Revision.
+
+EVIDENCIA FISICA LIMITADA (no realizada por este agente)
+Revision comunica observacion en UI despues de que Antonio configuro y pulso Play:
+Entradas dBFS activas / OCTA-CAPTURE 48000 Hz / 512 samples.
+M1 aproximadamente -43.9 dBFS; M2 -85.2; M3 -83.2; M4 -83.0;
+referencia comun R5 aproximadamente -87.8 dBFS. Rutas M1..4/R5 correctas.
+Esto acredita apertura y presencia de lecturas observadas en esa sesion. No demuestra
+exactitud, calibracion, respuesta dinamica, desconexion/reconexion ni funcionamiento
+Windows. Se conserva informe previo como evidencia historica anterior a esta prueba.
+
+CORREGIDO
+- Measurement Configuration dejaba un texto fijo Acquisition stopped. El panel ahora
+  recibe el estado real del motor al abrirse y en transiciones Play, permiso, fallo y
+  Stop/Pause; no depende de reconstruirlo ni de cambios de seleccion de fuente.
+- Tooltips Audio/E-S ES/EN describen Play para abrir entradas dBFS y Stop/Pause para
+  cerrarlas. No anuncian adquisicion desactivada. No se modifico el motor/callback.
+- Canal0 legacy se presenta Sin asignar, en vez de Input0, con un formateador comun
+  para medidores compactos, editor y principal. Ninguna migracion ni remapeo de
+  preferencias. Un nuevo Input1 sin dispositivo sigue mostrandose como tal.
+- Build identificable MYA-006-A-R1 en cabecera, titulo y Acerca de. Icono aprobado y
+  distribucion aprobada conservados. Copia anterior MYA-006-A conservada.
+
+COMPROBACION
+Build macOS Debug correcto. CTest 9/9 PASS. Render offscreen PASS sin abrir audio ni
+ventana nativa. Comprobacion adicional: mismo panel cambia entre detenido/activo/
+permiso/detenido y conserva rutas; canales0 guardados se recargan intactos y se
+presentan Sin asignar; Input1 ausente sigue no disponible. Pruebas previas conservadas.
+La prueba de estado activo del panel es una inyeccion de presentacion offscreen,
+no un segundo ensayo fisico ni reapertura de la OctaCapture.
+No se abrio/reinicio la instancia de Antonio, no se interrumpio su adquisicion,
+no se cambiaron rutas, ganancias, 48V ni archivos de preferencias del usuario.
+El arreglo estara visible al usar voluntariamente el nuevo build; la instancia que
+esta corriendo mantiene su codigo anterior hasta que Antonio decida sustituirla.
+
+EVIDENCIAS
+work/MYA-006-A-R1/: build, logs, render, fuentes y SHA256SUMS.txt.
+Sin nueva aceptacion global de UI/medicion; icono ya aprobado solamente como icono.
+Continuan pendientes exactitud, desconexion/reconexion fisica y Windows/ASIO.

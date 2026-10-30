@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <vector>
 
 // Presentation policy only: no acquisition, averaging, routing or captured data.
 namespace PlotPresentation {
@@ -17,6 +18,8 @@ inline std::array<int,4> drawOrder(int front) {
  if(front>=0&&front<4){for(int i=front;i<3;++i)order[(size_t)i]=i+1;order[3]=front;}
  return order;
 }
+inline int frontTrace(int choice,int selected,const std::vector<bool>& visible){if(choice>1){int i=choice-2;return i>=0&&(size_t)i<visible.size()&&visible[(size_t)i]?i:-1;}if(selected>=0&&(size_t)selected<visible.size()&&visible[(size_t)selected])return selected;for(int i=(int)visible.size()-1;i>=0;--i)if(visible[(size_t)i])return i;return -1;}
+inline std::vector<int> drawOrder(int front,size_t count){std::vector<int> order;order.reserve(count);for(size_t i=0;i<count;++i)if((int)i!=front)order.push_back((int)i);if(front>=0&&(size_t)front<count)order.push_back(front);return order;}
 inline bool validTF(double u,int index,double coherence,double threshold) {
  return index>=0&&index<4&&std::isfinite(u)&&u>=0.&&u<=1.&&
    std::isfinite(coherence)&&coherence>=threshold;

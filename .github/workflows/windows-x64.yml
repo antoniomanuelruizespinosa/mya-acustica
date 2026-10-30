@@ -1,0 +1,71 @@
+name: Windows x64
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: windows-2022
+    steps:
+      - name: Checkout Mya
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Checkout JUCE 8.0.12
+        uses: actions/checkout@v4
+        with:
+          repository: juce-framework/JUCE
+          ref: 29396c22c93392d6738e021b83196283d6e4d850
+          path: juce
+          persist-credentials: false
+
+      - name: Configure x64 without ASIO
+        shell: pwsh
+        run: |
+          cmake -S Aplicacion -B build-windows -G "Visual Studio 17 2022" -A x64 "-DJUCE_DIR=$env:GITHUB_WORKSPACE/juce" -DMYA_ENABLE_ASIO=OFF -DMYA_BUILD_LAYOUT_SNAPSHOT=OFF -DBUILD_TESTING=ON
+
+      - name: Build Release
+        run: cmake --build build-windows --config Release --parallel 4
+
+      - name: Run offline tests
+        run: ctest --test-dir build-windows -C Release --output-on-failure
+
+      - name: Verify x64 executable and package
+        id: package
+        shell: pwsh
+        run: |
+          $exe = "build-windows/MyaAcustica_artefacts/Release/Mya Acustica.exe"
+          if (-not (Test-Path $exe)) { throw "Windows executable missing: $exe" }
+          $bytes = [System.IO.File]::ReadAllBytes((Resolve-Path $exe))
+          $offset = [BitConverter]::ToInt32($bytes, 0x3c)
+          $machine = [BitConverter]::ToUInt16($bytes, $offset + 4)
+          if ($machine -ne 0x8664) { throw "Executable is not x64 PE" }
+          $match = Select-String -Path "build-windows/CMakeCache.txt" -Pattern '^CMAKE_PROJECT_VERSION:STATIC=(\d+\.\d+\.\d+)$' | Select-Object -First 1
+          if (-not $match) { throw "CMake project version missing" }
+          $expectedVersion = $match.Matches[0].Groups[1].Value
+          $version = (Get-Item $exe).VersionInfo.ProductVersion
+          if ($version -ne $expectedVersion -and -not $version.StartsWith("$expectedVersion.")) { throw "Unexpected product version: $version (expected $expectedVersion)" }
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item $exe "dist/Mya Acustica.exe"
+          $zip = "Mya-Acustica-Analyzer-v$expectedVersion-Windows-x64.zip"
+          Compress-Archive -Path "dist/Mya Acustica.exe" -DestinationPath "dist/$zip"
+          $hash = (Get-FileHash "dist/$zip" -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $zip" | Set-Content "dist/$zip.sha256"
+          "version=$expectedVersion" >> $env:GITHUB_OUTPUT
+          Write-Host "Windows x64 PE verified; ZIP SHA-256: $hash"
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mya-Acustica-Analyzer-v${{ steps.package.outputs.version }}-Windows-x64
+          path: |
+            dist/*.zip
+            dist/*.sha256
+          if-no-files-found: error
+          retention-days: 14

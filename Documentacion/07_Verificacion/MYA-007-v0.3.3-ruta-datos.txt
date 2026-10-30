@@ -1,0 +1,27 @@
+MYA-007 · Versión 0.3.3 · Ruta estable de datos · 28/10/2026
+
+Corrección
+- La aplicación usa File::userApplicationDataDirectory/Mya Acustica en macOS y Windows para proyecto, preferencias, calibraciones, Biblioteca y Capturas. La app Release ya no recibe MYA_PROJECT_DIRECTORY. El renderer aislado conserva su carpeta de prueba.
+- Migración local explícita con mya_migrate_data <carpeta-antigua>, antes del primer arranque y con la app cerrada. La herramienta no contiene rutas personales ni está incluida en el DMG. Copia solo los diez JSON conocidos y las carpetas Biblioteca y Capturas, incluidos sus contenidos; conserva el origen. Rechaza enlaces simbólicos, prepara una copia temporal y no sobrescribe un destino existente. Si el destino ya existe, requiere revisión manual.
+- No se ejecutó la migración sobre los datos reales de este Mac ni se copiaron datos personales al repositorio. Revisión y Control hará el traslado local tras la instalación.
+
+Archivos para trasladar a la rama de entrega
+- Aplicacion/CMakeLists.txt
+- Aplicacion/src/AppDataLocation.h
+- Aplicacion/src/Main.cpp
+- Aplicacion/tools/migrate-data.cpp
+- Aplicacion/tests/app_data.cpp
+- Aplicacion/tests/update_check.cpp
+- README.md
+- Este informe
+
+Validación
+- Compilación macOS Debug y Release correctas. CTest Debug 17/17; Release 16/16. La prueba app_data verifica ruta por usuario, proyecto, rutas, calibraciones, Biblioteca, Capturas, origen intacto, rechazo de destino existente y exclusión de archivos ajenos. Renderer offline correcto. git diff --check correcto.
+- El ejecutable Release no contiene la ruta antigua de compilación como definición de proyecto. Info.plist dentro del DMG: 0.3.3. Firma ad hoc verificada dentro del DMG. hdiutil verify: imagen válida. Archivo .sha256 comprobado.
+- DMG local: work/MYA-007-LOOP/entrega-0.3.3/Mya-Acustica-Analyzer-v0.3.3-macOS.dmg (5765325 bytes).
+- SHA-256 DMG: 316f6765e7acf0bc54a122b68281c09b319fa62305ef6d40d0a52bbd51173307
+- SHA-256 ejecutable firmado dentro del DMG: d9d0929b3a0810d7f7f31bb999220856dca153e322bbdd179fdebd051ca3f477
+- SHA-256 ejecutable del build antes del empaquetado: 5674f735fcc888ed46a9f5abc4ea1ffd3668c037b2f487a7087318d87b811fc8
+
+Pendiente de Revisión y Control
+- Integrar estos cambios sobre la rama actual, repetir CI Windows y preparar PR/Release. No hubo compilación Windows local, prueba acústica, apertura de la app, instalación ni publicación. El DMG está firmado ad hoc y no notarizado.

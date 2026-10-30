@@ -1,0 +1,53 @@
+MYA-006-C — Versión, DMG y aviso de actualizaciones — 28/10/2026
+
+ALCANCE APLICADO
+Versión 0.3.1 declarada una vez en CMake y usada por JUCE, Info.plist,
+inicio, Acerca de, pie y diagnóstico. Nombre oficial Mya Acústica Analyzer.
+Bundle ID com.mya.acustica.prototype y ejecutable Mya Acustica conservados.
+Comando 790 «Buscar actualizaciones» activo; consulta HTTPS asíncrona a
+GitHub Releases/latest. Al abrir la ventana principal se inicia una consulta
+sin bloquear el arranque ni abrir dispositivos de audio. Solo se avisa de
+forma automática si el tag semántico publicado supera la versión instalada.
+El aviso ofrece abrir la página de Release; instalación manual. La consulta
+manual informa también de igualdad, ausencia de Release y errores de red.
+No se guardan preferencias ni datos nuevos por esta consulta.
+
+ARCHIVOS DE IMPLEMENTACIÓN
+Aplicacion/CMakeLists.txt; src/MyaIdentity.h; src/Branding.h; src/Main.cpp;
+src/Commands.h; src/WorkstationCommands.inc; src/UpdateCheck.h;
+tests/update_check.cpp; tools/create-dmg.sh.
+Proceso de revisión: Documentacion/00_Guia_y_control/proceso-entregas-github.txt.
+No se cambió interfaz de medición, rutas, motor de audio ni configuración.
+
+VALIDACIÓN
+Debug y Release compilados en carpetas aisladas work/MYA-006-C/.
+CTest final: 14/14 PASS; update_check incluye versión nueva, igual, anterior,
+sin red, HTTP 404, respuesta inválida y URL ajena. Renderer offline PASS
+con métrica de título nativo 181 px, sin crear ventana nativa ni abrir audio.
+git diff --check: sin errores. Release rebuild: sin avisos de código propio.
+DMG creado con hdiutil, verificado con hdiutil verify, montado en solo lectura.
+Contenido verificado: Mya Acústica Analyzer.app 0.3.1, ejecutable técnico y
+enlace Applications. Firma ad hoc aplicada a la copia del paquete y
+codesign --verify --deep --strict correcto antes y después del montaje.
+Tamaño DMG: 5728043 bytes.
+SHA-256 DMG: c4ee38ce2153319ba3a96596c07e6be50fea20def4fdb7ab2510fe542284a806
+Ruta: work/MYA-006-C/entrega/Mya-Acustica-Analyzer-v0.3.1-macOS.dmg
+
+EXCLUSIONES Y ESTADO GIT
+.gitignore confirmado para Aplicacion/*.json, Biblioteca, Capturas,
+diagnósticos y work/DMG. Las rutas de preferencias y calibraciones no se
+añadieron a Git. La revisión de una PR debe comprobar además todo el índice.
+El main local fb3912b permanece antiguo y con cambios sin consolidar; el
+main remoto consultado durante la inspección era 891c7f1. No se hizo reset,
+commit, push, PR, merge, tag ni GitHub Release en este encargo. El DMG queda
+local para revisión del diff, binario y exclusiones.
+
+LÍMITES
+No se abrió la app ni se ensayó hardware/audio. El comportamiento del aviso
+visible y el acceso real a la descarga requieren una Release publicada y
+revisión interactiva posterior. La respuesta de la API se probó con casos
+controlados; la consulta HTTPS real desde la app no se ejecutó en esta fase.
+La firma es ad hoc: no es Developer ID ni notarización Apple. Gatekeeper
+puede advertir al abrir una descarga. No hay instalación automática.
+No se compiló Windows. La versión 0.3.1 no generará aviso hasta que una
+Release posterior con tag vX.Y.Z esté publicada.

@@ -1,0 +1,65 @@
+#pragma once
+#include <juce_gui_extra/juce_gui_extra.h>
+#include <cmath>
+#include <optional>
+#include "InputLevelCore.h"
+
+// These panels inspect presentation/state only. They own no audio device, callback or route setter.
+class AnchoredOptions : public juce::Component {
+ std::unique_ptr<juce::Component> body;juce::Label title;juce::TextButton close{"X"};
+public:
+ std::function<void()> requestClose;
+ juce::Component* content()const{return body.get();}
+ AnchoredOptions(juce::String heading,std::unique_ptr<juce::Component> content):body(std::move(content)){
+  title.setText(heading,juce::dontSendNotification);title.setColour(juce::Label::textColourId,juce::Colour(0xff00e5ed));addAndMakeVisible(title);addAndMakeVisible(close);addAndMakeVisible(*body);close.onClick=[this]{if(requestClose)requestClose();};setSize(body->getWidth()+20,body->getHeight()+42);
+ }
+ void resized()override{title.setBounds(10,4,getWidth()-48,28);close.setBounds(getWidth()-34,5,26,24);body->setBounds(10,36,getWidth()-20,getHeight()-42);}
+ void paint(juce::Graphics& g)override{g.setColour(juce::Colour(0xff172129));g.fillRoundedRectangle(getLocalBounds().toFloat(),5);g.setColour(juce::Colour(0xff748a98));g.drawRoundedRectangle(getLocalBounds().toFloat().reduced(.5f),5,1);}
+};
+
+class AudioOptionsView : public juce::Component {
+ std::vector<std::unique_ptr<juce::Component>> controls;int nextY=0;bool allowAllOutputs=false;
+ juce::String outputName,referenceName;
+ juce::ComboBox* tfChoice=nullptr;juce::ComboBox* deviceChoice=nullptr;juce::ComboBox* outputChoice=nullptr;juce::ComboBox* microphoneChoice=nullptr;juce::ComboBox* referenceChoice=nullptr;
+ juce::ToggleButton* loopToggle=nullptr;juce::ToggleButton* generatorToggle=nullptr;juce::Label* routeDevice=nullptr;juce::Label* outputLevel=nullptr;juce::Label* referenceLevel=nullptr;juce::Label* returnStatus=nullptr;juce::Label* loopDelay=nullptr;juce::Label* calibrationStatus=nullptr;juce::TextButton* calibrate=nullptr;juce::TextButton* reset=nullptr;juce::Slider* levelSlider=nullptr;juce::Slider* refSlider=nullptr;
+ juce::Label& label(juce::String value,int x,int y,int width,int height=24){auto c=std::make_unique<juce::Label>();c->setText(value,juce::dontSendNotification);c->setFont(juce::Font(juce::FontOptions(12.f)));c->setBounds(x,y,width,height);auto* result=c.get();addAndMakeVisible(*c);controls.push_back(std::move(c));return *result;}
+ juce::Label* textRow(juce::String name,juce::String value){label(name,0,nextY,114);auto& field=label(value,116,nextY,214);field.setColour(juce::Label::backgroundColourId,juce::Colour(0xff0e171e));field.setTooltip(value);nextY+=28;return &field;}
+ juce::Slider* sliderRow(juce::String title,double low,double high,double value,juce::String suffix,std::function<void(double)> changed){label(title,0,nextY,92);auto s=std::make_unique<juce::Slider>();auto* raw=s.get();s->setSliderStyle(juce::Slider::LinearHorizontal);s->setTextBoxStyle(juce::Slider::TextBoxRight,false,76,22);s->setRange(low,high,.5);s->setValue(value,juce::dontSendNotification);s->setTextValueSuffix(suffix);s->setBounds(94,nextY,236,24);s->onValueChange=[raw,changed]{if(changed)changed(raw->getValue());};addAndMakeVisible(*s);controls.push_back(std::move(s));nextY+=30;return raw;}
+ juce::TextButton* actionButton(juce::String caption,int x,int y,int w,std::function<void()> action){auto b=std::make_unique<juce::TextButton>(caption);auto* raw=b.get();b->setBounds(x,y,w,24);b->onClick=std::move(action);addAndMakeVisible(*b);controls.push_back(std::move(b));return raw;}
+ juce::ComboBox* choiceRow(juce::String title,const juce::StringArray& options,int selected,std::function<void(int)> changed,bool allOutputs=false){label(title,0,nextY,114);auto c=std::make_unique<juce::ComboBox>();auto* raw=c.get();c->addItem("Sin asignar",1000);for(int i=0;i<options.size();++i)c->addItem(options[i],i+1);if(allOutputs&&!options.isEmpty())c->addItem("Todas las salidas (mono)",InputLevels::maxChannels+1);c->setSelectedId(selected==InputLevels::maxChannels+1&&allOutputs&&!options.isEmpty()?selected:selected>0&&selected<=options.size()?selected:1000,juce::dontSendNotification);c->setEnabled(!options.isEmpty());c->setBounds(116,nextY,214,24);c->onChange=[raw,changed]{if(changed)changed(raw->getSelectedId()==1000?0:raw->getSelectedId());};addAndMakeVisible(*c);controls.push_back(std::move(c));nextY+=28;return raw;}
+public:
+ std::function<void(bool)> onPhysicalLoopToggle;
+ std::function<void(bool)> onGeneratorToggle;
+ std::function<void(double)> onPinkLevel,onReferenceGain;
+ std::function<void(double)> onSweepStart,onSweepEnd,onSweepDuration;
+ std::function<void(int)> onTransferFunction,onDevice,onOutputChannel,onMicrophoneChannel,onReferenceChannel;
+ std::function<void()> onCalibrate,onReset;
+ AudioOptionsView(bool loop,juce::String deviceAndBackend,juce::String projectOutput,juce::String referenceInput,bool loopActive=false,double pinkDb=-40.,double refDb=0.,const juce::StringArray& outputs={},int selectedOutput=0,const juce::StringArray& inputs={},int selectedReference=0,int selectedMicrophone=0,const juce::StringArray& transferFunctions={},int selectedTF=0,const juce::StringArray& devices={},int selectedDevice=0,bool sweep=false,bool generatorActive=false,double sweepStart=20.,double sweepEnd=20000.,double sweepSeconds=5.):allowAllOutputs(loop||!sweep),outputName(std::move(projectOutput)),referenceName(std::move(referenceInput)){
+  if(loop){auto enabled=std::make_unique<juce::ToggleButton>(juce::String::fromUTF8("Loop físico / salida → referencia"));loopToggle=enabled.get();enabled->setToggleState(loopActive,juce::dontSendNotification);enabled->onClick=[this]{if(onPhysicalLoopToggle)onPhysicalLoopToggle(loopToggle->getToggleState());};enabled->setBounds(0,nextY,330,25);addAndMakeVisible(*enabled);controls.push_back(std::move(enabled));nextY+=30;tfChoice=choiceRow("TF seleccionada",transferFunctions,selectedTF,[this](int tf){if(onTransferFunction)onTransferFunction(tf);});deviceChoice=choiceRow("Tarjeta/backend",devices,selectedDevice,[this](int device){if(onDevice)onDevice(device);});routeDevice=&label(deviceAndBackend,116,nextY,214);routeDevice->setVisible(false);outputChoice=choiceRow("Salida",outputs,selectedOutput,[this](int channel){if(onOutputChannel)onOutputChannel(channel);},true);microphoneChoice=choiceRow("Micro / señal",inputs,selectedMicrophone,[this](int channel){if(onMicrophoneChannel)onMicrophoneChannel(channel);});referenceChoice=choiceRow(juce::String::fromUTF8("Referencia física"),inputs,selectedReference,[this](int channel){if(onReferenceChannel)onReferenceChannel(channel);});levelSlider=sliderRow("Nivel Pink",-60,-20,pinkDb," dBFS",[this](double v){if(onPinkLevel)onPinkLevel(v);});refSlider=sliderRow("REF Gain",-24,24,refDb," dB",[this](double v){if(onReferenceGain)onReferenceGain(v);});outputLevel=&label("Salida: -- dBFS",0,nextY,330);nextY+=26;referenceLevel=&label("Referencia: -- dBFS",0,nextY,330);nextY+=26;returnStatus=&label("Loop detenido",0,nextY,330,36);nextY+=38;loopDelay=&label("Loop Delay: -- ms",0,nextY,330);nextY+=27;calibrate=actionButton("Calib Loop",0,nextY,160,[this]{if(onCalibrate)onCalibrate();});reset=actionButton("Reset Loop",170,nextY,160,[this]{if(onReset)onReset();});nextY+=29;calibrationStatus=&label(juce::String::fromUTF8("Sin calibración"),0,nextY,330,42);nextY+=44;label(juce::String::fromUTF8("El delay de loop es electrónico; no es distancia acústica."),0,nextY,330,32);nextY+=34;}
+  else{auto enabled=std::make_unique<juce::ToggleButton>(sweep?"Sweep activo":"Pink activo");generatorToggle=enabled.get();enabled->setToggleState(generatorActive,juce::dontSendNotification);enabled->onClick=[this]{if(onGeneratorToggle)onGeneratorToggle(generatorToggle->getToggleState());};enabled->setBounds(0,nextY,330,25);addAndMakeVisible(*enabled);controls.push_back(std::move(enabled));nextY+=30;deviceChoice=choiceRow("Tarjeta/backend",devices,selectedDevice,[this](int device){if(onDevice)onDevice(device);});outputChoice=choiceRow("Salida",outputs,selectedOutput,[this](int channel){if(onOutputChannel)onOutputChannel(channel);},!sweep);levelSlider=sliderRow(sweep?"Nivel Sweep":"Nivel Pink",-60,-20,pinkDb," dBFS",[this](double v){if(onPinkLevel)onPinkLevel(v);});if(sweep){sliderRow("Inicio",10,2000,sweepStart," Hz",[this](double v){if(onSweepStart)onSweepStart(v);});sliderRow("Final",100,24000,sweepEnd," Hz",[this](double v){if(onSweepEnd)onSweepEnd(v);});sliderRow(juce::String::fromUTF8("Duración"),.5,30,sweepSeconds," s",[this](double v){if(onSweepDuration)onSweepDuration(v);});label(juce::String::fromUTF8("Barrido logarítmico"),0,nextY,330);nextY+=26;}label(juce::String::fromUTF8("Una segunda pulsación detiene el generador y silencia la salida."),0,nextY,330,34);nextY+=36;}
+  setSize(330,nextY);
+ }
+ void setRoute(juce::String device,juce::String output,juce::String reference){if(!loopToggle)return;outputName=std::move(output);referenceName=std::move(reference);if(routeDevice){routeDevice->setText(device,juce::dontSendNotification);routeDevice->setTooltip(device);}}
+ void setChoices(const juce::StringArray& outputs,int output,const juce::StringArray& inputs,int reference,int microphone,const juce::StringArray& transferFunctions={},int selectedTF=0,const juce::StringArray& devices={},int selectedDevice=0){auto refresh=[this](juce::ComboBox* box,const juce::StringArray& names,int value){if(!box)return;bool all=box==outputChoice&&loopToggle;bool changed=box->getNumItems()!=names.size()+1+(all&&!names.isEmpty()?1:0);for(int i=0;!changed&&i<names.size();++i)changed=box->getItemText(i+1)!=names[i];if(changed){box->clear(juce::dontSendNotification);box->addItem("Sin asignar",1000);for(int i=0;i<names.size();++i)box->addItem(names[i],i+1);if(all&&!names.isEmpty())box->addItem("Todas las salidas (mono)",InputLevels::maxChannels+1);}int selected=all&&value==InputLevels::maxChannels+1&&!names.isEmpty()?value:value>0&&value<=names.size()?value:1000;if(box->getSelectedId()!=selected)box->setSelectedId(selected,juce::dontSendNotification);box->setEnabled(!names.isEmpty());};refresh(tfChoice,transferFunctions,selectedTF);refresh(deviceChoice,devices,selectedDevice);refresh(outputChoice,outputs,output);refresh(microphoneChoice,inputs,microphone);refresh(referenceChoice,inputs,reference);}
+ void setGeneratorOutputs(const juce::StringArray& outputs,int selected){if(!outputChoice)return;outputChoice->clear(juce::dontSendNotification);outputChoice->addItem("Sin asignar",1000);for(int i=0;i<outputs.size();++i)outputChoice->addItem(outputs[i],i+1);if(allowAllOutputs&&!outputs.isEmpty())outputChoice->addItem("Todas las salidas (mono)",InputLevels::maxChannels+1);outputChoice->setSelectedId(allowAllOutputs&&selected==InputLevels::maxChannels+1&&!outputs.isEmpty()?selected:selected>0&&selected<=outputs.size()?selected:1000,juce::dontSendNotification);outputChoice->setEnabled(!outputs.isEmpty());}
+ void updatePhysicalLoop(bool active,bool routeReady,std::optional<double> outputDbfs,std::optional<double> referenceDbfs,bool referenceClipped,std::optional<double> delayMs,bool delayCurrent,juce::String calibrationText,bool measuring,bool saved,double pinkDb,double refDb,bool calibratable=true){
+  if(!loopToggle)return;
+  loopToggle->setToggleState(active,juce::dontSendNotification);
+  loopToggle->setEnabled(routeReady||active);
+  levelSlider->setValue(pinkDb,juce::dontSendNotification);
+  refSlider->setValue(refDb,juce::dontSendNotification);
+  levelSlider->setEnabled(!measuring);
+  refSlider->setEnabled(!measuring);
+  auto out=outputName.isNotEmpty()&&outputName!="Sin asignar"?outputName:juce::String("Salida");auto ref=referenceName.isNotEmpty()&&referenceName!="Sin asignar"?referenceName:juce::String("Referencia");
+  outputLevel->setText(out+": "+(active&&outputDbfs&&std::isfinite(*outputDbfs)?juce::String(*outputDbfs,1):juce::String("--"))+" dBFS",juce::dontSendNotification);
+  referenceLevel->setText(ref+": "+(active&&referenceDbfs&&std::isfinite(*referenceDbfs)?juce::String(*referenceDbfs,1):juce::String("--"))+" dBFS",juce::dontSendNotification);
+  returnStatus->setText(!active?"Loop detenido":referenceClipped?"Referencia recortada; reduce Pink":referenceDbfs&&std::isfinite(*referenceDbfs)&&*referenceDbfs>-75.?"Retorno detectado / comprobar nivel":"Sin retorno detectable en "+ref,juce::dontSendNotification);
+  auto delayText=delayMs?"Loop Delay: "+juce::String(*delayMs,2)+" ms":"Loop Delay: -- ms";
+  if(delayMs&&!delayCurrent)delayText+=juce::String::fromUTF8(" · guardado / pendiente de validar");
+  loopDelay->setText(delayText,juce::dontSendNotification);
+  loopDelay->setTooltip(delayText);
+  calibrationStatus->setText(calibrationText,juce::dontSendNotification);
+  calibrate->setEnabled(active&&routeReady&&calibratable&&!measuring);
+  reset->setEnabled(routeReady&&calibratable&&(saved||measuring||std::abs(refDb)>.01));
+ }
+};

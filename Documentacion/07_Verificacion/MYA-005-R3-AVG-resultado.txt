@@ -1,0 +1,20 @@
+MYA-005-R3 — CORRECCION PUNTUAL DEL RECUADRO AVG
+26/10/2026. Compilado y render de componentes reales correcto. Aceptacion pendiente.
+AVG mantiene altura26px, posicion, circulo/color, nombre y Play. Sin M/R ni delay.
+Borde/fondo siguen criterio visualTF; borde naranja por defecto, o el colorAVG
+asignado por el usuario. Editar color repinta inmediatamente recuadro, punto ynombre.
+Ninguna redistribucion ni cambio funcional. No se escribe ni sustituye el color
+personalizado al generar la imagen de prueba: fixture aislado y temporal.
+
+Verificacion: compilacion correcta, rendererPASS, inspeccion de naranja y color
+personalizado cian. Cuerpo de resized() intacto respectoR3; sin cambios en posiciones,
+sizes, callbacks de audio/medicion o otros archivos de produccion. No nuevas pruebas
+unitarias para este cambio de pintura; R3 precedente mantiene registro8/8.
+Sin audio, sin reinicio de instancia, sin push/merge.
+
+Vistas vigentes de esta correccion:
+work/MYA-005-R3-AVG/final/workspace-1440x960.png
+work/MYA-005-R3-AVG/final/workspace-1760x1080.png
+work/MYA-005-R3-AVG/final/workspace-AVG-color-personalizado.png
+Fuentes anteriores en before/; diffs, hashes y logs en work/MYA-005-R3-AVG/.
+Se conserva identidad del build MYA-005-R3.

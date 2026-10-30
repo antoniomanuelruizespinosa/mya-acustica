@@ -1,0 +1,23 @@
+MYA-008 — Primera función de transferencia M/R en directo
+Fecha: 2026-10-28
+
+Alcance implementado
+- Una TF seleccionada por Play captura muestras M y R de sus entradas físicas configuradas.
+- Cola SPSC limitada; el callback copia muestras pero no calcula FFT ni actualiza la interfaz.
+- Estimador H1 con FFT de 8192 puntos, ventana Hann, promedio exponencial y coherencia cuadrática.
+- Magnitud, fase, coherencia y lectura de cursor usan el resultado real de esa TF.
+- Si la referencia RMS cae por debajo de -60 dBFS, se invalidan los promedios y no se dibuja TF real.
+- IR y otras TF visibles siguen identificadas como DEMO. Stop/Pause cierra audio y borra la TF en directo.
+
+Validación realizada
+- Compilación Debug de Mya en macOS: correcta, sin avisos nuevos.
+- CTest transfer_function, input_engine y commands: 3/3 correctos.
+- Señal conocida: ganancia -6.02 dB, fase 0.4 rad y coherencia >0.99 recuperadas por el estimador.
+- Prueba de cola limitada, salto de secuencia, pérdida de referencia y mapeo físico M Input1/R Input5: correctas.
+- Octa-Capture: Play de TF1 recibió M/R; la referencia estaba cerca de -89 dBFS. Antes del umbral se vio la curva de ruido; tras el umbral, la retícula quedó sin curva y se informó referencia insuficiente. Stop cerró la adquisición. No se emitió audio.
+
+Límites
+- No se validó la respuesta acústica con una referencia excitada ni un altavoz.
+- No hay aún Find/Track, captura de TF real, promedio de varias TF, suavizado aplicado a la TF real, IR real ni RTA.
+- Windows/ASIO: código multiplataforma, compilación y dispositivo físico pendientes de probar en Windows.
+- El umbral -60 dBFS es fijo en este primer paso; su ajuste de usuario queda pendiente.

@@ -1,0 +1,86 @@
+MYA-005-R1 — CORRECCIÓN VISUAL PARA REVISIÓN
+26/10/2026. Compilado; 8/8 pruebas PASS. ACEPTACIÓN VISUAL PENDIENTE.
+Continúa sobre MYA-005 y sus correcciones R1 guardadas; no rehace otros bloques.
+
+CRITERIO FINAL IMPLEMENTADO
+• Cabecera izquierda: Trazos/dB Meter/TF+AVG/SweepIR en cuadrícula2x2,
+  los cuatro69x24px al ancho predeterminado. Opciones cuadrado25x25 junto al
+  buscador, que reduce ancho30px. Ancho lateral y funciones conservados.
+• Derecha según organización Concepto08: TF/RTA/IR, promedio y transporte/Track,
+  cuatroTF compactas y reservaAVG. Card110→96px, paso112→100px. Se conservan
+  ancho lateral216px por defecto, límites/persistencia y demás elementos aprobados.
+• +TF/+AVG y Alineación avanzada al PIE, encima del Pink/Sweep y controles de generador al fondo.
+  Pink y Sweep reemplazan los accesos rápidos inferiores Audio/E-S y Medidores,
+  mismo ancho/alto98x28px por defecto. Sin duplicados pequeños. Generador/salida/
+  nivel/Ajustes al fondo absoluto. Audio y medidores conservan menús/atajos yEE.
+  La lista centralTF/AVG tiene área propia y queda disponible para ampliación.
+  AVG es reserva «motor pendiente», no promedio calculado. Acciones sin motor
+  deshabilitadas. No se añaden TF ni AVG ficticios a la aplicación.
+• Eliminada completamente la fila «Pico retenido ON» y sus controles laterales.
+  Doble clic en cualquiera de las8 barras M/R abre opciones existentes ON/OFF,
+  duración, reset, brillo y umbralesdBFS. El tooltip explica ese acceso.
+  Doble clic tarjeta/nombre/color conserva ajustesTF. Las rutas no cambian.
+• Lectura M/R DENTRO y centrada en barra COMPLETA, no en tramo iluminado.
+  Escala debajo. Relieve, coloresTF, pico blanco y segmentos de umbral conservados.
+  Sin audio: --dBFS. Datos de fixtureDEMO no se introducen en el proyecto.
+• Barra superior24px: cuatro grupos repartidos en todo ancho, etiquetas discretas,
+  valores16.5px cian/verde/rosa/rojo. Sin cambiar altura/proporción de gráficos.
+  Los valores vienen de las mismas funciones de cálculo por fuente. P1/P2 y nombres
+  completos en tooltip; coherencias distintas se muestran como pareja CohP2/P1.
+  Sin panel de un tipo no se inventa su valor; enIR se muestra tiempo/amplitudIR.
+  No se introdujo el «1/1» erróneo de la maqueta como selector de magnitud.
+
+PRUEBAS Y REVISIÓN
+8/8 CTest: smoothing, presentation, commands, library, impulse, ui_layout,
+preferences, input_meters. Renderer adicional usa componentes REALES fuera de
+pantalla: cuatro botones izquierdos de igual tamaño, opciones junto al buscador;
+cuatroTF +AVG caben tanto plegado como desplegado a1440x960 y1760x1080;
+comprueba los8 dobleclicsM/R, acceso de tarjeta/color aTF, ausencia de conflicto,
+rutas M/R/salida intactas y presentación con fuentesTF1/TF3 diferentes.
+Sin adquisición,4 M/R sin datos y5 Track apagados/deshabilitados comprobados.
+Inspección visual de componentes reales, vistaDEMO aislada y opciones abiertas.
+No se ejecutó MainWindow ni se abrió/reinició la instancia de Antonio. Sin audio,
+sin cambios en Smaart, sin push/merge/commit. Diagnóstico CoreMIDI de enumeración
+ya existente en entorno; renderer termina PASS y no abre adquisición.
+
+ENTREGA PNG FINAL — SÓLO ESTA CARPETA ES LA REVISIÓN VIGENTE
+work/MYA-005-R1/final/workspace-1440x960.png
+work/MYA-005-R1/final/workspace-1760x1080.png
+Vista sin datos M/R; curvas de gráficos siguen siendo DEMO del prototipo.
+work/MYA-005-R1/final/workspace-DEMO-1440x960.png
+work/MYA-005-R1/final/workspace-DEMO-1760x1080.png
+DEMO de niveles aislada, explícitamente rotulada; no adquisición real.
+work/MYA-005-R1/final/workspace-alineacion-abierta-1440x960.png
+work/MYA-005-R1/final/workspace-alineacion-abierta-1760x1080.png
+work/MYA-005-R1/final/workspace-opciones-doble-clic.png
+work/MYA-005-R1/final/input-meters-DEMO.png
+La lámina M/R incluye AVG naranja ilustrativo, no un motor de promedio.
+
+ANTES / HISTORIAL / EVIDENCIA
+work/MYA-005-R1/antes/: MYA-005 anterior a las correcciones.
+work/MYA-005-R1/despues/: estado INTERMEDIO superado por las últimas correcciones;
+no usarlo como entrega final. intermedio-antes-doble-clic/ conserva esas fuentes.
+work/MYA-005-R1/before/: seis fuentes/pruebas anteriores aR1 y registrovisual.
+Diffs respecto a esa base, hashes finales y logs compilacion-final.log,
+pruebas-final.log, render-final.log. Registro cronológico actualizado sin borrar
+historial. Reporte R1 intermedio conservado en intermedio-antes-doble-clic/.
+
+ALCANCE
+Sólo Main.cpp, CompactLayout.h, TFInputMeters.h, geometría de cabecera en
+CaptureLibraryPanel.h y tests de layout/render.
+No se modifican modelos de cálculo, adquisición/rutas, biblioteca, comandos,
+atajos ni función de dibujo de gráficos. Ver alcance-sin-cambios.log.
+Build Debug macOS/JUCE8.0.12 (sin lanzar):
+/Users/antoniomanuelruizespinosa/Documents/ChatGPT/Mya Acústica/work/mya-cpp-build/MyaAcustica_artefacts/Debug/Mya Acustica.app
+Ventana identifica MYA-005-R1. Pendiente revisión visual de Antonio.
+
+ACLARACIÓN RECIBIDA AL CIERRE
+Contrato L/F registrado en decisiones-visuales-aprobadas.txt: búsqueda individual,
+repetir búsqueda, resultado/ajuste/delta diferenciados e inserción explícita.
+La referencia observada por Revisión y Control no se presenta como medición Mya.
+L o Find abrirá la ventanaTF seleccionada con medido/actual/diferencia y
+Insertar/FindDelay o Volver a medir/Avanzado/Cancelar; F repetirá búsqueda.
+Insertar deshabilitado sin resultado válido del futuro motor, sin copiar6.21ms.
+No se modifica el perfil de teclado ni se implementa estimador en este bloque.
+
+Antes de la corrección de cabecera: work/MYA-005-R1/intermedio-antes-cabecera/.

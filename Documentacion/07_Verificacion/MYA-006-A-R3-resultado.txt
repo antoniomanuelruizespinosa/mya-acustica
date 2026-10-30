@@ -1,0 +1,107 @@
+MYA-006-A-R3 — AUDITORIA DE ATAJOS, CELDAS Y CABECERA/INICIO
+26/10/2026. Entrega para revision. No aceptacion visual global ni metrologica.
+
+ATAJOS — AUDITORIA DOCUMENTAL COMPLETA, NO PARIDAD INTERACTIVA
+Directorio Documentacion/05_Referencia_tecnica/atajos-Smaart-Mya/:
+LEEME-auditoria.txt, matriz-completa.tsv/json, catalogo-Mya-completo.tsv y fuentes.
+Smaart9.6.4 local:161 HTML examinados,77 fuentes con huella.109 asignaciones de la
+tabla general (127 casos expandidos) +2 adicionales en paginas de menu=129.
+137 comandosMya contrastados con su capacidad, teclado y despacho por defecto.
+V confirmado como Reset Averager, no refresh ni biblioteca:526 PENDIENTE, sin motor
+simulado ni borrado. MappVision sinV. D se retira deDSP y queda reservado: tabla y
+menu discrepan Find/Track; L/F deAntonio intactos. T ahora selecciona980TF tambien
+desdeDSP/3D, en lugar de solo401workspace. ShiftEspacio/ShiftG/ShiftT no caen en
+acciones simples. DobleE solo sin modificadores en todos sus contextos.
+B/O/L/F/E,E/Espacio/G/S/Option5, flechas, zoom, K/OptionK y OptionT conservados.
+Cmd/CtrlR sigue sin asignar: la fuente dice biblioteca, comando911 ya existe por
+menu, pero no se confunde conV ni se adopta todo el perfil por inferencia.
+I/CmdI, D y ShiftEspacio/Recapture quedan documentados como contradicciones reales.
+No se activan Find/Track/generacion/Leq/RTA/promedios. Matriz lista cada pendiente.
+No se ejecuto Smaart ni se probaron todos sus atajos fisicamente. TecladosES/EN y
+Windows requieren prueba interactiva futura. No afirmar equivalencia completa.
+
+MEDIDORES — ULTIMA REFERENCIA VISUAL, SUSTITUYE R2
+Referencia leida: captura Desktop/Captura de pantalla2026-10-26 a las20.01.58.png.
+Lateral y flotantes ahora muestran SOLO celdas contiguas: entrada superior, lectura
+grande, Max/reset y metrica inferior. Sin cabecera Lateral/Flotantes/#/... ni pie.
+Ancho util completo dividido exactamente por columnas mediante limites enteros:
+no ancho fijo minimo que provoque recorte horizontal ni hueco sobrante. Ultima
+columna acaba en el borde util. Ajuste al redimensionar, sin ampliar sidebar.
+Filas/columnas elegidas siguen independientes y no se cambian automaticamente.
+Altura minima112px por celda; si no cabe, desplazamiento vertical discreto6px.
+No scrollbar horizontal. En columnas muy estrechas se reduce fuente y se abrevia
+entrada/metrica; detalle completo en tooltip/editor. Es una limitacion fisica de
+legibilidad, no se inventan mas pixeles ni se altera el numero de columnas.
+Opciones, filas, columnas, añadir Input1, reset maximos, siempre delante (flotante),
+mover/quitar/editar tarjeta y alarmas se conservan en menu contextual sobre lectura.
+Si hay exceso, menu PaginaNdeM y anterior/siguiente; sin pie permanente ni borrado.
+Renders: lateral1col a1120/1440/1760; flotante4col a480/720/1200. Los paneles ocupan
+su rectangulo completo, con bordes contiguos. Principal derecho y M/R no cambian.
+Relieve y colores/alarma/pulso de R2 conservados. Modelos y archivos separados R2
+siguen vigentes. Adaptar texto no escribe la configuracion de fuente ni metrica.
+
+CABECERA — REEMPLAZO EXPLICITO DE LA FILA PERMANENTE
+La decision nueva sustituye el requisito anterior de conservar ocho botones visibles.
+Ahora esos mismos botones/IDs estan en un desplegable temporal superpuesto, abierto
+por una pequeña pestaña centrada. La misma pestaña cierra; elegir seccion cierra.
+Medicion, DSP/Ajuste, MappVision3D, Laboratorio, Guardar/Abrir/Audio/Ayuda siguen
+accesibles. Todos los menus del registro se ofrecen en Todos los menus... y el menu
+nativo globalMac se conserva. Version/DEMO sigue en el pie existente; no otra banda.
+El desplegable no cambia bounds de graficas, estados de fuentes, proporciones ni
+colecciones. Se recuperan29px adicionales respectoR2; origen interno desplazado66px
+respecto layout original (37franja anterior +29fila sustituida). Fase/magnitud iguales.
+Seccion actual accesible por titulo/tooltip de la pestaña y estado de botones/menu.
+
+FACTIBILIDAD NATIVA Y LIMITES DE PLATAFORMA
+DocumentWindow::setIcon y centrado de titulo JUCE se pintan en titulo NO nativo;
+no se declaran suficientes para la barra nativa. Se reviso JUCE8.0.12 local.
+Mac: NativeTitleBranding_mac.mm añade PNG15+MYA ACUSTICA en la barraAppKit existente,
+centrado segun ancho real del texto. Oculta titulo nativo duplicado, conserva titulo
+accesible, botones nativos, altura y arrastre. El grupo no intercepta hit tests.
+Compilado; no se abrio una nueva ventana nativa del producto con tools. Renders
+muestran el contenido/chevron reales, NO una captura ficticia de la barraAppKit.
+Posicion/arrastre/retina/fullscreen nativos quedan para la apertura real porRevision.
+Windows: barra y controles/icono nativos gestionados por elSO, todos los menus por
+chevron; NO se implementa override no-cliente para centrar titulo. Su colocacion
+nativa puede ser izquierda. CentradoWindows NO terminado/validado, sin prueba EXE.
+No se oculta esta diferencia ni se simula un resultadoWindows en el renderMac.
+
+INICIO REAL Y PREVIA PARA REVISION
+MyaApp.initialise crea ventanaInicio con panel oscuro/cian, logo15 aprobado,
+MYA ACUSTICA, ANALYZER y buildR3. Encola inicializacion real de MainWindow y retira
+inicio al completarse. Sin sleep, minimo de permanencia, temporizador artificial,
+porcentaje ni progreso inventado. Continuar/cerrar solo oculta inicio, no arranca
+audio ni impone login/paso adicional. La construccion actual de interfaz/dispositivos
+sigue en el hiloGUI como antes; no se afirma inicializacion completamente paralela.
+Si carga muy rapido puede no apreciarse: Acerca de > Ver pantalla de inicio permite
+reabrir la misma composicion como vista previa. No abre otras apps ni reproduce audio.
+No se ha medido aun su duracion ni capturado el arranque nativo; requiere prueba al
+abrirR3 porRevision. Evidencia offscreen de los paneles reales y Acerca de disponible.
+Diseño provisional revisable; aprobacion previa solo del icono, no de todo el inicio.
+
+VERIFICACION
+Compilacion macOS Debug correcta sin avisos finales. CTest10/10 PASS.
+Tests agregados a comandos: Vpendiente sin despacho, Dreservado, Tdesdeotrosespacios,
+Shift no alias de teclas simples, focoedicion, zoomconmodificadores y16 combinaciones
+para la teclaE. Catalogo137 exportado desde ejecutable de prueba.
+Render offscreen PASS sin aserciones: celdas y paginas con limites exactos/ancho
+completo; independencia de vistas; navegacion abre/cierra sin reflow y elegir seccion
+cierra; retornoT; paneles inicio/previa; regresionesR2 TF/IR exclusivos, AVG seleccion,
+captura con origen y cursor-- sin datos. Diagnostico CoreMIDI previo al enumerar no
+supone audio abierto ni fallo de los tests. Sin ventana nativa del producto por tools.
+Corregido durante comprobacion: actualizar etiqueta ComboBox antes de poblar items
+producía aserciones; ahora se valida ID, y se actualiza etiqueta/seleccion con
+DontSendNotification, sin cambiar modelo ni confundir fuente al redimensionar.
+
+OPERACION/CONTINUIDAD
+Preferencia nueva guardada en operacion-actualizaciones.txt: al revisar, guardar,
+detener audio, cerrar anterior y abrir nueva version verificada; sin autoPlay.
+REVISION coordina la operacion. Este agente NO reinicia concurrentemente: Revision
+estaba pasandoA->R2. Nueva entregaR3 en work/MYA-006-A-R3/build/Mya Acustica.app.
+Logs/renders/fuentes/huellas y matrices en la misma entrega. R2 conservada.
+InputLevelCore y LiveInputEngine siguen identicos aR1; sin nuevos calculos/acquisicion.
+CalibracionB autorizada, incompleta y fuera del build, en checkpoint:
+work/checkpoints/MYA-006-B-en-curso-antes-prioridad-medidores/.
+Al retomarla recuperar solo los nucleos/prototipos y adaptar con cuidado a estado
+actual: NO restaurar Main.cpp/CMake viejos sobre R3 ni perder vistas independientes.
+RTA/espectrograma2D/3D permanece especificacion pendiente, no prediccion de recinto.

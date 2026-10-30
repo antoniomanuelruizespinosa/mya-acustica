@@ -1,6 +1,7 @@
 #pragma once
 #include "CaptureLibrary.h"
 #include "Commands.h"
+#include "CompactLayout.h"
 #include <map>
 #include <juce_gui_extra/juce_gui_extra.h>
 
@@ -91,7 +92,9 @@ class CaptureLibraryPanel : public juce::Component, public juce::DragAndDropCont
   }
   juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::InfoIcon,n->name,text,"OK");
  }
+bool headerOnly=false;
 public:
+ void setHeaderOnly(bool only){headerOnly=only;for(auto* c:std::initializer_list<juce::Component*>{&destination,&search,&tree,&more,&info,&remove})c->setVisible(!only);if(captureControl)captureControl->setVisible(!only);empty.setVisible(false);}
  std::function<void(int)> onCommand;
  std::function<juce::String(int)> commandText;
  std::function<void()> onChange,onSelection;
@@ -153,12 +156,15 @@ public:
  bool keyPressed(const juce::KeyPress& key) override{
   if(!tree.hasKeyboardFocus(true)&&!hasKeyboardFocus(false))return false;
   auto mods=key.getModifiers();bool command=mods.isCommandDown()||mods.isCtrlDown();int code=key.getKeyCode();char c=code>=0&&code<128?(char)std::tolower((unsigned char)code):0;
-  if(key==juce::KeyPress::returnKey&&selected().size()==1){if(onCommand)onCommand(907);return true;}
-  if(c=='e'&&!command&&!mods.isAltDown()){int id=meterSequence.press(juce::Time::getMillisecondCounterHiRes(),true);if(id&&onCommand)onCommand(id);return true;}
+  if(!command&&!mods.isAltDown()&&!mods.isShiftDown()&&key==juce::KeyPress::returnKey&&selected().size()==1){if(onCommand)onCommand(907);return true;}
+  if(MyaCommands::isPlainMeterKey(key.getKeyCode(),mods.isCommandDown(),mods.isCtrlDown(),mods.isAltDown(),mods.isShiftDown())){int id=meterSequence.press(juce::Time::getMillisecondCounterHiRes(),true);if(id&&onCommand)onCommand(id);return true;}
   meterSequence.reset();int id=MyaCommands::shortcut(c,command,mods.isAltDown(),mods.isShiftDown(),false,false);if(id&&onCommand){onCommand(id);return true;}return false;
  }
+ #if defined(MYA_OFFSCREEN_RENDER)
+ bool previewHeaderMatches(int width,int height)const{return tracesTab.getBounds()==juce::Rectangle<int>{0,0,width,height}&&irTab.getBounds()==juce::Rectangle<int>{width+2,0,width,height}&&more.getY()==search.getY()&&more.getHeight()==search.getHeight()&&more.getWidth()==more.getHeight()&&search.getRight()<more.getX()&&more.getRight()<=getWidth();}
+ #endif
  void resized() override{
-  tracesTab.setBounds(2,0,54,22);irTab.setBounds(58,0,getWidth()-86,22);more.setBounds(getWidth()-26,0,24,22);destination.setBounds(4,26,getWidth()-8,30);search.setBounds(3,59,getWidth()-6,25);
+  int column=CompactLayout::libraryColumnWidth(getWidth()),height=CompactLayout::libraryTabHeight;tracesTab.setBounds(0,0,column,height);irTab.setBounds(column+2,0,column,height);if(headerOnly)return;more.setBounds(getWidth()-28,59,25,25);destination.setBounds(4,26,getWidth()-8,30);search.setBounds(3,59,getWidth()-36,25);
   tree.setBounds(2,88,getWidth()-4,juce::jmax(40,getHeight()-120));empty.setBounds(5,92+tree.getNumRowsInTree()*24,getWidth()-10,52);info.setBounds(3,getHeight()-28,30,25);if(captureControl)captureControl->setBounds(36,getHeight()-28,getWidth()-68,25);remove.setButtonText("X");remove.setBounds(getWidth()-29,getHeight()-28,26,25);
  }
 };

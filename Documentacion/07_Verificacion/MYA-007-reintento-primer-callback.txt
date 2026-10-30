@@ -1,0 +1,7 @@
+MYA-007 — Reintento de primera apertura, 28-10-2026
+
+Se permite un único reintento automático solo cuando el flujo se abrió, recibió AboutToStart y no entregó el primer callback en 2000 ms. Se guarda el diagnóstico del primer fallo antes de cerrar el dispositivo. La segunda apertura no puede reintentarse de nuevo. Stop o una nueva solicitud de audio invalida el reintento pendiente mediante el token de activación. Los fallos de backend, desconexiones y callbacks interrumpidos no disparan este reintento.
+
+Verificación: compiló MyaAcustica; mya_input_engine_test pasó, incluidos los casos de consumo único y cancelación del reintento. En Octa-Capture, el primer Play de esta ejecución abrió entradas 1–5 directamente y mostró niveles de micrófono y referencia, sin generar señal de salida. Stop cerró las entradas y los medidores quedaron en --.
+
+Límite: el fallo intermitente de primera apertura no ocurrió en esta ejecución real, por lo que la ruta automática no quedó validada en hardware. El origen del retraso de CoreAudio/Roland sigue sin determinarse.

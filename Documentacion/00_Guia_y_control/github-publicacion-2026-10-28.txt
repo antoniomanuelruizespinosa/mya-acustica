@@ -1,0 +1,11 @@
+28/10/2026 — PUBLICACION GITHUB B-R4 VERIFICADA
+Repositorio privado: https://github.com/antoniomanuelruizespinosa/mya-acustica
+PR integrada: https://github.com/antoniomanuelruizespinosa/mya-acustica/pull/1
+Rama: respaldo/mya-006-b-r4
+Commit de entrega: b42c39b0aa4a0953919292f7d7c352aa37d4288b
+Merge main: 48bce1cdd759620ca94e2ac5d7c7350644acd63f
+140 archivos; 79 nuevos/modificados respecto MYA-005. Todos los archivos remotos previos conservados. Sin force push.
+Fuentes/tests/assets/CMake comparados byte a byte con entrega B-R4 probada; informes13/13 PASS. No nueva validacion fisica.
+Excluidos sesiones/preferencias/calibraciones/capturas/manuales externos/vendor/builds.
+Publicacion por conector GitHub. Checkout local y su HEAD historico no se han reseteado ni reconciliado: NO hacer push directo de main local sin reconciliar primero.
+Este registro es posterior a la publicacion y queda local. La PR conserva el registro remoto de la entrega.
