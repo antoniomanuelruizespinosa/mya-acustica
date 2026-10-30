@@ -16,6 +16,29 @@ int main(int argc,char** argv){
  {juce::StringArray outputs,inputs;for(int i=1;i<=4;++i)outputs.add("Output "+juce::String(i));for(int i=1;i<=7;++i)inputs.add("Input "+juce::String(i));AudioOptionsView panel(true,"Another device [CoreAudio]","Output 4","Input 7",false,-55,6,outputs,4,inputs,7,1,{"TF 1","TF 2","TF 3","TF 4"},2,{"OCTA-CAPTURE [CoreAudio]","Another device [CoreAudio]"},2);panel.updatePhysicalLoop(false,true,{}, {},false,26.35,false,juce::String::fromUTF8("Calibración guardada"),false,true,-55,6);if(!write(panel.createComponentSnapshot(panel.getLocalBounds()),"loop-saved-delay-no-audio.png"))return 81;bool resetEnabled=false,calibrateEnabled=false,pinkValue=false,referenceValue=false,storedDelay=false,outputRoute=false,referenceRoute=false,tfRoute=false,deviceRoute=false;for(auto* child:panel.getChildren()){if(auto* button=dynamic_cast<juce::TextButton*>(child)){if(button->getButtonText()=="Reset Loop")resetEnabled=button->isEnabled();if(button->getButtonText()=="Calib Loop")calibrateEnabled=button->isEnabled();}if(auto* slider=dynamic_cast<juce::Slider*>(child)){pinkValue|=std::abs(slider->getValue()+55)<.01;referenceValue|=std::abs(slider->getValue()-6)<.01;}if(auto* combo=dynamic_cast<juce::ComboBox*>(child)){outputRoute|=combo->getText()=="Output 4";referenceRoute|=combo->getText()=="Input 7";tfRoute|=combo->getText()=="TF 2";deviceRoute|=combo->getText()=="Another device [CoreAudio]";}if(auto* label=dynamic_cast<juce::Label*>(child))if(label->getText().startsWith("Loop Delay:"))storedDelay=label->getText().contains(juce::String::fromUTF8("26.35 ms · guardado / pendiente de validar"));}if(!resetEnabled||calibrateEnabled||!pinkValue||!referenceValue||!storedDelay||!outputRoute||!referenceRoute||!tfRoute||!deviceRoute)return 80;}
  {auto message=MyaUpdate::currentMessage(MyaIdentity::version());if(message!=juce::String::fromUTF8("Mya Acústica Analyzer está actualizada. Versión instalada: 0.3.5."))return 82;juce::Label updateLabel;updateLabel.setText(message,juce::dontSendNotification);updateLabel.setSize(560,60);if(!write(updateLabel.createComponentSnapshot(updateLabel.getLocalBounds()),"update-current-0.3.5.png"))return 83;}
  {
+  TransferFunctionPanel panel([]{return std::vector<TransferFunctionPanel::Trace>{};});
+  panel.setSize(800,500);panel.setPlotLayout({0,0,800,230},{0,238,800,262});
+  std::array<double,3> pan{},zoomX{{1.,1.,1.}},zoomY{{1.,1.,1.}};
+  panel.setPlotTransforms(pan,pan,zoomX,zoomY);
+  auto baseline=panel.createComponentSnapshot(panel.getLocalBounds());
+  auto changes=[](const juce::Image& a,const juce::Image& b,juce::Rectangle<int> area){int count=0;for(int y=area.getY();y<area.getBottom();++y)for(int x=area.getX();x<area.getRight();++x)count+=a.getPixelAt(x,y)!=b.getPixelAt(x,y);return count;};
+  zoomY[1]=2.;panel.setPlotTransforms(pan,pan,zoomX,zoomY);
+  auto phaseZoom=panel.createComponentSnapshot(panel.getLocalBounds());
+  if(changes(baseline,phaseZoom,{0,0,800,230})==0||changes(baseline,phaseZoom,{0,238,800,262})!=0)return 85;
+  zoomY[1]=1.;zoomX[1]=2.;panel.setPlotTransforms(pan,pan,zoomX,zoomY);
+  auto phaseHorizontal=panel.createComponentSnapshot(panel.getLocalBounds());
+  if(changes(baseline,phaseHorizontal,{0,0,800,230})==0||changes(baseline,phaseHorizontal,{0,238,800,262})!=0)return 88;
+  zoomX[1]=1.;zoomY[2]=2.;panel.setPlotTransforms(pan,pan,zoomX,zoomY);
+  auto magnitudeZoom=panel.createComponentSnapshot(panel.getLocalBounds());
+  if(changes(baseline,magnitudeZoom,{0,0,800,230})!=0||changes(baseline,magnitudeZoom,{0,238,800,262})==0)return 86;
+  zoomY[2]=1.;zoomX[2]=2.;panel.setPlotTransforms(pan,pan,zoomX,zoomY);
+  auto magnitudeHorizontal=panel.createComponentSnapshot(panel.getLocalBounds());
+  if(changes(baseline,magnitudeHorizontal,{0,0,800,230})!=0||changes(baseline,magnitudeHorizontal,{0,238,800,262})==0)return 89;
+  zoomX[2]=1.;panel.setPlotTransforms(pan,pan,zoomX,zoomY);panel.setPlotLayout({0,0,800,220},{0,238,800,262});
+  auto phaseSize=panel.createComponentSnapshot(panel.getLocalBounds());
+  if(changes(baseline,phaseSize,{0,0,800,230})==0||changes(baseline,phaseSize,{0,238,800,262})!=0)return 87;
+ }
+ {
   WorkstationSurface surface;auto& station=surface.station;
   for(auto size:{juce::Point<int>{1440,960},juce::Point<int>{1760,1080},juce::Point<int>{1120,900}}){surface.setSize(size.x,size.y);if(!station.previewRowDSPControls())return 84;if(!station.previewSurface(surface))return 38;station.previewCursor(2,.6);if((size.y>=960&&!station.previewFits())||!station.previewListAccessible()||!station.previewLeftHeader())return 7;if(!write(surface.createComponentSnapshot(surface.getLocalBounds()),"workspace-"+juce::String(size.x)+"x"+juce::String(size.y)+".png"))return 4;}
   surface.setSize(1440,960);station.previewAvgColour(juce::Colour(0xff00e5ed));if(!write(surface.createComponentSnapshot(surface.getLocalBounds()),"workspace-AVG-color-personalizado.png"))return 26;station.previewAvgColour(juce::Colour(0xffffac24));if(!station.previewPrincipal())return 19;station.previewMeterClock(true);if(!write(surface.createComponentSnapshot(surface.getLocalBounds()),"workspace-principal-reloj.png"))return 21;station.previewMeterClock(false);station.previewPrincipalConfig();if(!write(surface.createComponentSnapshot(surface.getLocalBounds()),"workspace-spl-config.png"))return 20;
