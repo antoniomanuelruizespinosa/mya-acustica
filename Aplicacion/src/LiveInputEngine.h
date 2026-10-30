@@ -42,6 +42,7 @@ private:
   std::vector<std::uint64_t> minimumRawSequences;
   void setRouteCount(size_t count){rawQueues.resize(count);captureMics.resize(count);captureRefs.resize(count);rawSequences.resize(count);minimumRawSequences.resize(count);}
   std::atomic<unsigned> rawDropped{0};
+  std::atomic<bool> resetWeighted{false};
   std::array<int,InputLevels::maxChannels> physical{};
   int count=0;std::uint64_t sequence=0;
   std::atomic<bool> stopped{true},stopNotified{false},aboutReady{false};
@@ -89,6 +90,7 @@ private:
    const double now=clock();lastCallbackMs.store(now,std::memory_order_release);
    lastInputs.store(inputs,std::memory_order_relaxed);lastSamples.store(samples,std::memory_order_relaxed);
    auto frame=InputLevels::capture(input,fault.load(std::memory_order_relaxed)!=Fault::None?-1:inputs,samples,physical,count,++sequence);
+   if(resetWeighted.exchange(false,std::memory_order_acq_rel))for(int i=0;i<count;++i)weighted[(size_t)physical[(size_t)i]].resetState();
    if(input&&inputs==count)for(int i=0;i<count;++i){int ch=physical[(size_t)i];weighted[(size_t)ch].process(input[i],samples,frame.channels[(size_t)ch]);}
    frame.timeSeconds=now*.001;
    if(!queue.push(frame))dropped.fetch_add(1,std::memory_order_relaxed);
@@ -219,7 +221,7 @@ public:
    }
    if(observeRaw||observeTF)for(size_t i=0;i<s->rawQueues.size();++i){TransferFunctionCore::RawBlock raw;for(int drained=0;drained<64&&s->rawQueues[i].pop(raw);++drained)if(raw.sequence>s->minimumRawSequences[i]){if(observeTF)observeTF((int)i,raw);else if(observeRaw&&i==0)observeRaw(s->key.toStdString(),raw);}}
    unsigned count=s->dropped.load();bool gap=count!=s->seenDrops;s->seenDrops=count;
-   if(gap){for(auto& rms:s->rms)rms.reset();for(auto& weighted:s->weighted)weighted.configure(s->sampleRate);}
+   if(gap){for(auto& rms:s->rms)rms.reset();s->resetWeighted.store(true,std::memory_order_release);}
    if(window.any){window.gap=window.gap||gap;s->latest=window;s->receivedAt=lastProcessedMs;}else if(gap)s->latest={};
    now=clock();fault=s->fault.load(std::memory_order_acquire);
    if(fault==Fault::BackendError)return fail(*s,"Error notificado por backend",now);
