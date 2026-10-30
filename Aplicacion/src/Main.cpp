@@ -220,7 +220,8 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
  TextButton *measure,*dsp,*vision,*lab,*invert,*bypass;
  Slider gain,delay,stacks,boxes,spacing,rotation;
  Label gainLabel,delayLabel,stacksLabel,boxesLabel,spacingLabel,rotationLabel;
- ComboBox source, plotChoice, averageChoice, meterInput, meterWeight, generatorOutput;
+ ComboBox source, plotChoice, averageChoice, globalFFT, globalSmth, meterInput, meterWeight, generatorOutput;
+ Label globalFFTLabel, globalSmthLabel;
  std::array<ComboBox,3> plotMic;
  std::array<ComboBox,2> plotSmooth,plotTypeChoice;
  std::array<TextButton,3> graphGear;
@@ -799,6 +800,11 @@ public:
  plotChoice.onChange=[this]{persistTF();resized();repaint();};
  averageChoice.addItemList({"Prom.1","Prom.2","Prom.4","Prom.5","Prom.8","Prom.16","Prom.32","Prom.64"},1);averageChoice.setSelectedId(4);addAndMakeVisible(averageChoice);for(auto& tf:liveTFs)tf.setAverageDepth(5);
  averageChoice.setTooltip("Promedio temporal de la TF seleccionada.");averageChoice.onChange=[this]{int i=source.getSelectedId()-1;if(i<0||(size_t)i>=liveTFs.size())return;const int depths[]={1,2,4,5,8,16,32,64};int choice=averageChoice.getSelectedId();if(choice<1||choice>8)return;tfAverageDepth[(size_t)i]=depths[choice-1];tfProm[(size_t)i].setSelectedId(choice,dontSendNotification);liveTFs[(size_t)i].setAverageDepth(depths[choice-1]);status="TF "+String(i+1)+": promedio "+String(depths[choice-1]);repaint();};
+ globalFFTLabel.setText("FFT",dontSendNotification);globalSmthLabel.setText("Smth",dontSendNotification);
+ for(auto* label:{&globalFFTLabel,&globalSmthLabel}){label->setColour(Label::textColourId,Palette::cyan);label->setJustificationType(Justification::centredLeft);addAndMakeVisible(*label);}
+ globalFFT.addItem("64 FPPO",1);globalFFT.addItem("Fija 16k",2);globalFFT.setSelectedId(1,dontSendNotification);globalFFT.setTitle("FFT de la pantalla activa");addAndMakeVisible(globalFFT);
+ globalSmth.addItemList({"Off","1/48 Oct","1/24 Oct","1/12 Oct","1/6 Oct","1/3 Oct"},1);globalSmth.setSelectedId(2,dontSendNotification);globalSmth.setTitle("Suavizado de la pantalla activa");addAndMakeVisible(globalSmth);
+ auto applyDisplay=[this]{if(!mainTabs||!tfPanel)return;bool multi=globalFFT.getSelectedId()==1;int smooth=globalSmth.getSelectedId();if(measurementView==2)mainTabs->rtaPanel().setDisplayOptions(multi,smooth);else tfPanel->setDisplayOptions(multi,smooth);};globalFFT.onChange=applyDisplay;globalSmth.onChange=applyDisplay;
  for(auto* slider:{&selectedDelay,&phasePreview}){slider->setRange(0,2000,.01);slider->setSliderStyle(Slider::IncDecButtons);slider->setTextBoxStyle(Slider::TextBoxLeft,false,86,26);slider->setTextValueSuffix(" ms");addAndMakeVisible(slider);}
  selectedDelay.setTitle("Delay de referencia seleccionado");
  selectedDelay.onValueChange=[this]{int i=source.getSelectedId()-1;if(i>=0&&(size_t)i<micDelay.size())micDelay[(size_t)i].setValue(selectedDelay.getValue());};
@@ -970,15 +976,18 @@ public:
  const bool measuring=mode==0&&rightVisible;
  for(auto& button:measurementButtons){button->setVisible(false);button->setTransform({});}
  for(auto* c:std::initializer_list<Component*>{&meterInput,&meterWeight,&selectedDelay,&phasePreview})c->setVisible(false);
- tfViewport.setVisible(measuring);averageChoice.setVisible(measuring);generatorOutput.setVisible(measuring);generatorLevel.setVisible(measuring);
+ tfViewport.setVisible(measuring);averageChoice.setVisible(measuring);for(auto* control:std::initializer_list<Component*>{&globalFFTLabel,&globalSmthLabel,&globalFFT,&globalSmth})control->setVisible(measuring);generatorOutput.setVisible(measuring);generatorLevel.setVisible(measuring);
  if(mode==0){for(int i=12;i<19;++i)buttons[(size_t)i]->setVisible(false);gain.setVisible(false);gainLabel.setVisible(false);delay.setVisible(false);delayLabel.setVisible(false);}
  int rx=getWidth()-rightWidth,rw=rightWidth-16;
  auto mb=[&](int id,int bx,int y,int w,int h=26){auto& button=*measurementButtons[(size_t)id];button.setVisible(measuring);button.setBounds(bx,y,w,h);};
  int meterOffset=meterState.state().mainVisible?96:0;principalMeter.setVisible(measuring&&meterState.state().mainVisible);principalMeter.setBounds(rx,88,rw,96);
  int tab=(rw-8)/3;mb(20,rx,94+meterOffset,tab);mb(0,rx+tab+4,94+meterOffset,tab);mb(21,rx+2*(tab+4),94+meterOffset,rw-2*(tab+4));
  averageChoice.setTransform({});averageChoice.setBounds(rx,128+meterOffset,rw,22);averageChoice.setTooltip("Promedio temporal de la TF seleccionada");
- int transport=(rw-8)/3;mb(23,rx,154+meterOffset,transport);mb(24,rx+transport+4,154+meterOffset,transport);mb(25,rx+2*(transport+4),154+meterOffset,rw-2*(transport+4));
- mb(19,rx,184+meterOffset,28);mb(5,rx+32,184+meterOffset,28);mb(26,rx+64,184+meterOffset,28);mb(4,rx+96,184+meterOffset,rw-128);measurementButtons[4]->getProperties().set("commandGlyph",true);measurementButtons[4]->setButtonText("Int.Loop");loopOptions.setVisible(measuring);loopOptions.setBounds(rx+rw-28,184+meterOffset,28,26);
+ if(mainTabs&&tfPanel){bool rta=measurementView==2;bool multi=rta?mainTabs->rtaPanel().multiWindow():tfPanel->multiWindow();int smooth=rta?mainTabs->rtaPanel().smoothingChoice():tfPanel->smoothingChoice();globalFFT.setSelectedId(multi?1:2,dontSendNotification);globalSmth.setSelectedId(smooth,dontSendNotification);}
+ globalFFTLabel.setBounds(rx+4,154+meterOffset,47,22);globalFFT.setBounds(rx+53,154+meterOffset,rw-53,22);
+ globalSmthLabel.setBounds(rx+4,182+meterOffset,47,22);globalSmth.setBounds(rx+53,182+meterOffset,rw-53,22);
+ int transport=(rw-8)/3;mb(23,rx,212+meterOffset,transport);mb(24,rx+transport+4,212+meterOffset,transport);mb(25,rx+2*(transport+4),212+meterOffset,rw-2*(transport+4));
+ mb(19,rx,242+meterOffset,28);mb(5,rx+32,242+meterOffset,28);mb(26,rx+64,242+meterOffset,28);mb(4,rx+96,242+meterOffset,rw-128);measurementButtons[4]->getProperties().set("commandGlyph",true);measurementButtons[4]->setButtonText("Int.Loop");loopOptions.setVisible(measuring);loopOptions.setBounds(rx+rw-28,242+meterOffset,28,26);
  int gen=CompactLayout::generatorTop(getHeight());
  int footerTop=CompactLayout::actionTop(getHeight(),alignmentExpanded),alignmentY=footerTop+32;
  tfViewport.setTransform({});tfViewport.setBounds(rx,CompactLayout::tfStart(meterState.state().mainVisible),rw,CompactLayout::tfViewportHeight(getHeight(),alignmentExpanded,meterState.state().mainVisible));

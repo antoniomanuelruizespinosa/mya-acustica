@@ -32,8 +32,8 @@ public:
  void paint(juce::Graphics& graphics) override;
  void resized() override;
  std::function<void(bool)> onResolutionChanged;
- int smoothingChoice() const { return smoothing.getSelectedId(); }
- bool multiWindow() const { return resolution.getSelectedId() == 1; }
+ int smoothingChoice() const { return smoothingMode; }
+ bool multiWindow() const { return multiWindowMode; }
  void setDisplayOptions(bool multi, int smooth);
 
 private:
@@ -47,7 +47,8 @@ private:
  std::vector<Trace> traces;
  std::map<int,Trace> history;
  juce::ComboBox speed;
- juce::ComboBox resolution, smoothing;
+ bool multiWindowMode=true;
+ int smoothingMode=2;
  double lastUpdateMs=0;
  bool active=false;
 };
