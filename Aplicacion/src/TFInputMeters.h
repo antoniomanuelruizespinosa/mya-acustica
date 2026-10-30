@@ -15,7 +15,7 @@ public:
   for(int ch=0;ch<2;++ch){auto& c=channels[(size_t)ch];auto box=CompactLayout::meterBar(getWidth(),ch);float y=(float)ch*24;juce::Rectangle<float> bar{(float)box.x,(float)box.y,(float)box.w,(float)box.h};
    g.setColour(juce::Colour(0xff090d10));g.fillRoundedRectangle(bar,5);g.setColour(juce::Colour(0xff48525a));g.drawRoundedRectangle(bar,.0f+5,.7f);
    g.setFont(10.f);g.setColour(juce::Colour(0xffa9bac8));g.drawText(ch==0?"M":"R",0,(int)y,14,12,juce::Justification::centredLeft);
-   if(c.level){
+   if(c.level&&std::isfinite(*c.level)){
     // Clip each threshold section to the same capsule. The base colour never changes.
     float filledWidth=(float)TFMeterChannel::position(*c.level,0,bar.getWidth());juce::Path capsule;capsule.addRoundedRectangle(bar.withWidth(filledWidth),juce::jmin(5.f,filledWidth*.5f));g.saveState();g.reduceClipRegion(capsule);
     float end=bar.getX()+filledWidth;
@@ -25,12 +25,12 @@ public:
     g.restoreState();
    }
    const float dash[]={2.f,2.f};g.setColour(juce::Colour(0xffa9bac8));for(double threshold:{settings.orangeDbFS,settings.redDbFS}){float x=thresholdPosition(threshold,ch);g.drawDashedLine(juce::Line<float>{x,bar.getY()+1,x,bar.getBottom()-1},dash,2,.75f);}
-   if(settings.peakOn&&c.peak){float x=juce::jlimit(bar.getX()+1,bar.getRight()-1,(float)TFMeterChannel::position(*c.peak,bar.getX(),bar.getWidth()));g.setColour(juce::Colours::white);g.drawLine(x,bar.getY()+1,x,bar.getBottom()-1,1.5f);}
+   if(settings.peakOn&&c.peak&&std::isfinite(*c.peak)){float x=juce::jlimit(bar.getX()+1,bar.getRight()-1,(float)TFMeterChannel::position(*c.peak,bar.getX(),bar.getWidth()));g.setColour(juce::Colours::white);g.drawLine(x,bar.getY()+1,x,bar.getBottom()-1,1.5f);}
    auto scale=CompactLayout::meterScale(getWidth(),ch);g.setFont(8.f);g.setColour(juce::Colour(0xffa9bac8));
    for(int tick:{-60,-36,-12,0}){float x=bar.getX()+bar.getWidth()*(float)TFMeterChannel::fraction(tick);auto label=juce::Rectangle<float>{juce::jlimit(bar.getX(),bar.getRight()-18,x-9),(float)scale.y,18,(float)scale.h};g.drawText(juce::String(tick),label,juce::Justification::centred);}
    // Centre the numeric reading in the ENTIRE capsule, independently of fill length.
    auto label=c.level?(std::isinf(*c.level)&&*c.level<0?juce::String::fromUTF8("−∞"):juce::String(*c.level,1))+" dBFS":juce::String("-- dBFS");g.setFont(10.5f);g.setColour(juce::Colour(0xffe5edf4));g.drawText(label,bar,juce::Justification::centred);
-   if(c.level){float fill=(float)TFMeterChannel::position(*c.level,0,bar.getWidth());juce::Path ink;ink.addRoundedRectangle(bar.withWidth(fill),juce::jmin(5.f,fill*.5f));g.saveState();g.reduceClipRegion(ink);g.setColour(juce::Colour(0xff071015));g.drawText(label,bar,juce::Justification::centred);g.restoreState();}
+   if(c.level&&std::isfinite(*c.level)){float fill=(float)TFMeterChannel::position(*c.level,0,bar.getWidth());juce::Path ink;ink.addRoundedRectangle(bar.withWidth(fill),juce::jmin(5.f,fill*.5f));g.saveState();g.reduceClipRegion(ink);g.setColour(juce::Colour(0xff071015));g.drawText(label,bar,juce::Justification::centred);g.restoreState();}
 
   }
  }
