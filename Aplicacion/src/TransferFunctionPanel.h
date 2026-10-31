@@ -40,6 +40,7 @@ public:
  void setPlotLayout(juce::Rectangle<int> phase, juce::Rectangle<int> magnitude);
  void setPlotTransforms(const std::array<double,3>& panX,const std::array<double,3>& panY,
                         const std::array<double,3>& zoomX,const std::array<double,3>& zoomY);
+ void setSelectedPlot(int plot);
 
 private:
  class PlotPane;
@@ -60,6 +61,7 @@ private:
  std::array<double,3> zoomX{{1.,1.,1.}},zoomY{{1.,1.,1.}};
  bool multiWindowMode=true;
  int smoothingMode=2;
+ int selectedPlot=1;
  double lastUpdateMs=0;
  bool active=false;
 };

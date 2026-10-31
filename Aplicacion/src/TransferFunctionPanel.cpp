@@ -63,6 +63,12 @@ void TransferFunctionPanel::setPlotTransforms(const std::array<double,3>& newPan
  phasePane->repaint();magnitudePane->repaint();
 }
 
+void TransferFunctionPanel::setSelectedPlot(int plot){
+ if(plot!=1&&plot!=2)return;
+ if(selectedPlot==plot)return;
+ selectedPlot=plot;phasePane->repaint();magnitudePane->repaint();
+}
+
 std::optional<float> TransferFunctionPanel::frequencyPosition(double hz,juce::Rectangle<float> area,bool phase)const{
  if(!std::isfinite(hz)||hz<minHz||hz>maxHz||area.isEmpty())return {};
  auto index=phase?1u:2u;
@@ -137,4 +143,8 @@ void TransferFunctionPanel::paintPane(juce::Graphics& g,juce::Rectangle<float> b
  drawGrid(g,area,phase);
  g.saveState();g.reduceClipRegion(area.getSmallestIntegerContainer());drawTraces(g,area,phase);if(!phase)drawCoherence(g,area);g.restoreState();
  if(phase&&traces.empty()){g.setColour(text);g.drawText("FT sin medidas activas",area.getSmallestIntegerContainer(),juce::Justification::centred);}
+ if(selectedPlot==(phase?1:2)){
+  g.setColour(juce::Colour(0xff43cce8).withAlpha(.8f));
+  g.drawRect(bounds.reduced(1.0f),1.25f);
+ }
 }

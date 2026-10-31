@@ -37,6 +37,11 @@ int main(int argc,char** argv){
   zoomX[2]=1.;panel.setPlotTransforms(pan,pan,zoomX,zoomY);panel.setPlotLayout({0,0,800,220},{0,238,800,262});
   auto phaseSize=panel.createComponentSnapshot(panel.getLocalBounds());
   if(changes(baseline,phaseSize,{0,0,800,230})==0||changes(baseline,phaseSize,{0,238,800,262})!=0)return 87;
+  panel.setPlotLayout({0,0,800,230},{0,238,800,262});panel.setSelectedPlot(1);
+  auto phaseSelected=panel.createComponentSnapshot(panel.getLocalBounds());
+  panel.setSelectedPlot(2);
+  auto magnitudeSelected=panel.createComponentSnapshot(panel.getLocalBounds());
+  if(changes(phaseSelected,magnitudeSelected,{0,0,800,230})==0||changes(phaseSelected,magnitudeSelected,{0,238,800,262})==0)return 90;
  }
  {
   WorkstationSurface surface;auto& station=surface.station;
