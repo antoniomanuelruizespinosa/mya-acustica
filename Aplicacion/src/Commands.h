@@ -21,7 +21,7 @@ inline const std::vector<Command>& catalog(){
   {202,"config.tf",{"Ajustes TF seleccionada","Selected TF settings"},"",1,{"",""},Capability::Demo,{"Edita parámetros de la TF demo; no inicia audio","Edits demo TF parameters; does not start audio"}},
   {290,"calibration.spl",{"Calibración SPL / micrófono","SPL / microphone calibration"},"",1,{"",""},Capability::Ready,{"Calibracion RMS por backend/dispositivo/canal","RMS calibration per backend/device/channel"}},
   {292,"calibration.loop",{"Calibración de loop","Loop calibration"},"",1,{"",""},Capability::Ready,{"Abre los controles del loop físico; el audio solo arranca al activarlo","Opens physical loop controls; audio starts only when enabled"}},
-  {293,"config.generator",{"Ajustes de generador","Generator settings"},"",1,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
+  {293,"config.generator",{"Ajustes de generador","Generator settings"},"",1,{"",""},Capability::Ready,{"Configura tarjeta, salida y nivel del generador Pink","Configures the Pink generator device, output and level"}},
   {291,"config.averaging",{"Promedios en directo","Live averaging"},"",1,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
   {301,"plot.smoothing.link",{"Vincular suavizado de fase y magnitud","Link phase and magnitude smoothing"},"",2,{"Ajustes de gráficos/Función de transferencia","Graph settings/Transfer function"},Capability::Demo,{}},
   {310,"plot.smoothing.phase.0",{"Sin suavizado","No smoothing"},"",2,{"Suavizado / fase","Smoothing / phase"},Capability::Demo,{"",""}},
@@ -242,6 +242,7 @@ inline int shortcut(char key,bool command,bool alt,bool shift,bool plotFocus,boo
  if(alt&&!command&&!shift&&key=='5')return 409;
  if(alt&&!command&&!shift&&(key=='t'||key=='T'))return 303;
  if(plotFocus&&(key=='+'||key=='-')){if(alt&&!command)return 0;return (command?(alt?854:852):850)+(key=='-'?1:0);}
+ if(!command&&!alt&&(key=='v'||key=='V'))return 526;
  if(command||alt||shift)return 0;
  key=static_cast<char>(std::tolower(static_cast<unsigned char>(key)));
  switch(key){case 'k':return 972;case 'b':return 405;case 'o':return 406;case 'c':return 408;case ' ':return 103;case 'l':case 'f':return 502;case 'g':return 504;case 's':return 505;case 't':return 980;case 'v':return 526;default:break;}

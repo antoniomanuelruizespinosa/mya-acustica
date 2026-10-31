@@ -30,6 +30,7 @@ public:
  explicit TransferFunctionPanel(DataProvider provider);
  ~TransferFunctionPanel() override;
  void setActive(bool active);
+ void clearTraces();
  void visibilityChanged() override;
  void paint(juce::Graphics& graphics) override;
  void resized() override;

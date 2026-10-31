@@ -50,11 +50,11 @@ void executeCommand(int id){
  case 502:{int n=source.getSelectedId()-1;if(!measuring(n)){status="Find: inicia la TF con referencia M/R antes de medir el retardo.";break;}auto found=liveTFs[(size_t)n].findDelayMs();if(!found){status="Find: espera un promedio M/R estable; rango 0–150 ms.";break;}micDelay[(size_t)n].setValue(*found);status="TF "+String(n+1)+": retardo medido "+String(*found,2)+" ms; IR relativo a ese tiempo.";break;}
  case 507:stopInputs();break;
  case 508:stopInputs("Entradas en pausa. Pulsa Play para reabrir.");break;
- case 526:inputEngine.discardPendingTF();for(auto& tf:liveTFs)tf.reset();liveTFState=0;status=inputEngine.running()?"TF en directo reiniciada con V; esperando nuevas muestras M/R.":"TF en directo borrada con V; entradas detenidas.";break;
+ case 526:inputEngine.discardPendingTF();for(auto& tf:liveTFs)tf.reset();for(auto& rta:liveRTAs)rta.reset();if(tfPanel)tfPanel->clearTraces();if(mainTabs)mainTabs->rtaPanel().clearTraces();liveTracesCleared=true;liveTFState=0;status=inputEngine.running()?"Trazos en directo reiniciados con V; esperando nuevas muestras.":"Trazos en directo borrados con V; entradas detenidas.";break;
  case 101:load();break;case 102:save();break;case 103:captureTrace();break;
  case 201:audioSettings();if(auto* window=getTopLevelComponent())window->toFront(true);break;case 202:engineSettings(source.getSelectedId()-1);break;
  case 971:meterState.mainVisibility(!meterState.state().mainVisible);break;case 972:meterState.clockMode(!meterState.state().clock);break;case 973:principalMeterOptions();break;case 974:if(auto* c=meterState.primaryCard())meterState.resetMax(c->id);break;case 975:if(auto* c=meterState.primaryCard())meterState.resetLeq(c->id);break;
- case 517:signalOptions("pink");break;case 518:signalOptions("sweep");break;case 292:case 970:signalOptions("loop");break;
+ case 517:signalOptions("pink");break;case 518:signalOptions("sweep");break;case 292:case 970:signalOptions("loop");break;case 293:signalOptions("pink",measurementButtons[28].get());break;
  case 203:showMeters();break;case 303:tfGraphSettings(1);break;case 963:tfGraphSettings(2);break;case 964:tfGraphSettings(0);break;case 960:case 961:dockMeterState.sidebar(id==961?!dockMeterState.state().sidebarMeters:false);leftVisible=true;break;
  case 301:{
   linkSmooth.setToggleState(!linkSmooth.getToggleState(),dontSendNotification);

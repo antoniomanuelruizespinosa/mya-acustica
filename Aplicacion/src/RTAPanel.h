@@ -10,6 +10,7 @@ public:
  using DataProvider = std::function<std::vector<Trace>()>;
  explicit RTAPanel(DataProvider provider);
  void setActive(bool active);
+ void clearTraces();
  void visibilityChanged() override;
  void paint(juce::Graphics& g) override;
  void resized() override;

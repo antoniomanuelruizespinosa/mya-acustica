@@ -98,6 +98,7 @@ int main(int argc,char** argv){
  if(!write(demo,"input-meters-DEMO.png"))return 5;
  {TFInputMeters custom;custom.setSize(580,48);custom.settings.orangeDbFS=-18;custom.settings.redDbFS=-3;custom.channels[0].update(-2.,0,custom.settings);custom.channels[0].update(-30.,.1,custom.settings);custom.channels[1].update(-36.,0,custom.settings);if(std::abs(custom.thresholdPosition(-18)-TFMeterChannel::position(-18,17,561))>.001||std::abs(custom.thresholdPosition(-3)-TFMeterChannel::position(-3,17,561))>.001)return 24;juce::Image example(juce::Image::RGB,640,110,true);juce::Graphics painter(example);painter.fillAll(juce::Colour(0xff192126));painter.setColour(juce::Colours::white);painter.setFont(14.f);painter.drawText("DEMO: umbrales personalizados -18 / -3 dBFS",12,8,610,24,juce::Justification::centredLeft);painter.drawImageAt(custom.createComponentSnapshot(custom.getLocalBounds()),30,44);if(!write(example,"input-meters-umbrales-personalizados-DEMO.png"))return 25;}
 
+ {WorkstationSurface surface;if(!surface.station.previewRefreshAndGenerator())return 90;}
  {WorkstationSurface surface;if(!surface.station.previewTraceRemoval())return 85;}
  {std::vector<bool> accepted;juce::StringArray names{"MIC 1 / TF 1","MIC 2 / TF 2","MIC 3 / TF 3","MIC 4 / TF 4"};AverageTFDialog dialog(names,{true,false,true,false},[&](std::vector<bool> selection){accepted=std::move(selection);});
    if(!write(dialog.createComponentSnapshot(dialog.getLocalBounds()),"create-average-tf.png"))return 89;

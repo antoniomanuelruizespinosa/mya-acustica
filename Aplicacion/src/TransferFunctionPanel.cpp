@@ -50,10 +50,12 @@ TransferFunctionPanel::TransferFunctionPanel(DataProvider provider):dataProvider
 void TransferFunctionPanel::setDisplayOptions(bool multi,int smooth){if(multiWindowMode!=multi){multiWindowMode=multi;if(onResolutionChanged)onResolutionChanged(multi);}smoothingMode=juce::jlimit(1,6,smooth);history.clear();}
 TransferFunctionPanel::~TransferFunctionPanel(){stopTimer();}
 
+void TransferFunctionPanel::clearTraces(){traces.clear();history.clear();lastUpdateMs=0;phasePane->repaint();magnitudePane->repaint();}
+
 void TransferFunctionPanel::setActive(bool shouldBeActive){
  active=shouldBeActive;
  if(active&&isShowing()){timerCallback();startTimerHz(30);}
- else {stopTimer();traces.clear();history.clear();lastUpdateMs=0;phasePane->repaint();magnitudePane->repaint();}
+ else {stopTimer();clearTraces();}
 }
 
 void TransferFunctionPanel::visibilityChanged(){

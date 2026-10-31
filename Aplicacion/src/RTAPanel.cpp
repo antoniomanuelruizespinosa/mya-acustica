@@ -8,9 +8,11 @@ RTAPanel::RTAPanel(DataProvider provider) : dataProvider(std::move(provider)) {
 
 void RTAPanel::setDisplayOptions(bool multi,int smooth){if(multiWindowMode!=multi){multiWindowMode=multi;if(onResolutionChanged)onResolutionChanged(multi);}smoothingMode=juce::jlimit(1,6,smooth);history.clear();}
 
+void RTAPanel::clearTraces(){traces.clear();history.clear();lastUpdateMs=0;repaint();}
+
 void RTAPanel::setActive(bool active) {
  if (active && !isTimerRunning()) { timerCallback(); startTimerHz(30); }
- else if (!active) {stopTimer();traces.clear();history.clear();lastUpdateMs=0;repaint();}
+ else if (!active) {stopTimer();clearTraces();}
 }
 
 void RTAPanel::visibilityChanged() {
