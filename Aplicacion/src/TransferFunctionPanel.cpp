@@ -3,12 +3,33 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <utility>
 
 namespace {
 constexpr double minHz=20.0,maxHz=20000.0;
 constexpr float minDb=-60.0f,maxDb=30.0f;
-const juce::Colour background{0xff080a0c},grid{0xff2c3135},text{0xffa9bac8};
+const juce::Colour background{0xff080a0c},grid{0xff2c3135},text{0xffa9bac8},axisBlue{0xff55b8f2};
+
+double readableStep(double target){
+ if(!std::isfinite(target)||target<=0)return 1.;
+ double magnitude=std::pow(10.,std::floor(std::log10(target)));
+ double best=magnitude,error=std::numeric_limits<double>::infinity();
+ for(double factor:{1.,2.,5.,10.}){double candidate=factor*magnitude;double difference=std::abs(std::log(candidate/target));if(difference<error){best=candidate;error=difference;}}
+ return best;
+}
+
+juce::String axisNumber(double value,double step){
+ int decimals=step<1.?juce::jlimit(0,4,(int)std::ceil(-std::log10(step))):0;
+ if(std::abs(value)<step*.0001)value=0;
+ return juce::String(value,decimals);
+}
+
+juce::String frequencyNumber(double hz,double interval){
+ if(hz>=1000.){int decimals=interval<10.?3:interval<100.?2:interval<1000.?1:0;auto label=juce::String(hz/1000.,decimals);if(decimals>0)label=label.trimCharactersAtEnd("0").trimCharactersAtEnd(".");return label+"k";}
+ int decimals=interval<1.?2:interval<10.?1:0;
+ auto label=juce::String(hz,decimals);return decimals>0?label.trimCharactersAtEnd("0").trimCharactersAtEnd("."):label;
+}
 
 }
 
@@ -85,17 +106,35 @@ float TransferFunctionPanel::valuePosition(double value,juce::Rectangle<float> a
 
 void TransferFunctionPanel::drawGrid(juce::Graphics& g,juce::Rectangle<float> area,bool phase)const{
  g.setColour(grid);g.drawRect(area,1.0f);
- for(double hz:{20.0,50.0,100.0,200.0,500.0,1000.0,2000.0,5000.0,10000.0,20000.0}){
+ auto index=phase?1u:2u;
+ double visibleOctaves=std::log2(maxHz/minHz)/zoomX[index];
+ int divisions=1;
+ for(int candidate:{1,2,3,6,12,24,48,96,192})if(area.getWidth()/(visibleOctaves*candidate)>=72.)divisions=candidate;
+ double firstU=PlotPresentation::coordinate(0.,panX[index],zoomX[index]);
+ double lastU=PlotPresentation::coordinate(1.,panX[index],zoomX[index]);
+ double firstOctave=std::log2(minHz/1000.)+firstU*std::log2(maxHz/minHz);
+ double lastOctave=std::log2(minHz/1000.)+lastU*std::log2(maxHz/minHz);
+ int first=(int)std::ceil(firstOctave*divisions-1.e-9),last=(int)std::floor(lastOctave*divisions+1.e-9);
+ for(int n=first;n<=last&&n<first+512;++n){
+  double hz=1000.*std::exp2((double)n/divisions);
+  if(hz<minHz||hz>maxHz)continue;
   auto x=frequencyPosition(hz,area,phase);if(!x||*x<area.getX()||*x>area.getRight())continue;
   g.setColour(grid);g.drawVerticalLine(juce::roundToInt(*x),area.getY(),area.getBottom());
-  g.setColour(text);g.setFont(10.0f);
-  auto label=hz>=1000.0?juce::String(hz/1000.0,0)+"k":juce::String(hz,0);
-  g.drawText(label,juce::roundToInt(*x)-22,juce::roundToInt(area.getBottom())+3,44,15,juce::Justification::centred);
+  double interval=hz*(std::exp2(1./(double)divisions)-1.);
+  g.setColour(axisBlue);g.setFont(10.0f);
+  g.drawText(frequencyNumber(hz,interval),juce::roundToInt(*x)-27,juce::roundToInt(area.getBottom())+3,54,15,juce::Justification::centred);
  }
- if(phase){
-  for(int value=-180;value<=180;value+=90){auto y=valuePosition(value,area,true);if(y<area.getY()||y>area.getBottom())continue;g.setColour(grid);g.drawHorizontalLine(juce::roundToInt(y),area.getX(),area.getRight());g.setColour(text);g.drawText(juce::String(value),juce::roundToInt(area.getX())-41,juce::roundToInt(y)-8,36,16,juce::Justification::centredRight);}
- }else{
-  for(int value=-60;value<=30;value+=15){auto y=valuePosition(value,area,false);if(y<area.getY()||y>area.getBottom())continue;g.setColour(grid);g.drawHorizontalLine(juce::roundToInt(y),area.getX(),area.getRight());g.setColour(text);g.drawText(juce::String(value),juce::roundToInt(area.getX())-41,juce::roundToInt(y)-8,36,16,juce::Justification::centredRight);}
+ double minimum=phase?-180.:minDb,maximum=phase?180.:maxDb,span=maximum-minimum,centre=(minimum+maximum)*.5;
+ double lower=centre+span*(panY[index]-.5/zoomY[index]),upper=centre+span*(panY[index]+.5/zoomY[index]);
+ double step=readableStep((upper-lower)*50./area.getHeight());
+ int start=(int)std::ceil(lower/step-1.e-9),end=(int)std::floor(upper/step+1.e-9);
+ for(int tick=start;tick<=end&&tick<start+512;++tick){
+  double value=tick*step;float y=valuePosition(value,area,phase);
+  if(y<area.getY()||y>area.getBottom())continue;
+  g.setColour(grid);g.drawHorizontalLine(juce::roundToInt(y),area.getX(),area.getRight());
+  g.setColour(axisBlue);g.setFont(10.0f);
+  g.drawText(axisNumber(value,step)+(phase?juce::String::fromUTF8("°"):juce::String{}),
+             juce::roundToInt(area.getX())-48,juce::roundToInt(y)-8,43,16,juce::Justification::centredRight);
  }
 }
 

@@ -45,8 +45,8 @@ void executeCommand(int id){
  case 503:{int found=0;for(size_t i=0;i<liveTFs.size();++i)if(measuring((int)i)){auto delay=liveTFs[i].findDelayMs();if(delay){micDelay[i].setValue(*delay);++found;}}status="Track general: "+String(found)+" de "+String((int)std::count(liveTFActive.begin(),liveTFActive.end(),true))+" TF con tiempo medido.";break;}
  case 514:{int n=source.getSelectedId()-1;if(!measuring(n)){status="Track: activa primero esta TF.";break;}auto delay=liveTFs[(size_t)n].findDelayMs();if(delay){micDelay[(size_t)n].setValue(*delay);status="Track TF "+String(n+1)+": "+String(*delay,2)+" ms.";}else status="Track: espera una referencia estable.";break;}
  case 509:addTF();break;
- case 510:avgActive=true;source.setSelectedId((int)micNames.size()+1,sendNotificationSync);status="AVG activado para las TF compatibles.";break;
- case 969:avgActive=!avgActive;status=avgActive?"AVG de TF activas habilitado":"AVG detenido";break;
+ case 510:showAverageDialog();break;
+ case 969:if(avgConfigured){avgActive=!avgActive;status=avgActive?"AVG de TF seleccionadas habilitado":"AVG detenido";}break;
  case 502:{int n=source.getSelectedId()-1;if(!measuring(n)){status="Find: inicia la TF con referencia M/R antes de medir el retardo.";break;}auto found=liveTFs[(size_t)n].findDelayMs();if(!found){status="Find: espera un promedio M/R estable; rango 0–150 ms.";break;}micDelay[(size_t)n].setValue(*found);status="TF "+String(n+1)+": retardo medido "+String(*found,2)+" ms; IR relativo a ese tiempo.";break;}
  case 507:stopInputs();break;
  case 508:stopInputs("Entradas en pausa. Pulsa Play para reabrir.");break;

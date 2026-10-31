@@ -18,23 +18,23 @@ int main(int argc,char** argv){
  {
   TransferFunctionPanel panel([]{return std::vector<TransferFunctionPanel::Trace>{};});
   panel.setSize(800,500);panel.setPlotLayout({0,0,800,230},{0,238,800,262});
-  std::array<double,3> pan{},zoomX{{1.,1.,1.}},zoomY{{1.,1.,1.}};
-  panel.setPlotTransforms(pan,pan,zoomX,zoomY);
+  std::array<double,3> panX{},panY{},zoomX{{1.,1.,1.}},zoomY{{1.,1.,1.}};
+  panel.setPlotTransforms(panX,panY,zoomX,zoomY);
   auto baseline=panel.createComponentSnapshot(panel.getLocalBounds());
   auto changes=[](const juce::Image& a,const juce::Image& b,juce::Rectangle<int> area){int count=0;for(int y=area.getY();y<area.getBottom();++y)for(int x=area.getX();x<area.getRight();++x)count+=a.getPixelAt(x,y)!=b.getPixelAt(x,y);return count;};
-  zoomY[1]=2.;panel.setPlotTransforms(pan,pan,zoomX,zoomY);
+  zoomY[1]=2.;panel.setPlotTransforms(panX,panY,zoomX,zoomY);
   auto phaseZoom=panel.createComponentSnapshot(panel.getLocalBounds());
   if(changes(baseline,phaseZoom,{0,0,800,230})==0||changes(baseline,phaseZoom,{0,238,800,262})!=0)return 85;
-  zoomY[1]=1.;zoomX[1]=2.;panel.setPlotTransforms(pan,pan,zoomX,zoomY);
+  zoomY[1]=1.;zoomX[1]=2.;panel.setPlotTransforms(panX,panY,zoomX,zoomY);
   auto phaseHorizontal=panel.createComponentSnapshot(panel.getLocalBounds());
   if(changes(baseline,phaseHorizontal,{0,0,800,230})==0||changes(baseline,phaseHorizontal,{0,238,800,262})!=0)return 88;
-  zoomX[1]=1.;zoomY[2]=2.;panel.setPlotTransforms(pan,pan,zoomX,zoomY);
+  zoomX[1]=1.;zoomY[2]=2.;panel.setPlotTransforms(panX,panY,zoomX,zoomY);
   auto magnitudeZoom=panel.createComponentSnapshot(panel.getLocalBounds());
   if(changes(baseline,magnitudeZoom,{0,0,800,230})!=0||changes(baseline,magnitudeZoom,{0,238,800,262})==0)return 86;
-  zoomY[2]=1.;zoomX[2]=2.;panel.setPlotTransforms(pan,pan,zoomX,zoomY);
+  zoomY[2]=1.;zoomX[2]=2.;panel.setPlotTransforms(panX,panY,zoomX,zoomY);
   auto magnitudeHorizontal=panel.createComponentSnapshot(panel.getLocalBounds());
   if(changes(baseline,magnitudeHorizontal,{0,0,800,230})!=0||changes(baseline,magnitudeHorizontal,{0,238,800,262})==0)return 89;
-  zoomX[2]=1.;panel.setPlotTransforms(pan,pan,zoomX,zoomY);panel.setPlotLayout({0,0,800,220},{0,238,800,262});
+  zoomX[2]=1.;panel.setPlotTransforms(panX,panY,zoomX,zoomY);panel.setPlotLayout({0,0,800,220},{0,238,800,262});
   auto phaseSize=panel.createComponentSnapshot(panel.getLocalBounds());
   if(changes(baseline,phaseSize,{0,0,800,230})==0||changes(baseline,phaseSize,{0,238,800,262})!=0)return 87;
   panel.setPlotLayout({0,0,800,230},{0,238,800,262});panel.setSelectedPlot(1);
@@ -42,10 +42,16 @@ int main(int argc,char** argv){
   panel.setSelectedPlot(2);
   auto magnitudeSelected=panel.createComponentSnapshot(panel.getLocalBounds());
   if(changes(phaseSelected,magnitudeSelected,{0,0,800,230})==0||changes(phaseSelected,magnitudeSelected,{0,238,800,262})==0)return 90;
+  panY[1]=2.;zoomX[1]=64.;zoomY[1]=16.;panel.setPlotTransforms(panX,panY,zoomX,zoomY);
+  auto extreme=panel.createComponentSnapshot(panel.getLocalBounds());
+  int gridLines=0,axisPixels=0;
+  for(int y=30;y<200;++y){auto pixel=extreme.getPixelAt(300,y);if(pixel.getRed()==0x2c&&pixel.getGreen()==0x31&&pixel.getBlue()==0x35)++gridLines;}
+  for(int y=30;y<200;++y)for(int x=10;x<48;++x){auto pixel=extreme.getPixelAt(x,y);if(pixel.getBlue()>180&&pixel.getGreen()>120&&pixel.getRed()<150)++axisPixels;}
+  if(gridLines<3||axisPixels<8||!write(extreme,"tf-grid-extreme-zoom.png"))return 91;
  }
  {
   WorkstationSurface surface;auto& station=surface.station;
-  for(auto size:{juce::Point<int>{1440,960},juce::Point<int>{1760,1080},juce::Point<int>{1120,900}}){surface.setSize(size.x,size.y);if(!station.previewRowDSPControls())return 84;if(!station.previewSurface(surface))return 38;station.previewCursor(2,.6);if((size.y>=960&&!station.previewFits())||!station.previewListAccessible()||!station.previewLeftHeader())return 7;if(!write(surface.createComponentSnapshot(surface.getLocalBounds()),"workspace-"+juce::String(size.x)+"x"+juce::String(size.y)+".png"))return 4;}
+  for(auto size:{juce::Point<int>{1440,960},juce::Point<int>{1760,1080},juce::Point<int>{1120,900}}){surface.setSize(size.x,size.y);if(!station.previewRowDSPControls()||!station.previewFFTSelection())return 84;if(!station.previewSurface(surface))return 38;station.previewCursor(2,.6);if((size.y>=960&&!station.previewFits())||!station.previewListAccessible()||!station.previewLeftHeader())return 7;if(!write(surface.createComponentSnapshot(surface.getLocalBounds()),"workspace-"+juce::String(size.x)+"x"+juce::String(size.y)+".png"))return 4;}
   surface.setSize(1440,960);station.previewAvgColour(juce::Colour(0xff00e5ed));if(!write(surface.createComponentSnapshot(surface.getLocalBounds()),"workspace-AVG-color-personalizado.png"))return 26;station.previewAvgColour(juce::Colour(0xffffac24));if(!station.previewPrincipal())return 19;station.previewMeterClock(true);if(!write(surface.createComponentSnapshot(surface.getLocalBounds()),"workspace-principal-reloj.png"))return 21;station.previewMeterClock(false);station.previewPrincipalConfig();if(!write(surface.createComponentSnapshot(surface.getLocalBounds()),"workspace-spl-config.png"))return 20;
   const char* pages[]={"display","alarmas","metricas","registro","compensacion"};for(int tab=1;tab<=5;++tab){station.previewPrincipalConfig(tab);if(!write(surface.createComponentSnapshot(surface.getLocalBounds()),"workspace-spl-"+juce::String(pages[tab-1])+".png"))return 23;}
   for(auto option:std::initializer_list<std::pair<int,const char*>>{{970,"loop"},{517,"pink"},{518,"sweep"}}){if(!station.previewSignalOptions(option.first)){std::cerr<<"Signal options failed: "<<option.first<<"\n";return 17;}if(!write(surface.createComponentSnapshot(surface.getLocalBounds()),"workspace-options-"+juce::String(option.second)+".png"))return 18;station.previewCloseSignalOptions();}
@@ -91,6 +97,15 @@ int main(int argc,char** argv){
  for(int i=0;i<4;++i){TFInputMeters meter;meter.setSize(580,48);meter.colour=colours[i];meter.channels[0].update(-2.,0,meter.settings);const double m[]={-18,-15,-10,-8,-16},r[]={-20,-17,-11,-1,-18};meter.channels[0].update(m[i],.2,meter.settings);meter.channels[1].update(r[i],0,meter.settings);auto image=meter.createComponentSnapshot(meter.getLocalBounds());g.drawImageAt(image,40,48+i*68);g.setColour(colours[i]);g.drawText("TF"+juce::String(i+1),6,48+i*68,32,20,juce::Justification::centredLeft);}
  if(!write(demo,"input-meters-DEMO.png"))return 5;
  {TFInputMeters custom;custom.setSize(580,48);custom.settings.orangeDbFS=-18;custom.settings.redDbFS=-3;custom.channels[0].update(-2.,0,custom.settings);custom.channels[0].update(-30.,.1,custom.settings);custom.channels[1].update(-36.,0,custom.settings);if(std::abs(custom.thresholdPosition(-18)-TFMeterChannel::position(-18,17,561))>.001||std::abs(custom.thresholdPosition(-3)-TFMeterChannel::position(-3,17,561))>.001)return 24;juce::Image example(juce::Image::RGB,640,110,true);juce::Graphics painter(example);painter.fillAll(juce::Colour(0xff192126));painter.setColour(juce::Colours::white);painter.setFont(14.f);painter.drawText("DEMO: umbrales personalizados -18 / -3 dBFS",12,8,610,24,juce::Justification::centredLeft);painter.drawImageAt(custom.createComponentSnapshot(custom.getLocalBounds()),30,44);if(!write(example,"input-meters-umbrales-personalizados-DEMO.png"))return 25;}
+
+ {WorkstationSurface surface;if(!surface.station.previewTraceRemoval())return 85;}
+ {std::vector<bool> accepted;juce::StringArray names{"MIC 1 / TF 1","MIC 2 / TF 2","MIC 3 / TF 3","MIC 4 / TF 4"};AverageTFDialog dialog(names,{true,false,true,false},[&](std::vector<bool> selection){accepted=std::move(selection);});
+   if(!write(dialog.createComponentSnapshot(dialog.getLocalBounds()),"create-average-tf.png"))return 89;
+   auto button=[&](juce::String name)->juce::Button*{for(auto* child:dialog.getChildren())if(auto* b=dynamic_cast<juce::Button*>(child))if(b->getButtonText()==name)return b;return nullptr;};
+   auto* all=button("Select All");auto* clear=button("Clear");auto* ok=button("OK");if(!all||!clear||!ok)return 86;
+   clear->onClick();for(auto* child:dialog.getChildren())if(auto* b=dynamic_cast<juce::ToggleButton*>(child))if(b->getToggleState())return 87;
+   all->onClick();ok->onClick();if(accepted!=std::vector<bool>({true,true,true,true}))return 88;
+ }
 
  std::cout<<"PASS B: real calibration dialog, 94/114/manual references, capture/confirm/cancel, persistence, explicit chain acknowledgement after generation change, metadata mismatch, clip rejection, source-only Play blocked offscreen; PASS R3: named saved capture origin, TF-only/hidden no-data cursor, AVG row/label/colour selection and colour double click; independent principal/sidebar/floating configurations; 2x2/1x4/4x1/1x1 pages; cell-only full-width grids with contextual pages, chevron navigation overlay without reflow, menu selection closes and T returns TF, phase/magnitude equal, startup/review panels rendered; primary meter visible by default; TFs+AVG remain scroll-accessible; all eight M/R double-clicks open meter options; card/colour keep TF settings; routing unchanged; readout preserves distinct sources; four left tabs equal; anchored Loop/Pink/Sweep toggle and preserve state/graph bounds; offscreen only, no audio\n";return 0;
 }

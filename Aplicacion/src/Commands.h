@@ -66,7 +66,7 @@ inline const std::vector<Command>& catalog(){
   {507,"stop",{"Detener todos","Stop all"},"",4,{"",""},Capability::Ready,{"Cierra entradas y borra TF en directo","Closes inputs and clears live TF"}},
   {508,"pause",{"Pausar todos","Pause all"},"",4,{"",""},Capability::Ready,{"Cierra entradas y borra TF en directo","Closes inputs and clears live TF"}},
   {509,"tf.create",{"Crear TF","Create TF"},"",4,{"",""},Capability::Ready,{"Añade una TF independiente","Adds an independent TF"}},
-  {510,"average.create",{"Crear promedio","Create average"},"",4,{"",""},Capability::Ready,{"Activa AVG de las TF compatibles","Enables average of compatible TFs"}},
+  {510,"average.create",{"Crear promedio","Create average"},"",4,{"",""},Capability::Ready,{"Abre la selección de micrófonos para AVG","Opens microphone selection for AVG"}},
   {511,"timer",{"Temporizador","Timer"},"",4,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
   {512,"internal.loop",{"Loop interno","Internal loop"},"",4,{"",""},Capability::Ready,{"Usa el generador rosa como referencia virtual al iniciar Pink; no emite audio al activar este botón","Uses pink generator as virtual reference when Pink starts; this button alone emits no audio"}},
   {513,"gain.track",{"Seguimiento de ganancia","Gain tracking"},"",4,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
