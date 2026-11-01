@@ -59,7 +59,7 @@ inline const std::vector<Command>& catalog(){
   {421,"view.spectrogram",{"Espectrograma","Spectrogram"},"",3,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
   {422,"view.rt60",{"RT60 por bandas","RT60 by band"},"",3,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
   {502,"measurement.find",{"Buscar retardo TF","Find TF delay"},"L / F",4,{"",""},Capability::Ready,{"Estima el retardo de la TF M/R activa hasta 150 ms","Estimates active M/R TF delay up to 150 ms"}},
-  {503,"measurement.track.all",{"Track general / todas las TF","Track all project TFs"},"",4,{"",""},Capability::Ready,{"Busca el tiempo de todas las TF activas","Finds delay for every active TF"}},
+  {503,"measurement.track.all",{"Track general / todas las TF","Track all project TFs"},"",4,{"",""},Capability::Ready,{"Activa o detiene el seguimiento continuo de las TF visibles","Toggles continuous delay tracking for visible TFs"}},
   {504,"generator.pink",{"Ruido rosa","Pink noise"},"G",4,{"",""},Capability::Ready,{"Emite por la salida configurada al nivel ajustado; con Int.Loop usa la misma señal como referencia virtual","Outputs on the configured channel at the selected level; with Int.Loop the same signal is the virtual reference"}},
   {505,"generator.sweep",{"Sweep","Sweep"},"S",4,{"",""},Capability::Ready,{"Emite un barrido logarítmico por la salida configurada","Outputs a logarithmic sweep on the configured channel"}},
   {526,"measurement.averager.reset",{"Refrescar TF en directo","Refresh live TF"},"V",4,{"",""},Capability::Ready,{"Vacía muestras pendientes y reinicia el promedio M/R; conserva capturas guardadas","Discards pending samples and resets M/R averaging; keeps saved captures"}},
@@ -71,7 +71,7 @@ inline const std::vector<Command>& catalog(){
   {511,"timer",{"Temporizador","Timer"},"",4,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
   {512,"internal.loop",{"Loop interno","Internal loop"},"",4,{"",""},Capability::Ready,{"Usa el generador rosa como referencia virtual al iniciar Pink; no emite audio al activar este botón","Uses pink generator as virtual reference when Pink starts; this button alone emits no audio"}},
   {513,"gain.track",{"Seguimiento de ganancia","Gain tracking"},"",4,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
-  {514,"track.tf",{"Track individual","Track individual TF"},"",4,{"",""},Capability::Ready,{"Busca el tiempo de esta TF activa","Finds delay for this active TF"}},
+  {514,"track.tf",{"Track individual","Track individual TF"},"",4,{"",""},Capability::Ready,{"Activa o detiene el seguimiento continuo de esta TF","Toggles continuous delay tracking for this TF"}},
   {515,"start.tf",{"Iniciar TF","Start TF"},"",4,{"",""},Capability::Ready,{"Mide magnitud, fase y coherencia M/R de esta TF","Measures this TF's live M/R magnitude, phase and coherence"}},
   {516,"find.advanced",{"Buscador avanzado","Advanced delay finder"},"",4,{"",""},Capability::Pending,{"Motor de audio pendiente","Audio engine pending"}},
   {517,"pink.settings",{"Opciones de ruido rosa","Pink noise options"},"",4,{"",""},Capability::Ready,{"Panel sin generacion; parametros sin motor deshabilitados","Panel only; engine parameters disabled"}},
@@ -182,7 +182,7 @@ inline constexpr std::array<int,4> tfBindings{{502,514,513,515}};
 inline constexpr std::array<std::array<int,2>,3> extraMenus{{{{4,103}},{{1,203}},{{5,409}}}};
 struct Context {
  bool mainMeterVisible=true,meterClock=false,meterMax=false,meterLeq=false;bool libraryReady=true,libraryTF=true;int librarySelection=0,libraryFolders=0,libraryCaptures=0,libraryView=1;bool sidebarMeters=false,metersVisible=false,allowNoSmoothing=true;
- int mode=0,selectedTF=1,tfCount=4,measurementView=0;bool drawer=false,left=true,right=true,ir=true,coherence=true,linked=true,polarity=false,bypass=false,internalLoop=false,pinkActive=false,sweepActive=false,avgActive=false;
+ int mode=0,selectedTF=1,tfCount=4,measurementView=0;bool drawer=false,left=true,right=true,ir=true,coherence=true,linked=true,polarity=false,bypass=false,internalLoop=false,pinkActive=false,sweepActive=false,avgActive=false;std::vector<bool> trackingTF;
  std::array<int,2> graphTypes{{1,2}};int irScale=0;
  std::array<int,2> smoothing{{1,1}};Language language=Language::ES;
 };
@@ -202,6 +202,8 @@ inline State state(const Command& c,const Context& x){
  if(c.id==512){s.enabled=x.mode==0;s.checked=x.internalLoop;if(!s.enabled)s.reason={"Disponible en Medición","Available in Measurement"};}
  if(c.id==504){s.enabled=x.mode==0;s.checked=x.pinkActive;if(!s.enabled)s.reason={"Disponible en Medición","Available in Measurement"};}
  if(c.id==505){s.enabled=x.mode==0;s.checked=x.sweepActive;if(!s.enabled)s.reason={"Disponible en Medición","Available in Measurement"};}
+ if(c.id==503)s.checked=std::any_of(x.trackingTF.begin(),x.trackingTF.end(),[](bool on){return on;});
+ if(c.id==514&&x.selectedTF>0&&(size_t)x.selectedTF<=x.trackingTF.size())s.checked=x.trackingTF[(size_t)x.selectedTF-1];
  if(c.id==969){s.enabled=x.mode==0;s.checked=x.avgActive;}
  if(c.id==526&&x.mode!=0){s.enabled=false;s.reason={"Disponible en Medición","Available in Measurement"};}
  if(c.id==203)s.checked=x.metersVisible;

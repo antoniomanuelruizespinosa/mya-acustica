@@ -89,6 +89,9 @@ class Estimator {
   rebuildSmoothing();rebuildImpulse();++revisionNumber;
  }
 public:
+ struct DelaySnapshot {int fftSize=0;double sampleRate=0;std::vector<Complex> transfer;};
+ std::optional<DelaySnapshot> delaySnapshot()const{if(!readyFlag||rateHz<=0)return {};DelaySnapshot snapshot;snapshot.fftSize=activeSize;snapshot.sampleRate=rateHz;snapshot.transfer.assign(transfer.begin(),transfer.begin()+activeBins());return snapshot;}
+ static std::optional<double> findDelayMs(const DelaySnapshot& snapshot){if(snapshot.fftSize<128||snapshot.fftSize>maxFftSize||snapshot.sampleRate<=0||snapshot.transfer.size()!=(size_t)(snapshot.fftSize/2+1))return {};auto spectrum=std::make_unique<std::array<Complex,maxFftSize>>();for(int k=1;k<=snapshot.fftSize/2;++k){auto h=snapshot.transfer[(size_t)k];(*spectrum)[(size_t)k]=h;if(k<snapshot.fftSize/2)(*spectrum)[(size_t)(snapshot.fftSize-k)]=std::conj(h);}fft(*spectrum,snapshot.fftSize,true);int limit=std::min(snapshot.fftSize/2-1,(int)std::round(snapshot.sampleRate*.15));int best=0;double peak=0,energy=0;for(int i=0;i<=limit;++i){double value=std::abs((*spectrum)[(size_t)i].real());energy+=value*value;if(value>peak){peak=value;best=i;}}if(peak<1.e-9||peak<5.*std::sqrt(energy/(limit+1)))return {};return 1000.*best/snapshot.sampleRate;}
  void setFFTSize(int value){if(value<128||value>maxFftSize||(value&(value-1))!=0||activeSize==value)return;activeSize=value;reset();}
  int fftSizeSamples()const{return activeSize;}
  void reset(){filled=averages=0;rateHz=0;lastSequence=0;readyFlag=false;sweepMeasurement=false;pendingAlignmentReset=false;previousRef.fill(0);cross.fill({});refPower.fill(0);micPower.fill(0);result.fill({});transfer.fill({});impulse.fill(0);envelope.fill(0);multi->reset();++revisionNumber;}
@@ -103,14 +106,7 @@ public:
  void setAverageDepth(int depth){if(depth<1||depth>64||averageDepth==depth)return;averageDepth=depth;readyFlag=averages>=averageDepth;multi->setAverageDepth(depth);}
  int averaging()const{return averageDepth;}
  double delay()const{return delayMs;}
- std::optional<double> findDelayMs()const{
-  if(!readyFlag||rateHz<=0)return {};
-  std::array<Complex,maxFftSize> spectrum{};
-  for(int k=1;k<activeBins();++k){auto h=transfer[(size_t)k];spectrum[(size_t)k]=h;if(k<activeSize/2)spectrum[(size_t)(activeSize-k)]=std::conj(h);}
-  fft(spectrum,activeSize,true);int limit=std::min(activeSize/2-1,(int)std::round(rateHz*.15));int best=0;double peak=0,energy=0;for(int i=0;i<=limit;++i){double value=std::abs(spectrum[(size_t)i].real());energy+=value*value;if(value>peak){peak=value;best=i;}}
-  if(peak<1.e-9||peak<5.*std::sqrt(energy/(limit+1)))return {};
-  return 1000.*best/rateHz;
- }
+ std::optional<double> findDelayMs()const{auto snapshot=delaySnapshot();return snapshot?findDelayMs(*snapshot):std::nullopt;}
  std::optional<double> impulseAt(double timeMs,bool useEnvelope=false)const{
   if(!readyFlag||rateHz<=0||!std::isfinite(timeMs)||std::abs(timeMs)>40.)return {};
   int sample=(int)std::round(timeMs*rateHz/1000.);if(std::abs(sample)>=activeSize/2)return {};

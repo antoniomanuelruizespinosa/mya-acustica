@@ -140,6 +140,7 @@ public:
  bool ready() const{return usable;}
  const juce::String& lastError() const{return error;}
  juce::File dataFile(const juce::String& id) const{auto* n=find(id);return n?file(data,*n):juce::File{};}
+ juce::File folderFile(const juce::String& id)const{auto* n=find(id);return n&&n->kind==Kind::Folder?file(data,*n):juce::File{};}
  bool reload(){
   Lock lock(root.getFullPathName());if(!lock.entered){error="Biblioteca ocupada por otra instancia";return false;}
   usable=false;error.clear();if(!root.createDirectory().wasOk()||root.isSymbolicLink()){error="No se puede abrir la biblioteca";return false;}
@@ -192,7 +193,7 @@ public:
   }
   return moves.empty()?true:transaction(next,moves);
  }
- juce::String capture(const juce::var& payload,juce::String name,juce::String colour,juce::String legacyKey={},bool adopting=false){
+ juce::String capture(const juce::var& payload,juce::String name,juce::String colour,juce::String legacyKey={},bool adopting=false,juce::String destination={}){
   if(!ready()){error=juce::String::fromUTF8("Biblioteca no disponible");return {};}
   if(!payload.isObject()||int(payload["schema"])!=1||!payload["samples"].isArray()||payload["samples"].getArray()->size()<2){error=juce::String::fromUTF8("Captura no válida");return {};}
   bool synthetic=payload["synthetic"].isBool()&&bool(payload["synthetic"]);
@@ -206,11 +207,14 @@ public:
    double frequency=double(point["frequencyHz"]),real=double(point["real"]),imaginary=double(point["imaginary"]);
    if(!std::isfinite(frequency)||frequency<=previous||!std::isfinite(real)||!std::isfinite(imaginary)){error=juce::String::fromUTF8("Datos TF no válidos");return {};}previous=frequency;
   }
-  auto next=data;Node n;n.id=uid();n.parent=data.active;n.kind=sweep?Kind::Sweep:Kind::SnapshotTF;n.name=name.trim().isEmpty()?"Captura":name.trim();n.colour=colour;n.diskName=n.id+".json";n.method=synthetic?"synthetic-demo":payload["acquisitionMethod"].toString();if(n.method.isEmpty())n.method="live-transfer";n.origin=synthetic?"original-demo":n.method=="vector-sum"?"derived":"measured";n.legacyKey=legacyKey;next.nodes.push_back(n);
+  if(destination.isEmpty())destination=data.active;auto* target=find(destination);if(!target||target->kind!=Kind::Folder){error="Selecciona una carpeta de destino válida";return {};}auto next=data;Node n;n.id=uid();n.parent=destination;n.kind=sweep?Kind::Sweep:Kind::SnapshotTF;n.name=name.trim().isEmpty()?"Captura":name.trim();n.colour=colour;n.diskName=n.id+".json";n.method=synthetic?"synthetic-demo":payload["acquisitionMethod"].toString();if(n.method.isEmpty())n.method="live-transfer";n.origin=synthetic?"original-demo":n.method=="vector-sum"?"derived":"measured";n.legacyKey=legacyKey;next.nodes.push_back(n);
   auto stored=payload.clone();if(!adopting){stored.getDynamicObject()->setProperty("traceRole","individual");stored.getDynamicObject()->setProperty("measurementId",n.id);stored.getDynamicObject()->setProperty("libraryId",data.id);}
   auto staged=root.getChildFile("Pendientes").getChildFile(n.diskName);if(!staged.getParentDirectory().createDirectory().wasOk()||!staged.replaceWithText(adopting?juce::File(legacyKey).loadFileAsString():juce::JSON::toString(stored))){error="No se pudo escribir la captura";return {};}
   return transaction(next,{{staged,file(next,n)}})?n.id:juce::String{};
  }
+ juce::String duplicate(const juce::String& id){auto* source=find(id);if(!source||(source->kind!=Kind::SnapshotTF&&source->kind!=Kind::Sweep)){error="Selecciona una traza o barrido";return {};}auto payload=juce::JSON::parse(dataFile(id));if(!payload.isObject()){error="No se puede leer la traza";return {};}return capture(payload,source->name+" copia",source->colour,{},false,source->parent);}
+ bool remove(const juce::String& id){auto* source=find(id);if(!source||source->kind==Kind::Folder){error="Selecciona una traza o barrido";return false;}for(const auto& n:data.nodes)if(n.derivedFrom==id){error="Esta traza tiene capturas derivadas; consérvala";return false;}State next=data;next.nodes.erase(std::remove_if(next.nodes.begin(),next.nodes.end(),[&](const Node& n){return n.id==id;}),next.nodes.end());auto pending=root.getChildFile("Pendientes").getChildFile(id+"-eliminado.json");if(!transaction(next,{{file(data,*source),pending}}))return false;if(!pending.deleteFile()){error="Traza retirada de la sesión; quedó una copia recuperable";}return true;}
+ juce::File exportTrace(const juce::String& id,const juce::String& destination){auto* source=find(id);auto folder=folderFile(destination);if(!source||source->kind==Kind::Folder||folder==juce::File{}){error="Selecciona una traza y una carpeta";return {};}auto out=folder.getChildFile("Exportaciones");if(!out.createDirectory().wasOk()){error="No se pudo crear Exportaciones";return {};}auto base=juce::File::createLegalFileName(source->name).substring(0,50);auto target=out.getChildFile(base+".json");for(int i=2;target.exists();++i)target=out.getChildFile(base+" "+juce::String(i)+".json");if(!dataFile(id).copyFileTo(target)){error="No se pudo exportar la traza";return {};}return target;}
  int adoptLegacy(const juce::File& folder){
   if(!ready())return 0;int count=0;
   for(const auto& f:folder.findChildFiles(juce::File::findFiles,false,"*.json")){

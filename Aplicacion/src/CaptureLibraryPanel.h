@@ -3,10 +3,20 @@
 #include "Commands.h"
 #include "CompactLayout.h"
 #include <map>
+#include <cmath>
+#include <cstdlib>
 #include <juce_gui_extra/juce_gui_extra.h>
 
 class CaptureLibraryPanel : public juce::Component, public juce::DragAndDropContainer, private juce::AsyncUpdater {
  using Kind=CaptureLibrary::Kind;
+ class PaletteGrid : public juce::Component {
+  std::function<void(juce::Colour)> choose;juce::Colour current;
+ public:
+  static constexpr std::array<juce::uint32,12> colours{{0xff54ee22,0xff00e5ed,0xff4d88ff,0xfff03baf,0xffffe33b,0xffffac24,0xffd45cff,0xff25c599,0xffe95454,0xffa8df56,0xfff2f4f8,0xff9ca8b8}};
+  PaletteGrid(juce::Colour selected,std::function<void(juce::Colour)> callback):choose(std::move(callback)),current(selected){setSize(204,150);}
+  void paint(juce::Graphics& g)override{g.fillAll(juce::Colour(0xff17232b));g.setColour(juce::Colours::white);g.setFont(12.f);g.drawText("Color de traza",8,4,getWidth()-16,20,juce::Justification::centredLeft);for(size_t i=0;i<colours.size();++i){auto area=juce::Rectangle<float>{8.f+49.f*(float)(i%4),30.f+38.f*(float)(i/4),42.f,32.f};auto c=juce::Colour(colours[i]);g.setColour(c);g.fillRoundedRectangle(area.reduced(2.f),4.f);g.setColour(current==c?juce::Colours::white:juce::Colour(0xff40515d));g.drawRoundedRectangle(area.reduced(1.f),4.f,current==c?2.5f:1.f);}}
+  void mouseUp(const juce::MouseEvent& e)override{int x=(e.x-8)/49,y=(e.y-30)/38;if(e.x<8||e.y<30||x<0||x>=4||y<0||y>=3)return;auto picked=juce::Colour(colours[(size_t)(y*4+x)]);if(choose)choose(picked);if(auto* box=findParentComponentOfClass<juce::CallOutBox>())box->dismiss();}
+ };
  struct Item : public juce::TreeViewItem {
   CaptureLibraryPanel& panel;juce::String id;bool folder=false;
   Item(CaptureLibraryPanel& p,juce::String key,bool isFolder):panel(p),id(std::move(key)),folder(isFolder){}
@@ -23,7 +33,7 @@ class CaptureLibraryPanel : public juce::Component, public juce::DragAndDropCont
    if(!folder){g.setColour(juce::Colour(0xffa9bac8));g.setFont(9.f);g.drawText(n->kind==Kind::SnapshotTF?(n->role=="average"?"AVG":"TF"):n->kind==Kind::Sweep?"SWP":n->kind==Kind::ImpulseResponse?"IR":"RTA",juce::jmax(21,w-31),0,29,h,juce::Justification::centredRight);}
   }
   void itemClicked(const juce::MouseEvent& e) override{
-   if(e.mods.isPopupMenu()){panel.menu();return;}
+   if(e.mods.isPopupMenu()){if(folder)panel.menu();else panel.traceMenu(id,e.getScreenPosition());return;}
    if(!folder&&e.x<19){auto* n=panel.library.find(id);if(n){auto key=id;bool visible=!n->visible;juce::Component::SafePointer<CaptureLibraryPanel> safe(&panel);juce::MessageManager::callAsync([safe,key,visible]{if(safe)safe->finish(safe->library.setVisibility({key},visible));});}return;}
    if(!folder&&panel.onFront)panel.onFront(id);
   }
@@ -47,6 +57,7 @@ class CaptureLibraryPanel : public juce::Component, public juce::DragAndDropCont
  juce::Label destination,empty;juce::TextEditor search;
  juce::TextButton tracesTab{"TF+AVG"},irTab{"Barridos"};juce::TextButton newProject{"Proyecto +"},newFolder{"Carpeta +"};juce::TextButton more{juce::String::fromUTF8("≡")},info{"Info"},remove{"Eliminar"};
  std::map<juce::String,bool> openChanges;
+ std::unique_ptr<juce::FileChooser> importChooser;
  juce::Button* captureControl=nullptr;
  bool rebuilding=false;MyaCommands::MeterSequence meterSequence;
  void handleAsyncUpdate() override{
@@ -70,6 +81,13 @@ class CaptureLibraryPanel : public juce::Component, public juce::DragAndDropCont
  juce::String folderForNew() const{
   auto ids=selected();if(ids.size()!=1)return {};auto* n=library.find(ids[0]);if(!n||n->kind!=Kind::Folder)return {};while(n->parent.isNotEmpty()){n=library.find(n->parent);if(!n||n->kind!=Kind::Folder)return {};}return n->id;
  }
+ juce::String destinationForAction(const juce::String& trace={})const{for(const auto& id:selected())if(auto* n=library.find(id))if(n->kind==Kind::Folder)return id;if(trace.isNotEmpty())if(auto* n=library.find(trace))return n->parent;return library.state().active;}
+ static std::optional<double> csvNumber(const juce::String& token){auto value=token.trim().toStdString();if(value.empty())return {};char* end=nullptr;double result=std::strtod(value.c_str(),&end);return end!=value.c_str()&&*end=='\0'&&std::isfinite(result)?std::optional<double>(result):std::nullopt;}
+ static juce::var csvPayload(const juce::String& content){auto lines=juce::StringArray::fromLines(content);juce::Array<juce::var> samples;int frequency=0,real=1,imaginary=2,coherence=-1,magnitude=-1,phase=-1;bool headerChecked=false;for(auto line:lines){line=line.trim();if(line.isEmpty()||line.startsWithChar('#'))continue;auto cells=juce::StringArray::fromTokens(line.containsChar(';')?line.replaceCharacter(';',','):line,",","");cells.trim();if(!headerChecked){headerChecked=true;if(cells.isEmpty())return {};if(!csvNumber(cells[0])){frequency=real=imaginary=-1;for(int i=0;i<cells.size();++i){auto label=cells[i].toLowerCase().removeCharacters(" _-()[]");if(label=="frequencyhz"||label=="frequency"||label=="freq"||label=="hz")frequency=i;else if(label=="real")real=i;else if(label=="imaginary"||label=="imag")imaginary=i;else if(label=="magnitudedb"||label=="magnitud"||label=="magnitude")magnitude=i;else if(label=="phasedegrees"||label=="phase"||label=="fase")phase=i;else if(label=="coherence"||label=="coherencia")coherence=i;}if(frequency<0||((real<0||imaginary<0)&&(magnitude<0||phase<0)))return {};continue;}}auto number=[&](int index)->std::optional<double>{return index>=0&&index<cells.size()?csvNumber(cells[index]):std::nullopt;};auto hz=number(frequency);auto re=number(real),im=number(imaginary);if(!hz)return {};if(!re||!im){auto db=number(magnitude),degrees=number(phase);if(!db||!degrees)return {};double amplitude=std::pow(10.,*db/20.),angle=*degrees*juce::MathConstants<double>::pi/180.;re=amplitude*std::cos(angle);im=amplitude*std::sin(angle);}auto* point=new juce::DynamicObject();point->setProperty("frequencyHz",*hz);point->setProperty("real",*re);point->setProperty("imaginary",*im);if(auto c=number(coherence))point->setProperty("coherence",*c);samples.add(juce::var(point));}if(samples.size()<2)return {};auto* payload=new juce::DynamicObject();payload->setProperty("schema",1);payload->setProperty("acquisitionMethod","import-csv");payload->setProperty("samples",samples);return juce::var(payload);}
+ void importTrace(){auto destination=destinationForAction();auto folder=library.folderFile(destination);if(folder==juce::File{}){if(onError)onError("Selecciona una carpeta de destino");return;}importChooser=std::make_unique<juce::FileChooser>("Importar traza JSON o CSV",folder,"*.json;*.csv");juce::Component::SafePointer<CaptureLibraryPanel> safe(this);importChooser->launchAsync(juce::FileBrowserComponent::openMode|juce::FileBrowserComponent::canSelectFiles,[safe,destination](const juce::FileChooser& chooser){if(!safe)return;auto file=chooser.getResult();if(file.existsAsFile()){auto payload=file.hasFileExtension(".csv")?csvPayload(file.loadFileAsString()):juce::JSON::parse(file);auto id=safe->library.capture(payload,file.getFileNameWithoutExtension(),"ff54ee22",{},false,destination);safe->finish(id.isNotEmpty());}juce::MessageManager::callAsync([safe]{if(safe)safe->importChooser.reset();});});}
+ void exportTrace(const juce::String& id){auto target=library.exportTrace(id,destinationForAction(id));if(target==juce::File{}){if(onError)onError(library.lastError());return;}juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::InfoIcon,"Traza exportada",target.getFullPathName(),"Aceptar");}
+ void showPalette(const juce::String& id,juce::Point<int> screen){auto* node=library.find(id);if(!node)return;juce::Component::SafePointer<CaptureLibraryPanel> safe(this);auto grid=std::make_unique<PaletteGrid>(juce::Colour::fromString(node->colour),[safe,id](juce::Colour colour){if(safe)safe->finish(safe->library.setColour({id},colour.toString()));});juce::CallOutBox::launchAsynchronously(std::move(grid),{screen.x,screen.y,1,1},this);}
+ void traceMenu(const juce::String& id,juce::Point<int> screen){auto* node=library.find(id);if(!node||node->kind==Kind::Folder)return;juce::PopupMenu menu;menu.addItem(1,"Renombrar");menu.addItem(2,"Duplicar");menu.addItem(3,"Cambiar color...");menu.addItem(4,"Exportar datos");menu.addSeparator();menu.addItem(5,"Eliminar");juce::Component::SafePointer<CaptureLibraryPanel> safe(this);menu.showMenuAsync(juce::PopupMenu::Options().withTargetScreenArea({screen.x,screen.y,1,1}),[safe,id,screen](int action){if(!safe)return;auto* current=safe->library.find(id);if(!current)return;switch(action){case 1:safe->askName("Renombrar",current->name,[safe,id](juce::String name){if(safe)safe->finish(safe->onRename?safe->onRename(id,name):safe->library.rename(id,name));});break;case 2:safe->finish(safe->library.duplicate(id).isNotEmpty());break;case 3:safe->showPalette(id,screen);break;case 4:safe->exportTrace(id);break;case 5:safe->finish(safe->library.remove(id));break;default:break;}});}
  void askName(juce::String title,juce::String initial,std::function<void(juce::String)> apply){
   auto* box=new juce::AlertWindow(title,"Escribe un nombre:",juce::MessageBoxIconType::NoIcon);box->addTextEditor("name",initial,"Nombre");if(auto* editor=box->getTextEditor("name")){editor->setColour(juce::TextEditor::backgroundColourId,juce::Colour(0xfff2f7fa));editor->setColour(juce::TextEditor::textColourId,juce::Colour(0xff17222b));editor->setColour(juce::TextEditor::outlineColourId,juce::Colour(0xff00c9d8));}box->addButton("Aceptar",1,juce::KeyPress(juce::KeyPress::returnKey));box->addButton("Cancelar",0,juce::KeyPress(juce::KeyPress::escapeKey));
   juce::Component::SafePointer<CaptureLibraryPanel> safe(this);
@@ -129,12 +147,7 @@ public:
   empty.setText(!library.ready()?library.lastError():count==0?(library.state().view==Kind::SnapshotTF?"Sin capturas TF.":library.state().view==Kind::Sweep?"Sin barridos guardados.":"Sin datos guardados."):juce::String{},juce::dontSendNotification);empty.setVisible(false);tree.setTooltip(empty.getText());info.setEnabled(selection.size()==1);resized();repaint();
  }
  void finish(bool success){if(!success&&onError)onError(library.lastError());refresh();if(onChange)onChange();if(onSelection)onSelection();}
- void menu(){if(!onCommand)return;juce::PopupMenu m;
-  for(int id:{913,914,912,900,901,902,903,904,905,906,907,908,909,910,911}){
-   auto* c=MyaCommands::find(id);auto x=context();auto s=MyaCommands::state(*c,x);m.addItem(id,juce::String::fromUTF8(c->name.es.c_str()),s.enabled,s.checked);
-  }
-  juce::Component::SafePointer<CaptureLibraryPanel> safe(this);m.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(&more),[safe](int id){if(safe&&id&&safe->onCommand)safe->onCommand(id);});
- }
+ void menu(){juce::PopupMenu menu;auto ids=selected();bool canExport=ids.size()==1&&library.find(ids[0])&&library.find(ids[0])->kind!=Kind::Folder;menu.addItem(1,"Importar traza (JSON/CSV)",library.ready());menu.addItem(2,"Exportar traza seleccionada",canExport);menu.addSeparator();menu.addItem(3,"Crear nuevo proyecto",library.ready());menu.addItem(4,"Crear nueva carpeta",library.ready()&&folderForNew().isNotEmpty());juce::Component::SafePointer<CaptureLibraryPanel> safe(this);menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(&more),[safe,ids](int choice){if(!safe)return;switch(choice){case 1:safe->importTrace();break;case 2:if(ids.size()==1)safe->exportTrace(ids[0]);break;case 3:safe->command(900);break;case 4:safe->command(901);break;default:break;}});}
  MyaCommands::Context context() const{
   MyaCommands::Context x;x.libraryReady=library.ready();x.libraryTF=library.state().view==Kind::SnapshotTF;auto ids=selected();x.librarySelection=(int)ids.size();
   for(const auto& id:ids){auto* n=library.find(id);if(n&&n->kind==Kind::Folder)++x.libraryFolders;else if(n)++x.libraryCaptures;}return x;
