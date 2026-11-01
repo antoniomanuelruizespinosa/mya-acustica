@@ -25,6 +25,6 @@ class ManageConfigurationsWindow : public juce::DocumentWindow {
   void resized()override{int w=getWidth();heading.setBounds(16,12,w-32,25);name.setBounds(16,50,w-165,28);store.setBounds(w-140,50,124,28);saved.setBounds(16,94,w-32,28);exportButton.setBounds(16,135,132,28);restoreButton.setBounds(160,135,132,28);close.setBounds(w-108,135,92,28);feedback.setBounds(16,181,w-32,28);}
  };
 public:
- ManageConfigurationsWindow(std::function<juce::StringArray()> available,std::function<bool(juce::String)> save,std::function<bool(juce::String,const juce::File&)> exportTo,std::function<bool(juce::String)> restore):juce::DocumentWindow("Manage Configurations...",juce::Colour(0xff20272c),juce::DocumentWindow::closeButton){setUsingNativeTitleBar(true);setAlwaysOnTop(true);setContentOwned(new Body(std::move(available),std::move(save),std::move(exportTo),std::move(restore),[this]{setVisible(false);}),true);setResizable(false,false);centreWithSize(480,240);}
+ ManageConfigurationsWindow(std::function<juce::StringArray()> available,std::function<bool(juce::String)> save,std::function<bool(juce::String,const juce::File&)> exportTo,std::function<bool(juce::String)> restore):juce::DocumentWindow("Manage Configurations...",juce::Colour(0xff20272c),juce::DocumentWindow::closeButton){setUsingNativeTitleBar(true);setContentOwned(new Body(std::move(available),std::move(save),std::move(exportTo),std::move(restore),[this]{setVisible(false);}),true);setResizable(false,false);centreWithSize(480,240);}
  void closeButtonPressed()override{setVisible(false);}
 };

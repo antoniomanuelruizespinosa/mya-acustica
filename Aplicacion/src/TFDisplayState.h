@@ -6,7 +6,7 @@
 #include <type_traits>
 struct TFDisplayState {
  int frequencyGrid=1;bool showIR=true,linkPhaseMag=true,linkFrequencyZoom=false,allowNone=true,coherenceOn=true,coherenceSquared=true,coherenceFollowTrace=false;
- double foregroundWidth=2.,backgroundWidth=1.25,magMin=-18.,magMax=18.,magGrid=3.,magScroll=3.,magZoom=6.,phaseMin=-180.,phaseMax=180.,phaseGrid=30.,phaseScroll=30.,phaseZoom=60.,coherenceThreshold=0.,coherenceHeight=.25,coherenceWidth=1.;
+ double foregroundWidth=2.,backgroundWidth=1.25,magMin=-18.,magMax=15.,magGrid=3.,magScroll=3.,magZoom=6.,phaseMin=-180.,phaseMax=180.,phaseGrid=30.,phaseScroll=30.,phaseZoom=60.,coherenceThreshold=0.,coherenceHeight=.25,coherenceWidth=1.;
  bool valid() const{
   for(double v:{foregroundWidth,backgroundWidth,magMin,magMax,magGrid,magScroll,magZoom,phaseMin,phaseMax,phaseGrid,phaseScroll,phaseZoom,coherenceThreshold,coherenceHeight,coherenceWidth})if(!std::isfinite(v))return false;
   return frequencyGrid>=1&&frequencyGrid<=4&&foregroundWidth>=.5&&foregroundWidth<=8&&backgroundWidth>=.5&&backgroundWidth<=8&&magMin>=-200&&magMax<=200&&magMax>magMin&&phaseMin>=-2000&&phaseMax<=2000&&phaseMax>phaseMin&&magGrid>=.5&&magGrid<=100&&phaseGrid>=5&&phaseGrid<=360&&magScroll>0&&magScroll<=100&&phaseScroll>0&&phaseScroll<=360&&magZoom>0&&magZoom<=100&&phaseZoom>0&&phaseZoom<=360&&coherenceThreshold>=0&&coherenceThreshold<=100&&(coherenceHeight==.25||coherenceHeight==.5)&&coherenceWidth>=.5&&coherenceWidth<=8;

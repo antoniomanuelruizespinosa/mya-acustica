@@ -22,7 +22,7 @@ int main(){
  }
  for(int w:{680,1000})for(int h:{80,200,400}){auto p=plot(w,h);assert(p.x>=0&&p.y>=20&&p.x+p.w<=w&&p.y+p.h<=h);assert(p.w>w*.9&&p.h>0);Box label{0,h-19,w-24,14},gear{w-20,h-18,16,16};assert(!label.intersects(gear));}
  for(int i=0;i<=12;++i)assert(phaseTick(i)==180-i*30);
- for(int available=717;available<=1817;++available)for(bool ir:{false,true}){auto h=heights(available,ir);assert(h.phase==h.magnitude);assert(h.phase>=80);assert(h.ir+(ir?8:0)+h.phase+8+h.magnitude<=available);auto grid=plot(800,h.phase);assert(grid.x+grid.w==798);}
+ for(int available=717;available<=1817;++available)for(bool ir:{false,true}){auto h=heights(available,ir);assert(h.phase==h.magnitude);assert(h.phase>=80);assert(h.ir+(ir?8:0)+h.phase+8+h.magnitude<=available);auto grid=plot(800,h.phase);assert(grid.x==51&&grid.x+grid.w==788);assert(plot(800,h.ir).x==grid.x&&plot(800,h.ir).w==grid.w);}
  using namespace MyaCommands;Context context;auto* audio=find(201);assert(audio);
  auto es=commandText(*audio,state(*audio,context),Language::ES);
  auto en=commandText(*audio,state(*audio,context),Language::EN);

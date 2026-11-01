@@ -8,7 +8,7 @@
 
 namespace {
 constexpr double minHz=20.0,maxHz=20000.0;
-constexpr float minDb=-60.0f,maxDb=30.0f;
+constexpr float minDb=-18.0f,maxDb=15.0f;
 const juce::Colour background{0xff080a0c},grid{0xff2c3135},text{0xffa9bac8},axisBlue{0xff55b8f2};
 
 double readableStep(double target){

@@ -28,3 +28,12 @@ void installMyaNativeTitleBrand(juce::Component& component){
  NSTextField* text=[[NSTextField alloc] initWithFrame:NSMakeRect(24,1,textWidth,20)];[text setStringValue:myaNativeTitle()];[text setFont:font];[text setTextColor:[NSColor labelColor]];[text setEditable:NO];[text setSelectable:NO];[text setBezeled:NO];[text setDrawsBackground:NO];[text setAlignment:NSTextAlignmentLeft];[brand addSubview:text];
  [bar addSubview:brand];[text release];[icon release];[image release];[brand release];
 }
+
+void attachMyaFloatingWindow(juce::Component& main,juce::Component& floating){
+ auto* mainPeer=main.getPeer();auto* floatingPeer=floating.getPeer();
+ if(mainPeer==nullptr||floatingPeer==nullptr)return;
+ NSWindow* parent=[(NSView*)mainPeer->getNativeHandle() window];
+ NSWindow* child=[(NSView*)floatingPeer->getNativeHandle() window];
+ if(parent==nil||child==nil||parent==child)return;
+ if([child parentWindow]!=parent){if([child parentWindow]!=nil)[[child parentWindow] removeChildWindow:child];[parent addChildWindow:child ordered:NSWindowAbove];}
+}
