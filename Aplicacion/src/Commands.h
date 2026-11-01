@@ -17,6 +17,7 @@ inline const std::vector<Command>& catalog(){
   {103,"trace.capture",{"Capturar TF","Capture TF"},"Space",0,{"",""},Capability::Demo,{"Guarda datos sintéticos; no una medida","Saves synthetic data; not a measurement"}},
   {190,"data.import",{"Importar medidas / IR / carpetas","Import measurements / IR / folders"},"",0,{"",""},Capability::Pending,{"Importador y procedencia pendientes","Importer and provenance pending"}},
   {192,"report.export",{"Exportar informe","Export report"},"",0,{"",""},Capability::Pending,{"Generación de informes pendiente","Report generation pending"}},
+  {200,"config.manage",{"Manage Configurations...","Manage Configurations..."},"",1,{"",""},Capability::Ready,{"Guardar, exportar y restaurar canales, nombres y vista","Save, export and restore channels, names and layout"}},
   {201,"config.audio",{"Audio / E-S","Audio / I-O"},"",1,{"",""},Capability::Ready,{"Dispositivos y rutas de entrada; Play mide una TF seleccionada, Stop/Pause cierra","Input devices and routes; Play measures one selected TF, Stop/Pause closes"}},
   {202,"config.tf",{"Ajustes TF seleccionada","Selected TF settings"},"",1,{"",""},Capability::Demo,{"Edita parámetros de la TF demo; no inicia audio","Edits demo TF parameters; does not start audio"}},
   {290,"calibration.spl",{"Calibración SPL / micrófono","SPL / microphone calibration"},"",1,{"",""},Capability::Ready,{"Calibracion RMS por backend/dispositivo/canal","RMS calibration per backend/device/channel"}},

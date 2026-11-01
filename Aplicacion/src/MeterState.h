@@ -72,6 +72,7 @@ public:
 
  const std::vector<Source>& sources() const{return inputs;}
  bool ready() const{return usable;}
+ bool reload(){State restored;if(!decode(juce::JSON::parse(file),restored)||!valid(restored))return false;data=std::move(restored);readings.clear();++revision;notify();return true;}
  const juce::String& lastError() const{return error;}
  int listen(std::function<void()> f){int id=++nextListener;listeners[id]=std::move(f);return id;}
  void unlisten(int id){listeners.erase(id);}

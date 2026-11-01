@@ -8,6 +8,18 @@
 // four TF selectors and the single generator output selector below them.
 class IOConfigWindow : public juce::DocumentWindow {
  class Body : public juce::Component, private juce::Timer {
+  class UseToggle : public juce::ToggleButton {
+   void paintButton(juce::Graphics& g,bool hover,bool down) override{
+    auto box=juce::Rectangle<float>(7.f,(getHeight()-19.f)*.5f,19.f,19.f);
+    const bool active=getToggleState();
+    g.setColour(active?juce::Colour(0xff54f28d):juce::Colour(0xffe8f5f8));
+    g.fillRoundedRectangle(box,3.f);
+    g.setColour(active?juce::Colour(0xff137240):juce::Colour(0xff52636b));
+    g.drawRoundedRectangle(box.reduced(.7f),3.f,1.8f);
+    if(active){juce::Path tick;tick.startNewSubPath(box.getX()+4.f,box.getCentreY());tick.lineTo(box.getX()+8.f,box.getBottom()-5.f);tick.lineTo(box.getRight()-4.f,box.getY()+5.f);g.setColour(juce::Colour(0xff073b25));g.strokePath(tick,juce::PathStrokeType(2.6f));}
+    if(hover||down){g.setColour(juce::Colour(0xff43cce8).withAlpha(.7f));g.drawRoundedRectangle(box.expanded(1.f),4.f,1.f);}
+   }
+  };
   struct Table : juce::TableListBoxModel {
    juce::TableListBox view;
    juce::StringArray rows;
@@ -23,7 +35,7 @@ class IOConfigWindow : public juce::DocumentWindow {
    int getNumRows() override{return rows.size();}
    void paintRowBackground(juce::Graphics& g,int row,int w,int h,bool chosen) override{g.fillAll(chosen?juce::Colour(0xffb3dce8):row%2?juce::Colour(0xffededed):juce::Colours::white);g.setColour(juce::Colour(0xffaaaaaa));g.drawHorizontalLine(h-1,0.f,(float)w);}
    void paintCell(juce::Graphics& g,int row,int col,int w,int h,bool) override{auto value=cell?cell(row,col):juce::String{};if(col==levelColumn&&value!="--"){auto db=value.getDoubleValue();auto fraction=juce::jlimit(0.,1.,(db+60.)/60.);g.setColour(juce::Colour(0xff57b658));g.fillRect(3,h-8,juce::roundToInt((w-6)*fraction),5);}g.setColour(juce::Colour(0xff171717));g.setFont(13.f);if(col!=1)g.drawFittedText(value,juce::Rectangle<int>(5,0,w-10,h-(col==levelColumn?5:0)),juce::Justification::centredLeft,1);g.setColour(juce::Colour(0xffbbbbbb));g.drawVerticalLine(w-1,0.f,(float)h);}
-   juce::Component* refreshComponentForCell(int row,int col,bool,juce::Component* old) override{if(col!=1){delete old;return nullptr;}auto* toggle=dynamic_cast<juce::ToggleButton*>(old);if(!toggle){delete old;toggle=new juce::ToggleButton();}toggle->setToggleState(cell&&cell(row,col)=="[x]",juce::dontSendNotification);toggle->onClick=[this,row,col]{if(clicked)clicked(row,col);};return toggle;}
+   juce::Component* refreshComponentForCell(int row,int col,bool,juce::Component* old) override{if(col!=1){delete old;return nullptr;}auto* toggle=dynamic_cast<UseToggle*>(old);if(!toggle){delete old;toggle=new UseToggle();}toggle->setToggleState(cell&&cell(row,col)=="[x]",juce::dontSendNotification);toggle->setTooltip("Use / activar canal");toggle->onClick=[this,row,col]{if(clicked)clicked(row,col);};return toggle;}
    void selectedRowsChanged(int row) override{if(selected&&row>=0)selected(row);}
    void cellClicked(int row,int column,const juce::MouseEvent&) override{if(clicked)clicked(row,column);}
    void refresh(){view.updateContent();view.repaint();}
@@ -89,7 +101,7 @@ class IOConfigWindow : public juce::DocumentWindow {
  };
  Body* body;
 public:
- IOConfigWindow(std::vector<AudioEndpoint> catalog,const std::array<juce::String,4>& names,const std::vector<juce::String>& keys,const std::vector<int>& mic,const std::vector<int>& ref,const std::vector<InputLevels::Source>& monitor,const std::map<std::string,std::string>& labels,juce::String outKey,int outChannel,std::function<void(int,juce::String,int,int)> change,std::function<void(juce::String,int,bool)> useChange,std::function<void(juce::String,int,juce::String)> rename,std::function<std::optional<double>(juce::String,int)> level,std::function<void(juce::String,int)> outChange,std::function<void()> calibration):DocumentWindow("I-O Config",juce::Colour(0xff20272c),closeButton){setUsingNativeTitleBar(true);body=new Body(std::move(catalog),names,keys,mic,ref,monitor,labels,std::move(outKey),outChannel,std::move(change),std::move(useChange),std::move(rename),std::move(level),std::move(outChange),std::move(calibration),[this]{setVisible(false);});setContentOwned(body,true);setResizable(true,false);setResizeLimits(720,540,1100,850);centreWithSize(760,570);}
+ IOConfigWindow(std::vector<AudioEndpoint> catalog,const std::array<juce::String,4>& names,const std::vector<juce::String>& keys,const std::vector<int>& mic,const std::vector<int>& ref,const std::vector<InputLevels::Source>& monitor,const std::map<std::string,std::string>& labels,juce::String outKey,int outChannel,std::function<void(int,juce::String,int,int)> change,std::function<void(juce::String,int,bool)> useChange,std::function<void(juce::String,int,juce::String)> rename,std::function<std::optional<double>(juce::String,int)> level,std::function<void(juce::String,int)> outChange,std::function<void()> calibration):DocumentWindow("I-O Config",juce::Colour(0xff20272c),closeButton){setUsingNativeTitleBar(true);setAlwaysOnTop(true);body=new Body(std::move(catalog),names,keys,mic,ref,monitor,labels,std::move(outKey),outChannel,std::move(change),std::move(useChange),std::move(rename),std::move(level),std::move(outChange),std::move(calibration),[this]{setVisible(false);});setContentOwned(body,true);setResizable(true,false);setResizeLimits(720,540,1100,850);centreWithSize(760,570);}
  void setAcquisitionState(bool active,bool waiting=false,const juce::String& details={}){body->setAcquisitionState(active,waiting,details);}
  int selectedTab()const{return body->selectedTab();}
  void selectTab(int index){body->selectTab(index);}

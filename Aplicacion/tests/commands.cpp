@@ -20,6 +20,7 @@ int main(int argc,char**){
   }
  }
  for(const auto& m:menus())assert(!m.es.empty()&&!m.en.empty());
+ auto firstConfiguration=std::find_if(catalog().begin(),catalog().end(),[](const auto& command){return command.menu==1;});assert(firstConfiguration!=catalog().end()&&firstConfiguration->id==200&&state(*firstConfiguration,x).enabled);
  for(int id:topBindings)assert(find(id));for(int id:measurementBindings)assert(find(id));for(int id:tfBindings)assert(find(id));
  for(const auto& p:extraMenus){assert(p[0]>=0&&p[0]<7);assert(find(p[1]));}
  x={};int calls=0;assert(!dispatch(-1,x,[&](int){++calls;}));assert(!dispatch(99999,x,[&](int){++calls;}));assert(calls==0);

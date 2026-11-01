@@ -1,4 +1,5 @@
 #include "../src/AppDataLocation.h"
+#include "../src/ConfigurationBundle.h"
 #include <cassert>
 #include <iostream>
 
@@ -44,5 +45,6 @@ int main(int argc,char** argv){
   assert(migrateFrom(linked,root.getChildFile("linked-target"))==MigrationResult::Failed);
   assert(!root.getChildFile("linked-target").exists());
  }
+ auto configRoot=root.getChildFile("config-test");assert(configRoot.createDirectory().wasOk());auto project=configRoot.getChildFile("proyecto-demo.json");assert(project.replaceWithText("{\"schema\":1,\"micros\":[{\"name\":\"MIC 1\"}]}"));assert(configRoot.getChildFile("entradas-niveles.json").replaceWithText("{\"schema\":3,\"routes\":[]}"));assert(configRoot.getChildFile("calibraciones-spl.json").replaceWithText("{\"offset\":42}"));auto bundle=ConfigurationBundle::capture(project,"Prueba OCTA");assert(ConfigurationBundle::valid(bundle));auto exported=configRoot.getChildFile("export.json");assert(ConfigurationBundle::write(exported,bundle));assert(project.replaceWithText("{\"schema\":1,\"micros\":[]}"));assert(configRoot.getChildFile("calibraciones-spl.json").replaceWithText("{\"offset\":99}"));assert(ConfigurationBundle::restore(project,juce::JSON::parse(exported)));assert(project.loadFileAsString().contains("MIC 1"));assert(configRoot.getChildFile("calibraciones-spl.json").loadFileAsString().contains("99"));
  std::cout<<"PASS stable per-user path, explicit migration of project/routes/calibrations/library/captures, source preserved, existing destination not overwritten, unrelated files excluded.\n";
 }
