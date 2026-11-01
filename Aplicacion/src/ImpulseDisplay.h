@@ -22,7 +22,7 @@ public:
   fft(analytic,false);for(size_t i=1;i<n/2;++i)analytic[i]*=2.;for(size_t i=n/2+1;i<n;++i)analytic[i]=0.;fft(analytic,true);
   std::vector<double> out;out.reserve(n);for(const auto& value:analytic)out.push_back(std::abs(value));return out;
  }
- ImpulseDisplay(){constexpr int count=4096;signal.reserve(count);for(int i=0;i<count;++i){double u=i/(double)count;signal.push_back(std::exp(-std::pow((u-.5)*65,2))*std::cos((u-.5)*240)*.42);}analyticMagnitude=envelope(signal);}
+ ImpulseDisplay()=default;
  // mode 0: signed Lin, 1: log amplitude ref 1, 2: ETC from the analytic envelope.
  std::optional<double> physical(double u,int mode) const{
   if(!std::isfinite(u)||u<0||u>1||mode<0||mode>2)return std::nullopt;
