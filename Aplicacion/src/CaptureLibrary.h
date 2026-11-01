@@ -10,7 +10,7 @@
 // This class has no audio, GUI, Smaart parser, DSP or import engine.
 class CaptureLibrary {
 public:
- enum class Kind { Folder, SnapshotTF, ImpulseResponse, RTA };
+ enum class Kind { Folder, SnapshotTF, ImpulseResponse, RTA, Sweep };
  struct Node {
   juce::String id,parent,name,diskName,colour="ff54ee22",method="unknown",origin="original",derivedFrom,legacyKey,role="individual";
   Kind kind=Kind::Folder;bool visible=true,expanded=true;
@@ -53,7 +53,7 @@ private:
    if(n.id.isEmpty()||!ids.insert(n.id).second||n.name.trim().isEmpty()||!safeName(n.diskName))return false;
    if(n.role!="individual"&&n.role!="average")return false;
    if(n.role=="average"&&n.kind!=Kind::SnapshotTF)return false;
-   if(n.kind!=Kind::Folder&&n.kind!=Kind::SnapshotTF&&n.kind!=Kind::ImpulseResponse&&n.kind!=Kind::RTA)return false;
+   if(n.kind!=Kind::Folder&&n.kind!=Kind::SnapshotTF&&n.kind!=Kind::ImpulseResponse&&n.kind!=Kind::RTA&&n.kind!=Kind::Sweep)return false;
    std::set<juce::String> ancestors{n.id};auto parent=n.parent;
    while(parent.isNotEmpty()){auto* p=node(s,parent);if(!p||p->kind!=Kind::Folder||ancestors.size()>64||!ancestors.insert(parent).second)return false;parent=p->parent;}
    if(!paths.insert(n.parent+"/"+n.diskName).second)return false;
@@ -74,7 +74,7 @@ private:
  bool decode(const juce::var& v,State& s) const {
   if(!v.isObject()||int(v["schema"])!=1||!v["nodes"].isArray())return false;
   s={};s.id=v["libraryId"].toString();s.revision=v["revision"].toString();s.active=v["activeFolderId"].toString();s.view=(Kind)int(v["view"]);
-  if(s.view!=Kind::SnapshotTF&&s.view!=Kind::ImpulseResponse&&s.view!=Kind::RTA)return false;
+  if(s.view!=Kind::SnapshotTF&&s.view!=Kind::ImpulseResponse&&s.view!=Kind::RTA&&s.view!=Kind::Sweep)return false;
   for(const auto& x:*v["nodes"].getArray()){
    if(!x.isObject())return false;Node n;n.id=x["id"].toString();n.parent=x["parentId"].toString();n.name=x["name"].toString();n.diskName=x["diskName"].toString();n.kind=(Kind)int(x["kind"]);n.colour=x["colour"].toString();n.visible=bool(x["visible"]);n.expanded=bool(x["expanded"]);n.method=x["acquisitionMethod"].toString();n.origin=x["origin"].toString();n.derivedFrom=x["derivedFromId"].toString();n.legacyKey=x["legacyKey"].toString();if(x.hasProperty("traceRole"))n.role=x["traceRole"].toString();s.nodes.push_back(std::move(n));
   }return validate(s);
@@ -171,7 +171,7 @@ public:
   return transaction(next);
  }
  bool setDestination(const juce::String& id){auto* n=find(id);if(!n||n->kind!=Kind::Folder){error="El destino debe ser una carpeta";return false;}auto next=data;next.active=id;return transaction(next);}
- bool setView(Kind kind){if(kind!=Kind::SnapshotTF&&kind!=Kind::ImpulseResponse&&kind!=Kind::RTA)return false;auto next=data;next.view=kind;return transaction(next);}
+ bool setView(Kind kind){if(kind!=Kind::SnapshotTF&&kind!=Kind::ImpulseResponse&&kind!=Kind::RTA&&kind!=Kind::Sweep)return false;auto next=data;next.view=kind;return transaction(next);}
  bool setExpanded(const juce::String& id,bool open){auto* n=find(id);if(!n||n->kind!=Kind::Folder)return false;if(n->expanded==open)return true;auto next=data;mutableNode(next,id)->expanded=open;return transaction(next);}
  bool setVisibility(const std::vector<juce::String>& ids,bool visible){auto next=data;for(const auto& id:ids){auto* n=mutableNode(next,id);if(n&&n->kind!=Kind::Folder)n->visible=visible;}return transaction(next);}
  bool setColour(const std::vector<juce::String>& ids,const juce::String& colour){
@@ -190,10 +190,13 @@ public:
   }
   return moves.empty()?true:transaction(next,moves);
  }
- // Only this application's explicitly synthetic TF payload is currently capturable.
  juce::String capture(const juce::var& payload,juce::String name,juce::String colour,juce::String legacyKey={},bool adopting=false){
-  if(!ready()||(!adopting&&data.view!=Kind::SnapshotTF)){error=juce::String::fromUTF8("Solo hay adquisición demo de snapshots TF");return {};}
-  if(!payload.isObject()||!payload["synthetic"].isBool()||!bool(payload["synthetic"])||int(payload["schema"])!=1||!payload["samples"].isArray()||payload["samples"].getArray()->size()<2){error=juce::String::fromUTF8("Snapshot TF demo no válido");return {};}
+  if(!ready()){error=juce::String::fromUTF8("Biblioteca no disponible");return {};}
+  if(!payload.isObject()||int(payload["schema"])!=1||!payload["samples"].isArray()||payload["samples"].getArray()->size()<2){error=juce::String::fromUTF8("Captura no válida");return {};}
+  bool synthetic=payload["synthetic"].isBool()&&bool(payload["synthetic"]);
+  bool sweep=payload["acquisitionMethod"].toString()=="sweep";
+  if(synthetic&&data.view!=Kind::SnapshotTF){error="La captura demo solo pertenece a TF";return {};}
+  if(adopting&&!synthetic){error="Origen heredado no válido";return {};}
   if(payload["traceRole"].toString()=="average"){error="AVG: estimador pendiente";return {};}
   double previous=0;
   for(const auto& point:*payload["samples"].getArray()){
@@ -201,7 +204,7 @@ public:
    double frequency=double(point["frequencyHz"]),real=double(point["real"]),imaginary=double(point["imaginary"]);
    if(!std::isfinite(frequency)||frequency<=previous||!std::isfinite(real)||!std::isfinite(imaginary)){error=juce::String::fromUTF8("Datos TF no válidos");return {};}previous=frequency;
   }
-  auto next=data;Node n;n.id=uid();n.parent=data.active;n.kind=Kind::SnapshotTF;n.name=name.trim().isEmpty()?"Snapshot TF demo":name.trim();n.colour=colour;n.diskName=n.id+".json";n.method="synthetic-demo";n.origin="original-demo";n.legacyKey=legacyKey;next.nodes.push_back(n);
+  auto next=data;Node n;n.id=uid();n.parent=data.active;n.kind=sweep?Kind::Sweep:Kind::SnapshotTF;n.name=name.trim().isEmpty()?"Captura":name.trim();n.colour=colour;n.diskName=n.id+".json";n.method=synthetic?"synthetic-demo":payload["acquisitionMethod"].toString();if(n.method.isEmpty())n.method="live-transfer";n.origin=synthetic?"original-demo":n.method=="vector-sum"?"derived":"measured";n.legacyKey=legacyKey;next.nodes.push_back(n);
   auto stored=payload.clone();if(!adopting){stored.getDynamicObject()->setProperty("traceRole","individual");stored.getDynamicObject()->setProperty("measurementId",n.id);stored.getDynamicObject()->setProperty("libraryId",data.id);}
   auto staged=root.getChildFile("Pendientes").getChildFile(n.diskName);if(!staged.getParentDirectory().createDirectory().wasOk()||!staged.replaceWithText(adopting?juce::File(legacyKey).loadFileAsString():juce::JSON::toString(stored))){error="No se pudo escribir la captura";return {};}
   return transaction(next,{{staged,file(next,n)}})?n.id:juce::String{};
@@ -217,7 +220,7 @@ public:
   }return count;
  }
  std::optional<Trace> readTrace(const juce::String& id) const {
-  auto* n=find(id);if(!n||n->kind!=Kind::SnapshotTF)return std::nullopt;auto v=juce::JSON::parse(dataFile(id));if(!v.isObject()||!v["samples"].isArray())return std::nullopt;
+  auto* n=find(id);if(!n||(n->kind!=Kind::SnapshotTF&&n->kind!=Kind::Sweep))return std::nullopt;auto v=juce::JSON::parse(dataFile(id));if(!v.isObject()||!v["samples"].isArray())return std::nullopt;
   Trace trace;trace.node=*n;trace.metadata=v;double last=0;
   for(const auto& p:*v["samples"].getArray()){
    if(!p.isObject()||!numeric(p["frequencyHz"])||!numeric(p["real"])||!numeric(p["imaginary"]))return std::nullopt;
@@ -233,6 +236,14 @@ public:
   Sample out;
   if(next==trace.samples.begin()||next->frequency<=frequency)out=*next;
   else{auto before=next-1;double t=(frequency-before->frequency)/(next->frequency-before->frequency);out.frequency=frequency;out.value=before->value+(next->value-before->value)*t;if(before->coherence&&next->coherence)out.coherence=std::min(*before->coherence,*next->coherence);}
-  if(!std::isfinite(out.value.real())||!std::isfinite(out.value.imag())||std::abs(out.value)<=1.e-15)return std::nullopt;return out;
+  if(!std::isfinite(out.value.real())||!std::isfinite(out.value.imag()))return std::nullopt;return out;
+ }
+ static std::optional<std::vector<Sample>> vectorSum(const Trace& left,const Trace& right){
+  if(bool(left.metadata["synthetic"])||bool(right.metadata["synthetic"]))return std::nullopt;
+  double leftRate=double(left.metadata["sampleRateHz"]),rightRate=double(right.metadata["sampleRateHz"]);
+  if(leftRate<=0||rightRate<=0||std::abs(leftRate-rightRate)>1.e-6||left.metadata["timeReference"].toString()!=right.metadata["timeReference"].toString()||std::abs(double(left.metadata["measurementDelayMs"])-double(right.metadata["measurementDelayMs"]))>1.e-6)return std::nullopt;
+  std::vector<Sample> result;result.reserve(left.samples.size());
+  for(const auto& sample:left.samples)if(auto other=interpolate(right,sample.frequency)){Sample combined;combined.frequency=sample.frequency;combined.value=sample.value+other->value;if(sample.coherence&&other->coherence)combined.coherence=std::min(*sample.coherence,*other->coherence);result.push_back(combined);}
+  return result.size()>1?std::optional<std::vector<Sample>>(std::move(result)):std::nullopt;
  }
 };

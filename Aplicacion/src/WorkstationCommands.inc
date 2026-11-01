@@ -46,6 +46,7 @@ void executeCommand(int id){
  case 514:{int n=source.getSelectedId()-1;if(!measuring(n)){status="Track: activa primero esta TF.";break;}auto delay=liveTFs[(size_t)n].findDelayMs();if(delay){micDelay[(size_t)n].setValue(*delay);status="Track TF "+String(n+1)+": "+String(*delay,2)+" ms.";}else status="Track: espera una referencia estable.";break;}
  case 509:addTF();break;
  case 510:showAverageDialog();break;
+ case 968:sumSelectedTraces();break;
  case 969:if(avgConfigured){avgActive=!avgActive;status=avgActive?"AVG de TF seleccionadas habilitado":"AVG detenido";}break;
  case 502:{int n=source.getSelectedId()-1;if(!measuring(n)){status="Find: inicia la TF con referencia M/R antes de medir el retardo.";break;}auto found=liveTFs[(size_t)n].findDelayMs();if(!found){status="Find: espera un promedio M/R estable; rango 0–150 ms.";break;}micDelay[(size_t)n].setValue(*found);status="TF "+String(n+1)+": retardo medido "+String(*found,2)+" ms; IR relativo a ese tiempo.";break;}
  case 507:stopInputs();break;

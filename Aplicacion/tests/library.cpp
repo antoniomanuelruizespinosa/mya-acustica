@@ -22,6 +22,13 @@ int main(int argc,char** argv){
  assert(reopened.setView(K::SnapshotTF));auto trace=reopened.readTrace(id);assert(trace&&trace->samples.size()==101);assert(trace->metadata["measurementId"].toString()==id);auto point=CaptureLibrary::interpolate(*trace,1000);assert(point&&std::abs(point->value.real()-2)<1.e-12&&point->coherence&&*point->coherence==.9);
  assert(!CaptureLibrary::interpolate(*trace,19));assert(!CaptureLibrary::interpolate(*trace,20001));
  assert(reopened.setVisibility({id},true));CapturedTraceDisplay display;display.reload(reopened);auto db=display.value(id,1000,2,1,80);assert(db&&std::abs(*db*36-20*std::log10(2.))<1.e-10);assert(!display.value(id,1000,2,1,95));
+ // A measured sweep is stored separately from TF demo snapshots and survives reload.
+ auto sweep=snapshot();sweep.getDynamicObject()->setProperty("synthetic",false);sweep.getDynamicObject()->setProperty("acquisitionMethod","sweep");sweep.getDynamicObject()->setProperty("sampleRateHz",48000.);sweep.getDynamicObject()->setProperty("timeReference","M/R aligned");sweep.getDynamicObject()->setProperty("measurementDelayMs",0.);
+ assert(reopened.setView(K::Sweep));auto sweepId=reopened.capture(sweep,"Sweep L","ff54ee22");assert(sweepId.isNotEmpty());assert(reopened.find(sweepId)->kind==K::Sweep);auto measured=reopened.readTrace(sweepId);assert(measured);
+ auto same=*measured;auto constructive=CaptureLibrary::vectorSum(*measured,same);assert(constructive&&std::abs(constructive->front().value.real()-4.)<1.e-12);
+ for(auto& sample:same.samples)sample.value=-sample.value;auto cancellation=CaptureLibrary::vectorSum(*measured,same);assert(cancellation&&std::abs(cancellation->front().value)<1.e-12);
+ same.metadata=same.metadata.clone();same.metadata.getDynamicObject()->setProperty("measurementDelayMs",1.);assert(!CaptureLibrary::vectorSum(*measured,same));
+ assert(reopened.setView(K::SnapshotTF));
  // Failed batch moves do not partially relocate data.
  auto before=reopened.dataFile(id);assert(!reopened.move({id,"missing-id"},a));assert(reopened.dataFile(id)==before&&before.loadFileAsString()==original);
  // Corrupt manifest is left untouched, never silently reset to an empty library.
@@ -41,7 +48,7 @@ int main(int argc,char** argv){
  };
  simulate(false);simulate(true);
  // The same session remains active across data views; no IR/RTA record is fabricated.
- auto active=reopened.state().active;assert(reopened.setView(K::RTA));CaptureLibrary views(dir);assert(views.state().view==K::RTA&&views.state().active==active);for(const auto& n:views.state().nodes)assert(n.kind==K::Folder||n.kind==K::SnapshotTF);
+ auto active=reopened.state().active;assert(reopened.setView(K::RTA));CaptureLibrary views(dir);assert(views.state().view==K::RTA&&views.state().active==active);for(const auto& n:views.state().nodes)assert(n.kind==K::Folder||n.kind==K::SnapshotTF||n.kind==K::Sweep);
  // Exact helpers used by the app: graph selectors survive file round-trips and reject unsupported views.
  auto prefs=dir.getChildFile("views.json");GraphViewState choices{{{2,2}},2};assert(choices.save(prefs));auto restored=GraphViewState::read(prefs);assert(restored&&restored->types[0]==2&&restored->types[1]==2&&restored->irScale==2);
  auto invalid=choices.encode();invalid.getDynamicObject()->setProperty("irScale",3);assert(!GraphViewState::decode(invalid));

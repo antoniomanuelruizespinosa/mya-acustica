@@ -50,7 +50,7 @@ private:
 public:
  void reset(){for(auto& level:stages)level.reset();decimators={};sampleRate=0;}
  void setWindowType(SignalWindow::Type type){if(windowType!=type){windowType=type;reset();}}
- void setAverageDepth(int depth){if(depth>0&&depth!=averageDepth){averageDepth=depth;for(auto& stage:stages)stage.resetAverage();}}
+ void setAverageDepth(int depth){if(depth>0&&depth!=averageDepth)averageDepth=depth;}
  void setDelayMs(double value){if(std::isfinite(value)&&value>=0&&std::abs(value-delayMs)>1.e-9){delayMs=value;for(auto& stage:stages)stage.resetAverage();}}
  void feed(double m,double r,double rate){if(!std::isfinite(m)||!std::isfinite(r)||!std::isfinite(rate)||rate<=0)return;if(sampleRate>0&&std::abs(sampleRate-rate)>1.e-6)reset();sampleRate=rate;for(int stage=1;stage<levels;++stage){double nextM,nextR;if(!decimators[(size_t)(stage-1)].push(m,r,nextM,nextR))break;m=nextM;r=nextR;stages[(size_t)(stage-1)].push(m,r,rate/(1<<stage),delayMs,averageDepth,windowType);}}
  std::optional<double> rtaDbfs(double hz)const{if(hz<=0||sampleRate<=0)return {};int stage=stageFor(hz,sampleRate);while(stage>=1){const auto& data=stages[(size_t)(stage-1)];int bin=(int)std::llround(hz*size*(1<<stage)/sampleRate);if(data.revision&&bin>=1&&bin<=size/2)return 10.*std::log10(std::max(1.e-20,data.micPower[(size_t)bin]));--stage;}return {};}

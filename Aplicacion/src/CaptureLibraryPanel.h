@@ -20,7 +20,7 @@ class CaptureLibraryPanel : public juce::Component, public juce::DragAndDropCont
    if(folder){g.setColour(juce::Colour(0xffd4b36c));g.fillRoundedRectangle(2,7,14,11,2);g.fillRect(3,4,7,5);}
    else{auto c=juce::Colour::fromString(n->colour);g.setColour(c.withAlpha(n->visible?1.f:.25f));g.fillEllipse(2,6,13,13);if(!n->visible){g.setColour(c);g.drawLine(3,7,14,18,1.5f);g.drawLine(14,7,3,18,1.5f);}}
    g.setColour(juce::Colour(0xffe5edf4));g.setFont(12.f);g.drawFittedText(n->name,{21,0,juce::jmax(1,w-(folder?23:55)),h},juce::Justification::centredLeft,1,.8f);
-   if(!folder){g.setColour(juce::Colour(0xffa9bac8));g.setFont(9.f);g.drawText(n->kind==Kind::SnapshotTF?(n->role=="average"?"AVG":"TF"):n->kind==Kind::ImpulseResponse?"IR":"RTA",juce::jmax(21,w-31),0,29,h,juce::Justification::centredRight);}
+   if(!folder){g.setColour(juce::Colour(0xffa9bac8));g.setFont(9.f);g.drawText(n->kind==Kind::SnapshotTF?(n->role=="average"?"AVG":"TF"):n->kind==Kind::Sweep?"SWP":n->kind==Kind::ImpulseResponse?"IR":"RTA",juce::jmax(21,w-31),0,29,h,juce::Justification::centredRight);}
   }
   void itemClicked(const juce::MouseEvent& e) override{
    if(e.mods.isPopupMenu()){panel.menu();return;}
@@ -45,7 +45,7 @@ class CaptureLibraryPanel : public juce::Component, public juce::DragAndDropCont
  };
  CaptureLibrary& library;juce::TreeView tree;std::unique_ptr<Item> root;
  juce::Label destination,empty;juce::TextEditor search;
- juce::TextButton tracesTab{"TF+AVG"},irTab{"Sweep/IR"};juce::TextButton more{juce::String::fromUTF8("≡")},info{"Info"},remove{"Eliminar"};
+ juce::TextButton tracesTab{"TF+AVG"},irTab{"Sweeps"};juce::TextButton more{juce::String::fromUTF8("≡")},info{"Info"},remove{"Eliminar"};
  std::map<juce::String,bool> openChanges;
  juce::Button* captureControl=nullptr;
  bool rebuilding=false;MyaCommands::MeterSequence meterSequence;
@@ -121,10 +121,10 @@ public:
   for(const auto& n:library.state().nodes)if(n.parent.isEmpty()&&n.id!=library.state().active)append(*root,n);
   root->setOpen(true);tree.setRootItem(root.get());
   std::function<void(Item&)> restore=[&](Item& p){if(std::find(selection.begin(),selection.end(),p.id)!=selection.end())p.setSelected(true,false);for(int i=0;i<p.getNumSubItems();++i)restore(*static_cast<Item*>(p.getSubItem(i)));};restore(*root);
-  rebuilding=false;tracesTab.setToggleState(library.state().view==Kind::SnapshotTF,juce::dontSendNotification);irTab.setToggleState(library.state().view==Kind::ImpulseResponse,juce::dontSendNotification);tracesTab.setEnabled(library.ready());irTab.setEnabled(library.ready());
+  rebuilding=false;tracesTab.setToggleState(library.state().view==Kind::SnapshotTF,juce::dontSendNotification);irTab.setToggleState(library.state().view==Kind::Sweep,juce::dontSendNotification);tracesTab.setEnabled(library.ready());irTab.setEnabled(library.ready());
   destination.setText(juce::String::fromUTF8("→ ")+library.folderPath(library.state().active),juce::dontSendNotification);destination.setTooltip("Destino de captura / Capture destination: "+library.folderPath(library.state().active));
   int count=0;for(const auto& n:library.state().nodes)if(n.kind==library.state().view)++count;
-  empty.setText(!library.ready()?library.lastError():count==0?(library.state().view==Kind::SnapshotTF?"Sin capturas TF. Espacio guarda una DEMO en el destino.":(library.state().view==Kind::RTA?juce::String::fromUTF8("RTA: sin datos. Adquisición/importación pendientes."):juce::String::fromUTF8("Sweep/IR: sin datos. Adquisición/importación pendientes."))):juce::String{},juce::dontSendNotification);empty.setVisible(false);tree.setTooltip(empty.getText());info.setEnabled(selection.size()==1);resized();repaint();
+  empty.setText(!library.ready()?library.lastError():count==0?(library.state().view==Kind::SnapshotTF?"Sin capturas TF.":library.state().view==Kind::Sweep?"Sin barridos guardados.":"Sin datos guardados."):juce::String{},juce::dontSendNotification);empty.setVisible(false);tree.setTooltip(empty.getText());info.setEnabled(selection.size()==1);resized();repaint();
  }
  void finish(bool success){if(!success&&onError)onError(library.lastError());refresh();if(onChange)onChange();if(onSelection)onSelection();}
  void menu(){if(!onCommand)return;juce::PopupMenu m;
@@ -149,7 +149,7 @@ public:
   case 907:showInfo();break;
   case 908:{juce::PopupMenu colors;const char* names[]={"Verde / Green","Azul / Blue","Magenta","Amarillo / Yellow","Cian / Cyan","Naranja / Orange"};for(int i=0;i<6;++i)colors.addItem(i+1,names[i]);colors.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(&more),[safe,ids](int c){const char* values[]={"ff54ee22","ff4d88ff","fff03baf","ffffe33b","ff00e5ed","ffffac24"};if(safe&&c>0&&c<=6)safe->finish(safe->library.setColour(ids,values[c-1]));});break;}
   case 911:finish(library.reload());break;
-  case 912:finish(library.setView(Kind::RTA));break;case 913:finish(library.setView(Kind::SnapshotTF));break;case 914:finish(library.setView(Kind::ImpulseResponse));break;
+  case 912:finish(library.setView(Kind::RTA));break;case 913:finish(library.setView(Kind::SnapshotTF));break;case 914:finish(library.setView(Kind::Sweep));break;
   default:break;
   }
  }

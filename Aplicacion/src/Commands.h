@@ -14,7 +14,7 @@ inline const std::vector<Command>& catalog(){
  static const std::vector<Command> commands{
   {101,"project.open",{"Abrir demo","Open demo"},"",0,{"",""},Capability::Ready,{"",""}},
   {102,"project.save",{"Guardar demo","Save demo"},"",0,{"",""},Capability::Ready,{"",""}},
-  {103,"trace.capture",{"Capturar TF","Capture TF"},"Space",0,{"",""},Capability::Demo,{"Guarda datos sintéticos; no una medida","Saves synthetic data; not a measurement"}},
+  {103,"trace.capture",{"Guardar medida","Save Trace"},"Space",0,{"",""},Capability::Ready,{"Guarda la TF o Sweep medido","Saves a measured TF or Sweep"}},
   {190,"data.import",{"Importar medidas / IR / carpetas","Import measurements / IR / folders"},"",0,{"",""},Capability::Pending,{"Importador y procedencia pendientes","Importer and provenance pending"}},
   {192,"report.export",{"Exportar informe","Export report"},"",0,{"",""},Capability::Pending,{"Generación de informes pendiente","Report generation pending"}},
   {200,"config.manage",{"Manage Configurations...","Manage Configurations..."},"",1,{"",""},Capability::Ready,{"Guardar, exportar y restaurar canales, nombres y vista","Save, export and restore channels, names and layout"}},
@@ -149,7 +149,7 @@ inline const std::vector<Command>& catalog(){
   {965,"dsp.auto.delay",{"Auto Delay","Auto Delay"},"",3,{"DSP","DSP"},Capability::Pending,{"Estimador temporal pendiente","Time estimator pending"}},
   {966,"dsp.compare",{"Comparar","Compare"},"",3,{"DSP","DSP"},Capability::Pending,{"Variantes y comparación verificable pendientes","Verifiable comparison and variants pending"}},
   {967,"dsp.proposals",{"Propuestas","Proposals"},"",3,{"DSP","DSP"},Capability::Pending,{"Propuestas verificables y decisión del ingeniero pendientes","Verifiable proposals and engineer decision pending"}},
-  {968,"plot.sum",{"Suma","Sum"},"",2,{"",""},Capability::Pending,{"Suma compleja y referencias temporales compatibles pendientes; AVG no es suma","Complex sum and compatible time references pending; AVG is not a sum"}},
+  {968,"plot.sum",{"Suma","Sum"},"",2,{"",""},Capability::Ready,{"Suma vectorial de dos capturas con referencia compatible","Vector sum of two captures with compatible reference"}},
   {914,"library.view.ir",{"Sweep / IR","Sweep / IR"},"",0,{"Biblioteca","Library"},Capability::Ready,{}}
 
  };return commands;
@@ -208,7 +208,7 @@ inline State state(const Command& c,const Context& x){
  if(c.id==960)s.checked=!x.sidebarMeters;if(c.id==961)s.checked=x.sidebarMeters;
  if(c.id>=912&&c.id<=914){s.enabled=x.libraryReady;s.checked=x.libraryView==(c.id==912?3:c.id==913?1:2);}
  if((c.id==310||c.id==320)&&!x.allowNoSmoothing){s.enabled=false;s.reason={"Sin suavizado desactivado en ajustes TF","No smoothing disabled in TF settings"};}
- if(c.id==103&&(!x.libraryReady||!x.libraryTF)){s.enabled=false;s.reason={"Captura demo disponible en Capturas TF; IR/RTA pendientes","Demo capture available in TF snapshots; IR/RTA pending"};}
+ if(c.id==103&&(!x.libraryReady||!x.libraryTF)){s.enabled=false;s.reason={"Selecciona capturas TF para guardar desde este botón","Select TF captures to save from this button"};}
  if((c.id==902||c.id==907)&&x.librarySelection!=1){s.enabled=false;s.reason={"Selecciona un elemento","Select one item"};}
  if(c.id==903&&(x.librarySelection!=1||x.libraryFolders!=1)){s.enabled=false;s.reason={"Selecciona una carpeta destino","Select a destination folder"};}
  if(c.id==904&&x.librarySelection<1){s.enabled=false;s.reason={"Selecciona capturas o carpetas","Select captures or folders"};}

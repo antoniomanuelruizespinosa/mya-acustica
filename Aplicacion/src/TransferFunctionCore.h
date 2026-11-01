@@ -99,7 +99,7 @@ public:
  bool isSweep()const{return sweepMeasurement;}
  void loadSweepSpectrum(const std::vector<Complex>& values,const std::vector<bool>& valid,double rate){if(values.size()!=activeBins()||valid.size()!=activeBins()||rate<=0)return;reset();rateHz=rate;averages=1;readyFlag=sweepMeasurement=true;for(int k=1;k<activeBins();++k){auto& p=result[(size_t)k];p.frequency=k*rate/activeSize;p.valid=valid[(size_t)k]&&std::isfinite(values[(size_t)k].real())&&std::isfinite(values[(size_t)k].imag());if(!p.valid)continue;transfer[(size_t)k]=values[(size_t)k];p.magnitudeDb=20.*std::log10(std::max(1.e-12,std::abs(transfer[(size_t)k])));p.phaseDegrees=std::arg(transfer[(size_t)k])*180./3.14159265358979323846;p.coherence=0;}rebuildSmoothing();rebuildImpulse();}
  void setDelayMs(double value){if(!std::isfinite(value)||value<0||value>2000)return;if(std::abs(delayMs-value)>1.e-6)pendingAlignmentReset=true;delayMs=value;multi->setDelayMs(value);rebuildSmoothing();rebuildImpulse();}
- void setAverageDepth(int depth){if(depth<1||depth>64||averageDepth==depth)return;averageDepth=depth;reset();multi->setAverageDepth(depth);}
+ void setAverageDepth(int depth){if(depth<1||depth>64||averageDepth==depth)return;averageDepth=depth;readyFlag=averages>=averageDepth;multi->setAverageDepth(depth);}
  int averaging()const{return averageDepth;}
  double delay()const{return delayMs;}
  std::optional<double> findDelayMs()const{

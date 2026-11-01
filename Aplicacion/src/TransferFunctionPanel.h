@@ -24,6 +24,7 @@ public:
   juce::String name;
   juce::Colour colour;
   bool selected=false;
+  bool showPhase=true,showMagnitude=true;
   std::vector<Sample> samples;
  };
  using DataProvider=std::function<std::vector<Trace>()>;
@@ -64,7 +65,6 @@ private:
  DataProvider dataProvider;
  std::vector<Trace> traces;
  std::map<int,Trace> history;
- juce::ComboBox speed;
  std::unique_ptr<PlotPane> phasePane,magnitudePane;
  std::unique_ptr<CoherenceHandle> coherenceHandle;
  std::array<double,3> panX{},panY{};

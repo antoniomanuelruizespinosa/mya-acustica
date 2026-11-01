@@ -6,7 +6,7 @@ RTAPanel::RTAPanel(DataProvider provider) : dataProvider(std::move(provider)) {
  speed.addItemList({"Fast","Slow","Prom.16"},1);speed.setSelectedId(1);speed.setTooltip("Respuesta temporal de la curva RTA");speed.onChange=[this]{history.clear();lastUpdateMs=0;};addAndMakeVisible(speed);
 }
 
-void RTAPanel::setDisplayOptions(bool multi,int smooth){if(multiWindowMode!=multi){multiWindowMode=multi;if(onResolutionChanged)onResolutionChanged(multi);}smoothingMode=juce::jlimit(1,6,smooth);history.clear();}
+void RTAPanel::setDisplayOptions(bool multi,int smooth){if(multiWindowMode!=multi){multiWindowMode=multi;if(onResolutionChanged)onResolutionChanged(multi);}smoothingMode=juce::jlimit(1,6,smooth);}
 
 void RTAPanel::clearTraces(){traces.clear();history.clear();lastUpdateMs=0;repaint();}
 
@@ -21,6 +21,7 @@ void RTAPanel::visibilityChanged() {
 
 void RTAPanel::timerCallback() {
  auto incoming=dataProvider?dataProvider():std::vector<Trace>{};
+ if(incoming.empty()&&isTimerRunning())return;
  double now=juce::Time::getMillisecondCounterHiRes(),dt=lastUpdateMs>0?juce::jlimit(0.0,1.0,(now-lastUpdateMs)/1000.):0.;lastUpdateMs=now;
  double tau=speed.getSelectedId()==2?1.:speed.getSelectedId()==3?5.4:.125;
  double alpha=dt>0?1.-std::exp(-dt/tau):1.;

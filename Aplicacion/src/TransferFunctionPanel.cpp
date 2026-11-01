@@ -48,7 +48,7 @@ public:
  explicit CoherenceHandle(TransferFunctionPanel& panel):owner(panel){setMouseCursor(juce::MouseCursor::UpDownResizeCursor);}
  void paint(juce::Graphics& g) override{
   g.setColour(juce::Colour(0xffb9c0c5));
-  juce::Path arrows;arrows.startNewSubPath(1.f,6.f);arrows.lineTo((float)getWidth()*.5f,1.f);arrows.lineTo((float)getWidth()-1.f,6.f);arrows.closeSubPath();arrows.startNewSubPath(1.f,(float)getHeight()-6.f);arrows.lineTo((float)getWidth()*.5f,(float)getHeight()-1.f);arrows.lineTo((float)getWidth()-1.f,(float)getHeight()-6.f);arrows.closeSubPath();g.fillPath(arrows);
+  juce::Path tip;tip.startNewSubPath(1.f,(float)getHeight()*.5f);tip.lineTo((float)getWidth()-1.f,1.f);tip.lineTo((float)getWidth()-1.f,(float)getHeight()-1.f);tip.closeSubPath();g.fillPath(tip);
  }
  void mouseDown(const juce::MouseEvent& e) override{owner.dragCoherenceHandle(e.getEventRelativeTo(&owner).position.y);}
  void mouseDrag(const juce::MouseEvent& e) override{owner.dragCoherenceHandle(e.getEventRelativeTo(&owner).position.y);}
@@ -61,9 +61,8 @@ TransferFunctionPanel::TransferFunctionPanel(DataProvider provider):dataProvider
  phasePane=std::make_unique<PlotPane>(*this,true);magnitudePane=std::make_unique<PlotPane>(*this,false);
  addAndMakeVisible(*phasePane);addAndMakeVisible(*magnitudePane);
  coherenceHandle=std::make_unique<CoherenceHandle>(*this);addAndMakeVisible(*coherenceHandle);
- speed.addItemList({"Fast","Slow","Prom.16"},1);speed.setSelectedId(1);speed.setTooltip("Respuesta temporal de magnitud, fase y coherencia");speed.onChange=[this]{history.clear();lastUpdateMs=0;};addAndMakeVisible(speed);
 }
-void TransferFunctionPanel::setDisplayOptions(bool multi,int smooth){if(multiWindowMode!=multi){multiWindowMode=multi;if(onResolutionChanged)onResolutionChanged(multi);}smoothingMode=juce::jlimit(1,6,smooth);history.clear();}
+void TransferFunctionPanel::setDisplayOptions(bool multi,int smooth){if(multiWindowMode!=multi){multiWindowMode=multi;if(onResolutionChanged)onResolutionChanged(multi);}smoothingMode=juce::jlimit(1,6,smooth);}
 TransferFunctionPanel::~TransferFunctionPanel(){stopTimer();}
 
 void TransferFunctionPanel::clearTraces(){traces.clear();history.clear();lastUpdateMs=0;phasePane->repaint();magnitudePane->repaint();}
@@ -82,8 +81,9 @@ void TransferFunctionPanel::visibilityChanged(){
 
 void TransferFunctionPanel::timerCallback(){
  auto incoming=dataProvider?dataProvider():std::vector<Trace>{};
+ if(incoming.empty()&&active)return;
  double now=juce::Time::getMillisecondCounterHiRes(),dt=lastUpdateMs>0?juce::jlimit(0.0,1.0,(now-lastUpdateMs)/1000.):0.;lastUpdateMs=now;
- double tau=speed.getSelectedId()==2?1.:speed.getSelectedId()==3?5.4:.125;
+ double tau=1.;
  double alpha=dt>0?1.-std::exp(-dt/tau):1.;
  std::map<int,Trace> next;
  for(auto& trace:incoming){auto old=history.find(trace.id);if(old!=history.end()&&old->second.samples.size()==trace.samples.size())for(size_t i=0;i<trace.samples.size();++i){auto& current=trace.samples[i];const auto& previous=old->second.samples[i];if(!current.valid||!previous.valid)continue;current.magnitudeDb=previous.magnitudeDb+alpha*(current.magnitudeDb-previous.magnitudeDb);current.phaseDegrees=previous.phaseDegrees+alpha*std::remainder(current.phaseDegrees-previous.phaseDegrees,360.);current.phaseDegrees=std::remainder(current.phaseDegrees,360.);current.coherence=previous.coherence+alpha*(current.coherence-previous.coherence);}next[trace.id]=trace;}
@@ -91,10 +91,10 @@ void TransferFunctionPanel::timerCallback(){
  phasePane->repaint();magnitudePane->repaint();
 }
 
-void TransferFunctionPanel::resized(){speed.setBounds(juce::jmax(8,getWidth()-464),2,104,21);}
+void TransferFunctionPanel::resized(){}
 
 void TransferFunctionPanel::setPlotLayout(juce::Rectangle<int> phase,juce::Rectangle<int> magnitude){
- phasePane->setBounds(phase);magnitudePane->setBounds(magnitude);updateCoherenceHandle();speed.toFront(false);
+ phasePane->setBounds(phase);magnitudePane->setBounds(magnitude);updateCoherenceHandle();
 }
 
 void TransferFunctionPanel::setCoherenceDisplay(double thresholdPercent,bool squared,bool visible,double height){
@@ -107,7 +107,7 @@ void TransferFunctionPanel::updateCoherenceHandle(){
  if(!coherenceHandle||!magnitudePane)return;
  auto bounds=magnitudePane->getBounds();auto area=juce::Rectangle<float>{51.f,23.f,(float)bounds.getWidth()-63.f,(float)bounds.getHeight()-48.f};
  coherenceHandle->setVisible(bounds.getWidth()>=130&&bounds.getHeight()>=80);
- coherenceHandle->setBounds(bounds.getX()+juce::roundToInt(area.getRight())+1,bounds.getY()+juce::roundToInt(coherenceLineY(area))-7,11,14);
+ coherenceHandle->setBounds(bounds.getX()+juce::roundToInt(area.getRight())+1,bounds.getY()+juce::roundToInt(coherenceLineY(area))-5,9,10);
  coherenceHandle->toFront(false);
 }
 
@@ -180,6 +180,7 @@ void TransferFunctionPanel::drawGrid(juce::Graphics& g,juce::Rectangle<float> ar
 
 void TransferFunctionPanel::drawTraces(juce::Graphics& g,juce::Rectangle<float> area,bool phase)const{
  for(const auto& trace:traces){
+  if(phase?!trace.showPhase:!trace.showMagnitude)continue;
   juce::Path path;bool started=false;double previousPhase=0.0;
   for(const auto& sample:trace.samples){
    auto x=frequencyPosition(sample.frequencyHz,area,phase);
@@ -197,6 +198,7 @@ void TransferFunctionPanel::drawTraces(juce::Graphics& g,juce::Rectangle<float> 
 void TransferFunctionPanel::drawCoherence(juce::Graphics& g,juce::Rectangle<float> area)const{
  if(!coherenceVisible)return;
  for(const auto& trace:traces){
+  if(!trace.showMagnitude)continue;
   juce::Path path;bool started=false;
   for(const auto& sample:trace.samples){
    auto x=frequencyPosition(sample.frequencyHz,area,false);
@@ -222,7 +224,7 @@ void TransferFunctionPanel::paintPane(juce::Graphics& g,juce::Rectangle<float> b
  g.drawText(phase?"FASE / grados":"MAGNITUD / dB",12,2,180,18,juce::Justification::centredLeft);
  drawGrid(g,area,phase);
  g.saveState();g.reduceClipRegion(area.getSmallestIntegerContainer());drawTraces(g,area,phase);if(!phase)drawCoherence(g,area);g.restoreState();
- if(!phase){g.setColour(juce::Colour(0xff9ca0a4).withAlpha(.85f));g.drawHorizontalLine(juce::roundToInt(coherenceLineY(area)),area.getX(),area.getRight());}
+ if(!phase){g.setColour(juce::Colour(0xff9ca0a4).withAlpha(.55f));g.drawHorizontalLine(juce::roundToInt(coherenceLineY(area)),area.getX(),area.getRight());}
  if(phase&&traces.empty()){g.setColour(text);g.drawText("FT sin medidas activas",area.getSmallestIntegerContainer(),juce::Justification::centred);}
  if(selectedPlot==(phase?1:2)){
   g.setColour(juce::Colour(0xff43cce8).withAlpha(.8f));
