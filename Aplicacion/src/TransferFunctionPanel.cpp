@@ -66,17 +66,19 @@ void TransferFunctionPanel::setDisplayOptions(bool multi,int smooth){if(multiWin
 TransferFunctionPanel::~TransferFunctionPanel(){stopTimer();}
 
 void TransferFunctionPanel::clearTraces(){traces.clear();history.clear();lastUpdateMs=0;phasePane->repaint();magnitudePane->repaint();}
+void TransferFunctionPanel::refreshNow(){timerCallback();}
 
 void TransferFunctionPanel::setActive(bool shouldBeActive){
- if(active==shouldBeActive)return;
+ if(active==shouldBeActive){if(!active&&isShowing())timerCallback();return;}
  active=shouldBeActive;
  if(active&&isShowing()){timerCallback();startTimerHz(30);}
- else {stopTimer();clearTraces();}
+ else {stopTimer();timerCallback();}
 }
 
 void TransferFunctionPanel::visibilityChanged(){
  if(!isShowing())stopTimer();
  else if(active){timerCallback();startTimerHz(30);}
+ else timerCallback();
 }
 
 void TransferFunctionPanel::timerCallback(){
@@ -86,7 +88,7 @@ void TransferFunctionPanel::timerCallback(){
  double tau=1.;
  double alpha=dt>0?1.-std::exp(-dt/tau):1.;
  std::map<int,Trace> next;
- for(auto& trace:incoming){auto old=history.find(trace.id);if(old!=history.end()&&old->second.samples.size()==trace.samples.size())for(size_t i=0;i<trace.samples.size();++i){auto& current=trace.samples[i];const auto& previous=old->second.samples[i];if(!current.valid||!previous.valid)continue;current.magnitudeDb=previous.magnitudeDb+alpha*(current.magnitudeDb-previous.magnitudeDb);current.phaseDegrees=previous.phaseDegrees+alpha*std::remainder(current.phaseDegrees-previous.phaseDegrees,360.);current.phaseDegrees=std::remainder(current.phaseDegrees,360.);current.coherence=previous.coherence+alpha*(current.coherence-previous.coherence);}next[trace.id]=trace;}
+ for(auto& trace:incoming){auto old=history.find(trace.id);if(!trace.frozen&&old!=history.end()&&old->second.samples.size()==trace.samples.size())for(size_t i=0;i<trace.samples.size();++i){auto& current=trace.samples[i];const auto& previous=old->second.samples[i];if(!current.valid||!previous.valid)continue;current.magnitudeDb=previous.magnitudeDb+alpha*(current.magnitudeDb-previous.magnitudeDb);current.phaseDegrees=previous.phaseDegrees+alpha*std::remainder(current.phaseDegrees-previous.phaseDegrees,360.);current.phaseDegrees=std::remainder(current.phaseDegrees,360.);current.coherence=previous.coherence+alpha*(current.coherence-previous.coherence);}next[trace.id]=trace;}
  history=std::move(next);traces=std::move(incoming);
  phasePane->repaint();magnitudePane->repaint();
 }
@@ -185,7 +187,7 @@ void TransferFunctionPanel::drawTraces(juce::Graphics& g,juce::Rectangle<float> 
   for(const auto& sample:trace.samples){
    auto x=frequencyPosition(sample.frequencyHz,area,phase);
    double value=phase?sample.phaseDegrees:sample.magnitudeDb;
-   if(!sample.valid||!x||!std::isfinite(value)||(!sample.bypassBlanking&&!CoherenceBlanking::passes(sample.coherence,coherenceThresholdPercent,coherenceSquared))){started=false;continue;}
+   if(!sample.valid||(phase?!sample.validPhase:!sample.validMagnitude)||!x||!std::isfinite(value)||(!sample.bypassBlanking&&!CoherenceBlanking::passes(sample.coherence,coherenceThresholdPercent,coherenceSquared))){started=false;continue;}
    auto y=valuePosition(value,area,phase);
    if(!started||(phase&&std::abs(value-previousPhase)>180.0))path.startNewSubPath(*x,y);
    else path.lineTo(*x,y);

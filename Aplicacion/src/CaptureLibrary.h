@@ -158,14 +158,16 @@ public:
   while(auto* p=find(parent)){value=p->name+" / "+value;parent=p->parent;}return value;
  }
  juce::String createFolder(juce::String name,juce::String parent,bool session=false){
-  name=name.trim();if(!ready()||name.isEmpty()){error="Escribe un nombre";return {};}
+  name=name.trim();if(!ready()||!safeName(name)){error="Escribe un nombre de carpeta válido";return {};}
   if(!session){auto* p=find(parent);if(!p||p->kind!=Kind::Folder){error=juce::String::fromUTF8("Selecciona una carpeta válida");return {};}}
-  State next=data;Node n;n.id=uid();n.name=name;n.parent=session?juce::String{}:parent;n.diskName=storageName(name,n.id);next.nodes.push_back(n);if(session)next.active=n.id;
+  for(const auto& existing:data.nodes)if(existing.kind==Kind::Folder&&existing.parent==(session?juce::String{}:parent)&&juce::File::createLegalFileName(existing.name).equalsIgnoreCase(juce::File::createLegalFileName(name))){error="Ya existe una carpeta con ese nombre";return {};}
+  State next=data;Node n;n.id=uid();n.name=name;n.parent=session?juce::String{}:parent;n.diskName=storageName(name,n.id);next.nodes.push_back(n);next.active=n.id;
   if(!file(next,n).createDirectory().wasOk()){error="No se pudo crear la carpeta";return {};}
   return transaction(next)?n.id:juce::String{};
  }
  bool rename(const juce::String& id,juce::String name){
-  name=name.trim();auto* old=find(id);if(!old||name.isEmpty()){error="Selecciona un elemento y un nombre";return false;}
+  name=name.trim();auto* old=find(id);if(!old||!safeName(name)){error="Selecciona un elemento y un nombre válido";return false;}
+  if(old->kind==Kind::Folder)for(const auto& existing:data.nodes)if(existing.id!=id&&existing.kind==Kind::Folder&&existing.parent==old->parent&&juce::File::createLegalFileName(existing.name).equalsIgnoreCase(juce::File::createLegalFileName(name))){error="Ya existe una carpeta con ese nombre";return false;}
   State next=data;auto* n=mutableNode(next,id);n->name=name;
   if(n->kind==Kind::Folder){n->diskName=storageName(name,id);if(n->diskName!=old->diskName)return transaction(next,{{file(data,*old),file(next,*n)}});}
   return transaction(next);

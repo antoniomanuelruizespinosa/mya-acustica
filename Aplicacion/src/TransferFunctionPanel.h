@@ -17,6 +17,7 @@ public:
   double phaseDegrees=0.0;
   double coherence=0.0;
   bool valid=false;
+  bool validPhase=true,validMagnitude=true;
   bool bypassBlanking=false;
  };
  struct Trace {
@@ -24,6 +25,7 @@ public:
   juce::String name;
   juce::Colour colour;
   bool selected=false;
+  bool frozen=false;
   bool showPhase=true,showMagnitude=true;
   std::vector<Sample> samples;
  };
@@ -33,6 +35,7 @@ public:
  ~TransferFunctionPanel() override;
  void setActive(bool active);
  void clearTraces();
+ void refreshNow();
  void visibilityChanged() override;
  void paint(juce::Graphics& graphics) override;
  void resized() override;

@@ -45,7 +45,7 @@ class CaptureLibraryPanel : public juce::Component, public juce::DragAndDropCont
  };
  CaptureLibrary& library;juce::TreeView tree;std::unique_ptr<Item> root;
  juce::Label destination,empty;juce::TextEditor search;
- juce::TextButton tracesTab{"TF+AVG"},irTab{"Sweeps"};juce::TextButton more{juce::String::fromUTF8("≡")},info{"Info"},remove{"Eliminar"};
+ juce::TextButton tracesTab{"TF+AVG"},irTab{"Sweeps"};juce::TextButton newProject{"Proyecto +"},newFolder{"Carpeta +"};juce::TextButton more{juce::String::fromUTF8("≡")},info{"Info"},remove{"Eliminar"};
  std::map<juce::String,bool> openChanges;
  juce::Button* captureControl=nullptr;
  bool rebuilding=false;MyaCommands::MeterSequence meterSequence;
@@ -94,14 +94,16 @@ class CaptureLibraryPanel : public juce::Component, public juce::DragAndDropCont
  }
 bool headerOnly=false;
 public:
- void setHeaderOnly(bool only){headerOnly=only;for(auto* c:std::initializer_list<juce::Component*>{&destination,&search,&tree,&more,&info,&remove})c->setVisible(!only);if(captureControl)captureControl->setVisible(!only);empty.setVisible(false);}
+ void setHeaderOnly(bool only){headerOnly=only;for(auto* c:std::initializer_list<juce::Component*>{&destination,&newProject,&newFolder,&search,&tree,&more,&info,&remove})c->setVisible(!only);if(captureControl)captureControl->setVisible(!only);empty.setVisible(false);}
  std::function<void(int)> onCommand;
  std::function<juce::String(int)> commandText;
  std::function<void()> onChange,onSelection;
  std::function<void(juce::String)> onFront,onError;
+ std::function<bool(juce::String,juce::String)> onRename;
  explicit CaptureLibraryPanel(CaptureLibrary& model):library(model){
   tracesTab.onClick=[this]{if(onCommand)onCommand(913);};irTab.onClick=[this]{if(onCommand)onCommand(914);};addAndMakeVisible(tracesTab);addAndMakeVisible(irTab);
   destination.setFont(juce::Font(juce::FontOptions(11.f)));addAndMakeVisible(destination);
+  newProject.onClick=[this]{command(900);};newFolder.onClick=[this]{command(901);};addAndMakeVisible(newProject);addAndMakeVisible(newFolder);
   search.setTextToShowWhenEmpty("Buscar / Search",juce::Colour(0xffa9bac8));search.onTextChange=[this]{refresh();};addAndMakeVisible(search);
   tree.setRootItemVisible(false);tree.setMultiSelectEnabled(true);tree.setIndentSize(11);tree.setColour(juce::TreeView::backgroundColourId,juce::Colour(0xff11181e));addAndMakeVisible(tree);
   more.onClick=[this]{menu();};addAndMakeVisible(more);info.onClick=[this]{if(onCommand)onCommand(907);};addAndMakeVisible(info);
@@ -140,9 +142,9 @@ public:
  void command(int id){
   auto ids=selected();juce::Component::SafePointer<CaptureLibraryPanel> safe(this);
   switch(id){
-  case 900:askName(juce::String::fromUTF8("Nueva sesión / New session"),"",[safe](juce::String name){if(safe)safe->finish(safe->library.createFolder(name,{},true).isNotEmpty());});break;
+  case 900:askName(juce::String::fromUTF8("Nuevo Proyecto / New Project"),"",[safe](juce::String name){if(safe)safe->finish(safe->library.createFolder(name,{},true).isNotEmpty());});break;
   case 901:{auto parent=folderForNew();askName("Nueva carpeta / New folder","",[safe,parent](juce::String name){if(safe)safe->finish(safe->library.createFolder(name,parent).isNotEmpty());});break;}
-  case 902:if(ids.size()==1){auto key=ids[0];askName("Renombrar / Rename",library.find(key)->name,[safe,key](juce::String name){if(safe)safe->finish(safe->library.rename(key,name));});}break;
+  case 902:if(ids.size()==1){auto key=ids[0];askName("Renombrar / Rename",library.find(key)->name,[safe,key](juce::String name){if(!safe)return;bool ok=safe->onRename?safe->onRename(key,name):safe->library.rename(key,name);if(ok)safe->finish(true);else safe->refresh();});}break;
   case 903:if(ids.size()==1)finish(library.setDestination(ids[0]));break;
   case 904:chooseMove();break;
   case 905:case 906:finish(library.setVisibility(ids,id==905));break;
@@ -164,7 +166,7 @@ public:
  bool previewHeaderMatches(int width,int height)const{return tracesTab.getBounds()==juce::Rectangle<int>{0,0,width,height}&&irTab.getBounds()==juce::Rectangle<int>{width+2,0,width,height}&&more.getY()==search.getY()&&more.getHeight()==search.getHeight()&&more.getWidth()==more.getHeight()&&search.getRight()<more.getX()&&more.getRight()<=getWidth();}
  #endif
  void resized() override{
-  int column=CompactLayout::libraryColumnWidth(getWidth()),height=CompactLayout::libraryTabHeight;tracesTab.setBounds(0,0,column,height);irTab.setBounds(column+2,0,column,height);if(headerOnly)return;more.setBounds(getWidth()-28,59,25,25);destination.setBounds(4,26,getWidth()-8,30);search.setBounds(3,59,getWidth()-36,25);
-  tree.setBounds(2,88,getWidth()-4,juce::jmax(40,getHeight()-120));empty.setBounds(5,92+tree.getNumRowsInTree()*24,getWidth()-10,52);info.setBounds(3,getHeight()-28,30,25);if(captureControl)captureControl->setBounds(36,getHeight()-28,getWidth()-68,25);remove.setButtonText("X");remove.setBounds(getWidth()-29,getHeight()-28,26,25);
+  int column=CompactLayout::libraryColumnWidth(getWidth()),height=CompactLayout::libraryTabHeight;tracesTab.setBounds(0,0,column,height);irTab.setBounds(column+2,0,column,height);if(headerOnly)return;destination.setBounds(4,26,getWidth()-8,30);int half=(getWidth()-9)/2;newProject.setBounds(3,59,half,25);newFolder.setBounds(6+half,59,getWidth()-9-half,25);more.setBounds(getWidth()-28,89,25,25);search.setBounds(3,89,getWidth()-36,25);
+  tree.setBounds(2,118,getWidth()-4,juce::jmax(40,getHeight()-150));empty.setBounds(5,122+tree.getNumRowsInTree()*24,getWidth()-10,52);info.setBounds(3,getHeight()-28,30,25);if(captureControl)captureControl->setBounds(36,getHeight()-28,getWidth()-68,25);remove.setButtonText("X");remove.setBounds(getWidth()-29,getHeight()-28,26,25);
  }
 };

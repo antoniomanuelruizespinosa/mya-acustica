@@ -111,8 +111,8 @@ inline const std::vector<Command>& catalog(){
   {857,"plot.zoom.arrow.out",{"Ampliar intervalo X","Widen X interval"},"Right",4,{"Gráfica activa","Active plot"},Capability::Demo,{"",""}},
   {858,"plot.pan.up",{"Desplazar arriba","Pan up"},"Up",4,{"Gráfica activa","Active plot"},Capability::Demo,{"",""}},
   {859,"plot.pan.down",{"Desplazar abajo","Pan down"},"Down",4,{"Gráfica activa","Active plot"},Capability::Demo,{"",""}},
-  {900,"library.session.new",{"Nueva sesión","New session"},"",0,{"Biblioteca","Library"},Capability::Ready,{}},
-  {901,"library.folder.new",{"Nueva subcarpeta","New subfolder"},"",0,{"Biblioteca","Library"},Capability::Ready,{}},
+  {900,"library.session.new",{"Nuevo Proyecto","New Project"},"",0,{"Biblioteca","Library"},Capability::Ready,{}},
+  {901,"library.folder.new",{"Nueva Carpeta","New Folder"},"",0,{"Biblioteca","Library"},Capability::Ready,{}},
   {902,"library.rename",{"Renombrar selección","Rename selection"},"",0,{"Biblioteca","Library"},Capability::Ready,{}},
   {903,"library.destination",{"Fijar destino de captura","Pin capture destination"},"",0,{"Biblioteca","Library"},Capability::Ready,{}},
   {904,"library.move",{"Mover selección a…","Move selection to…"},"",0,{"Biblioteca","Library"},Capability::Ready,{}},
@@ -206,7 +206,7 @@ inline State state(const Command& c,const Context& x){
  if(c.id==526&&x.mode!=0){s.enabled=false;s.reason={"Disponible en Medición","Available in Measurement"};}
  if(c.id==203)s.checked=x.metersVisible;
  if(c.id==960)s.checked=!x.sidebarMeters;if(c.id==961)s.checked=x.sidebarMeters;
- if(c.id>=912&&c.id<=914){s.enabled=x.libraryReady;s.checked=x.libraryView==(c.id==912?3:c.id==913?1:2);}
+ if(c.id>=912&&c.id<=914){s.enabled=x.libraryReady;s.checked=x.libraryView==(c.id==912?3:c.id==913?1:4);}
  if((c.id==310||c.id==320)&&!x.allowNoSmoothing){s.enabled=false;s.reason={"Sin suavizado desactivado en ajustes TF","No smoothing disabled in TF settings"};}
  if(c.id==103&&(!x.libraryReady||!x.libraryTF)){s.enabled=false;s.reason={"Selecciona capturas TF para guardar desde este botón","Select TF captures to save from this button"};}
  if((c.id==902||c.id==907)&&x.librarySelection!=1){s.enabled=false;s.reason={"Selecciona un elemento","Select one item"};}
