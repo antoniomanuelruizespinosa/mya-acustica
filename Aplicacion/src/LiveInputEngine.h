@@ -99,7 +99,7 @@ private:
     int micChannel=captureMics[route],refChannel=captureRefs[route];if(micChannel<=0)continue;
     int mi=-1,ri=-1;
     for(int ch=0;ch<count;++ch){if(physical[(size_t)ch]==micChannel-1)mi=ch;if(physical[(size_t)ch]==refChannel-1)ri=ch;}
-    if(mi>=0&&input[mi]&&(!virtualReference||(signal!=Signal::None&&outputs>=1&&output&&output[0])))for(int offset=0;offset<samples;){
+    if(mi>=0&&input[mi]&&(virtualReference?(signal!=Signal::None&&outputs>=1&&output&&output[0]):(ri>=0&&input[ri])))for(int offset=0;offset<samples;){
      TransferFunctionCore::RawBlock block;block.sequence=rawSequences[route].fetch_add(1,std::memory_order_acq_rel)+1;block.sampleRate=sampleRate;
      block.count=std::min(TransferFunctionCore::blockCapacity,samples-offset);
      std::copy_n(input[mi]+offset,block.count,block.mic.begin());
@@ -163,7 +163,7 @@ public:
   if(outputSignal!=Signal::None){
    if(plan.groups.size()!=1||juce::String::fromUTF8(plan.groups.front().key.c_str())!=outputDeviceKey){error="El loop requiere la misma tarjeta para entrada y salida";return false;}
    auto* outputEndpoint=findEndpoint(endpoints,outputDeviceKey);
-   if(!outputEndpoint||outputEndpoint->outputs.isEmpty()||outputChannel<1||(outputChannel>outputEndpoint->outputs.size()&&!(outputSignal==Signal::Pink&&outputChannel==InputLevels::maxChannels+1))){error="Canal de salida no disponible";return false;}
+   if(!outputEndpoint||outputEndpoint->outputs.isEmpty()||outputChannel<1||(outputChannel>outputEndpoint->outputs.size()&&!(outputSignal==Signal::Pink&&outputChannel==InputLevels::maxChannels+1)&&!(outputSignal==Signal::Pink&&outputChannel==InputLevels::stereoOutput&&outputEndpoint->outputs.size()>=2))){error="Canal de salida no disponible";return false;}
   }
   for(const auto& group:plan.groups){
    auto* endpoint=findEndpoint(endpoints,juce::String::fromUTF8(group.key.c_str()));
@@ -180,7 +180,7 @@ public:
    auto rates=session->device->getAvailableSampleRates();double rate=session->device->getCurrentSampleRate();
    if(rate<=0||!rates.contains(rate))rate=rates.isEmpty()?0:rates[0];int size=session->device->getDefaultBufferSize();
    if(rate<=0||size<=0){error="Formato de entrada no disponible";stop();return false;}
-   juce::BigInteger outputMask;if(outputSignal!=Signal::None){if(outputChannel==InputLevels::maxChannels+1){for(int ch=0;ch<endpoint->outputs.size();++ch)outputMask.setBit(ch);}else outputMask.setBit(outputChannel-1);}
+   juce::BigInteger outputMask;if(outputSignal!=Signal::None){if(outputChannel==InputLevels::maxChannels+1){for(int ch=0;ch<endpoint->outputs.size();++ch)outputMask.setBit(ch);}else if(outputChannel==InputLevels::stereoOutput){outputMask.setBit(0);outputMask.setBit(1);}else outputMask.setBit(outputChannel-1);}
    auto failure=session->device->open(mask,outputMask,rate,size);
    if(failure.isNotEmpty()){error=endpoint->name+": "+failure;stop();return false;}
    if(session->device->getActiveInputChannels()!=mask||session->device->getActiveOutputChannels()!=outputMask){error="Backend no respeto los canales de entrada/salida solicitados";stop();return false;}
@@ -190,7 +190,7 @@ public:
    if(session->fault.load()==Fault::BackendError)return fail(*session,"Error notificado por backend al iniciar",clock());
    if(session->fault.load()==Fault::UnexpectedRestart)return fail(*session,"Backend reinicio callback al iniciar",clock());
    if(!session->device->isPlaying())return fail(*session,"Dispositivo no entro en reproduccion de entrada",clock());
-   description+=endpoint->name+" "+juce::String(session->device->getCurrentSampleRate(),0)+" Hz / "+juce::String(session->device->getCurrentBufferSizeSamples())+(outputSignal!=Signal::None?" / "+juce::String(outputSignal==Signal::Pink?"rosa":"sweep")+" "+(outputChannel==InputLevels::maxChannels+1?"todas las salidas":("Output "+juce::String(outputChannel)))+" "+juce::String(outputSignal==Signal::Pink?pinkLevelDb:sweepLevelDb,0)+" dBFS; ":"; ");
+   description+=endpoint->name+" "+juce::String(session->device->getCurrentSampleRate(),0)+" Hz / "+juce::String(session->device->getCurrentBufferSizeSamples())+(outputSignal!=Signal::None?" / "+juce::String(outputSignal==Signal::Pink?"rosa":"sweep")+" "+(outputChannel==InputLevels::maxChannels+1?"todas las salidas":outputChannel==InputLevels::stereoOutput?"Output 1+2":("Output "+juce::String(outputChannel)))+" "+juce::String(outputSignal==Signal::Pink?pinkLevelDb:sweepLevelDb,0)+" dBFS; ":"; ");
    sessions.push_back(std::move(session));
   }
   activePlan=plan;runningFlag=true;return true;

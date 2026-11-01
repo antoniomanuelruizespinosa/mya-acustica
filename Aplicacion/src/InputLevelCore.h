@@ -10,6 +10,7 @@
 
 namespace InputLevels {
 constexpr int maxChannels=256;
+constexpr int stereoOutput=maxChannels+2;
 struct Route {std::string device;int mic=0,ref=0;};
 struct Source {std::string device;int channel=0;};
 struct Device {std::string key;int channels=0;};

@@ -12,6 +12,7 @@ int main(int argc,char** argv){
  assert(argc==2);
  auto preferenceFile=juce::File(juce::String::fromUTF8(argv[1])).getChildFile("mya-all-outputs-preference.json");
  preferenceFile.getParentDirectory().createDirectory();InputRoutePreferences allOutputs;allOutputs.outputDevice="CoreAudio / OCTA fixture";allOutputs.outputChannel=InputLevels::maxChannels+1;assert(preferenceFile.replaceWithText(juce::JSON::toString(allOutputs.encode())));auto restored=InputRoutePreferences::read(preferenceFile);assert(restored&&restored->outputChannel==InputLevels::maxChannels+1);preferenceFile.deleteFile();
+ allOutputs.outputChannel=InputLevels::stereoOutput;assert(allOutputs.save(preferenceFile));restored=InputRoutePreferences::read(preferenceFile);assert(restored&&restored->outputChannel==InputLevels::stereoOutput);preferenceFile.deleteFile();
  allOutputs.extraRoutes.push_back({key,6,5});for(int channel=1;channel<=8;++channel)allOutputs.monitoredInputs.push_back({key,channel});allOutputs.friendlyNames[key+"/1"]="MIC 1";assert(allOutputs.save(preferenceFile));restored=InputRoutePreferences::read(preferenceFile);assert(restored&&restored->allRoutes().size()==5&&restored->extraRoutes[0].mic==6&&restored->monitoredInputs.size()==8&&restored->friendlyNames.at(key+"/1")=="MIC 1");auto monitorPlan=InputLevels::plan(restored->allRoutes(),std::vector<bool>(5,false),restored->monitoredInputs,{{key,8}});assert(monitorPlan.valid());for(int channel=0;channel<8;++channel)assert(monitorPlan.groups[0].enabled[(size_t)channel]);preferenceFile.deleteFile();
  FirstCallbackRetry retry;retry.arm(true);assert(!retry.consume("Callbacks interrumpidos >2000 ms")&&!retry.available);
  retry.arm(true);assert(retry.consume("Sin primer callback >2000 ms [CoreAudio / OCTA-CAPTURE]")&&!retry.consume("Sin primer callback >2000 ms"));
@@ -80,6 +81,8 @@ int main(int argc,char** argv){
  bool captured=false;
  assert(engine.poll({},[&](const std::string& observed,const TransferFunctionCore::RawBlock& b){assert(observed==key&&b.count==480&&b.sampleRate==48000);assert(b.mic[0]==channels[0][0]&&b.ref[1]==channels[4][1]);captured=true;}));
  assert(captured);
+ // No se envía una FT si falta la entrada física de referencia.
+ engine.fixtureStart(juce::String(key),48000,{1},false,1,5);nowMs+=10;engine.fixtureCallback(input,1,480);int missingReference=0;assert(engine.poll({},[&](const std::string&,const TransferFunctionCore::RawBlock&){++missingReference;}));assert(missingReference==0);
  // More than four independent TF routes retain their own queue and physical microphone channel.
  engine.fixtureStart(juce::String(key),48000,{1,2,3,4,5});std::vector<InputLevels::Route> many(5);for(int i=0;i<5;++i)many[(size_t)i]={key,(i%4)+1,5};engine.fixtureRoutes(many,{true,true,true,true,true});nowMs+=10;engine.fixtureCallback(five,5,480);std::array<bool,5> seen{};assert(engine.poll({}, {},[&](int route,const TransferFunctionCore::RawBlock& b){assert(route>=0&&route<5&&b.mic[1]==channels[(size_t)(route%4)][1]&&b.ref[1]==channels[4][1]);seen[(size_t)route]=true;}));for(bool value:seen)assert(value);
  engine.fixtureStart(juce::String(key),48000,{1,2,3,4,5},false,1,5);

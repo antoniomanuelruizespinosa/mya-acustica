@@ -53,6 +53,7 @@ TransferFunctionPanel::~TransferFunctionPanel(){stopTimer();}
 void TransferFunctionPanel::clearTraces(){traces.clear();history.clear();lastUpdateMs=0;phasePane->repaint();magnitudePane->repaint();}
 
 void TransferFunctionPanel::setActive(bool shouldBeActive){
+ if(active==shouldBeActive)return;
  active=shouldBeActive;
  if(active&&isShowing()){timerCallback();startTimerHz(30);}
  else {stopTimer();clearTraces();}
