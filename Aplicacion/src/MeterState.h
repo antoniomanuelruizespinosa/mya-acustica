@@ -14,7 +14,7 @@ class MeterState {
 public:
  struct Source {juce::String deviceKey,label;int channel=0;};
  struct Card {juce::String id,name,deviceKey;int channel=0,metric=1,weight=1,alarmMetric=0,alarmWeight=0;double warning=105.,alarm=110.,hysteresis=1.;bool alarmEnabled=true,animate=true;double leqSeconds=10.;juce::String textColour="ffe5edf4",backgroundColour="ff080a0c",warningColour="ffff9500",alarmColour="ffe83232";};
- struct State {int rows=2,columns=2,x=100,y=100,width=960,height=660;bool sidebarMeters=false,mainVisible=true,clock=false,clock24=true,alwaysOnTop=false;juce::String primaryId;std::vector<Card> cards;};
+ struct State {int rows=2,columns=2,x=100,y=100,width=760,height=520;bool sidebarMeters=false,mainVisible=true,clock=false,clock24=true,alwaysOnTop=false;juce::String primaryId;std::vector<Card> cards;};
  struct Runtime {std::optional<double> current,maximum,leqFill;bool acquisitionValid=false,calibrated=false,overload=false,leqComplete=false;unsigned maxResetCount=0,leqResetCount=0;double leqPower=0;std::uint64_t leqSamples=0,lastSequence=0;void resetMax(){maximum.reset();++maxResetCount;}void resetLeq(){leqFill.reset();leqPower=0;leqSamples=0;lastSequence=0;leqComplete=false;current.reset();++leqResetCount;}};
 private:
  juce::File file;State data;juce::String error;bool usable=true;unsigned revision=0;juce::String defaultDevice;

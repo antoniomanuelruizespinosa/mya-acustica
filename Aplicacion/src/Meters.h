@@ -106,8 +106,8 @@ class MeterWindow : public juce::DocumentWindow,private juce::Timer {
 public:
  MeterPanel* panel;
  explicit MeterWindow(MeterState& state):DocumentWindow(MyaIdentity::name()+" - dB Meter",juce::Colour(0xff222427),DocumentWindow::allButtons),model(state){
-  setUsingNativeTitleBar(true);panel=new MeterPanel(model);setContentOwned(panel,true);setResizable(true,false);setResizeLimits(480,340,6000,6000);
-  const auto& s=model.state();juce::Rectangle<int> bounds(s.x,s.y,s.width,s.height);if(auto* display=juce::Desktop::getInstance().getDisplays().getDisplayForRect(bounds)){if(!bounds.intersects(display->userArea))bounds=bounds.withPosition(display->userArea.getPosition());}setBounds(bounds);initialising=false;setAlwaysOnTop(model.state().alwaysOnTop);topListener=model.listen([this]{setAlwaysOnTop(model.state().alwaysOnTop);});
+  setUsingNativeTitleBar(true);panel=new MeterPanel(model);setContentOwned(panel,true);setResizable(true,false);setResizeLimits(480,340,1400,900);
+  const auto& s=model.state();juce::Rectangle<int> bounds(s.x,s.y,juce::jlimit(480,1400,s.width),juce::jlimit(340,900,s.height));if(auto* display=juce::Desktop::getInstance().getDisplays().getDisplayForRect(bounds)){bounds.setSize(juce::jmin(bounds.getWidth(),display->userArea.getWidth()),juce::jmin(bounds.getHeight(),display->userArea.getHeight()));if(!bounds.intersects(display->userArea))bounds=bounds.withPosition(display->userArea.getPosition());}setBounds(bounds);initialising=false;setAlwaysOnTop(model.state().alwaysOnTop);topListener=model.listen([this]{setAlwaysOnTop(model.state().alwaysOnTop);});
  }
  ~MeterWindow() override{model.unlisten(topListener);stopTimer();saveBounds();}
  void moved() override{if(!initialising)startTimer(200);}
