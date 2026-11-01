@@ -22,6 +22,7 @@ public:
   b.button->setEnabled(s.enabled);b.button->setToggleState(s.checked,juce::dontSendNotification);
   b.button->setTitle(title(*c));b.button->setTooltip(details(*c,s));
   if(b.button->getProperties()["transportIcon"].toString().isEmpty()&&!bool(b.button->getProperties()["commandGlyph"]))b.button->setButtonText(b.compact?utf8(MyaCommands::compactName(*c,language)):title(*c));
+  if(b.id==960&&x.mode==1){b.button->setTitle("Snap");b.button->setButtonText("Snap");}
  }}
  juce::StringArray menuNames() const{juce::StringArray names;for(const auto& m:MyaCommands::menus())names.add(utf8(m.get(language)));return names;}
  juce::PopupMenu menu(int group) const{

@@ -140,32 +140,47 @@ void VirtualDSPPanel::paint(Graphics& g) {
 struct VirtualDSPSidebar::EngineCard : Component {
     int number;
     Colour colour;
-    TextButton micro{"Micro"}, reference{"RF"};
+    ComboBox measurement, reference;
+    std::function<void(int,int)> routeChanged;
     EngineCard(int index, Colour engineColour) : number(index + 1), colour(engineColour) {
-        for (auto* button : {&micro, &reference}) {
-            button->setEnabled(false);
-            button->setTooltip("Configuracion de entrada pendiente");
-            addAndMakeVisible(*button);
+        for (auto* choice : {&measurement, &reference}) {
+            choice->setTooltip("Entrada física asignada a este motor DSP; no modifica Mya Analyzer");
+            addAndMakeVisible(*choice);
         }
+        measurement.onChange = [this] { if (routeChanged) routeChanged(measurement.getSelectedId(), reference.getSelectedId()); };
+        reference.onChange = [this] { if (routeChanged) routeChanged(measurement.getSelectedId(), reference.getSelectedId()); };
+    }
+    void setChannels(const StringArray& channels, int mic, int ref) {
+        for (auto* choice : {&measurement, &reference}) {
+            choice->clear(dontSendNotification);
+            choice->addItem("--", 1);
+            for (int i = 0; i < channels.size(); ++i) choice->addItem(String(i + 1), i + 2);
+            choice->setEnabled(!channels.isEmpty());
+        }
+        measurement.setSelectedId(mic > 0 && mic <= channels.size() ? mic + 1 : 1, dontSendNotification);
+        reference.setSelectedId(ref > 0 && ref <= channels.size() ? ref + 1 : 1, dontSendNotification);
     }
     void resized() override {
-        const int buttonWidth = 42;
-        micro.setBounds(getWidth() - 2 * buttonWidth - 8, 7, buttonWidth, getHeight() - 14);
-        reference.setBounds(getWidth() - buttonWidth - 4, 7, buttonWidth, getHeight() - 14);
+        const int boxWidth = 42;
+        measurement.setBounds(getWidth() - 2 * boxWidth - 8, 26, boxWidth, 25);
+        reference.setBounds(getWidth() - boxWidth - 4, 26, boxWidth, 25);
     }
     void paint(Graphics& g) override {
         g.fillAll(Colour(0xff141c22));
         g.setColour(Colour(0xff52616a)); g.drawRect(getLocalBounds(), 1);
         g.setColour(colour); g.fillRect(5, 6, 24, 17);
         g.setFont(11.f); g.drawText("Engine " + String(number), 35, 4, getWidth() - 125, 20, Justification::centredLeft);
-        const int meterRight = getWidth() - 102;
+        const int meterRight = getWidth() - 105;
+        g.setColour(Colour(0xffb7c8d1)); g.setFont(10.f);
+        g.drawText("M", getWidth() - 2 * 42 - 8, 8, 42, 15, Justification::centred);
+        g.drawText("R", getWidth() - 42 - 4, 8, 42, 15, Justification::centred);
         for (int row = 0; row < 2; ++row) {
-            const int y = 27 + row * 14;
+            const int y = 29 + row * 19;
             g.setColour(Colours::white); g.drawText(row == 0 ? "M" : "R", 6, y - 2, 13, 13, Justification::centred);
-            g.setColour(Colour(0xff0a0d10)); g.fillRect(22, y, std::max(10, meterRight - 22), 7);
-            g.setColour(Colour(0xff4a5a62)); g.drawRect(22, y, std::max(10, meterRight - 22), 7, 1);
+            g.setColour(Colour(0xff0a0d10)); g.fillRect(22, y, std::max(10, meterRight - 22), 11);
+            g.setColour(Colour(0xff4a5a62)); g.drawRect(22, y, std::max(10, meterRight - 22), 11, 1);
             g.setColour(Colour(0xffb7c8d1)); g.setFont(9.f);
-            g.drawText("-- dBFS", meterRight - 42, y - 4, 42, 14, Justification::centredRight);
+            g.drawText("-- dBFS", meterRight - 50, y - 2, 48, 11, Justification::centredRight);
         }
     }
 };
@@ -192,12 +207,31 @@ VirtualDSPSidebar::~VirtualDSPSidebar() = default;
 
 void VirtualDSPSidebar::setEngines(const std::vector<VirtualDSPPanel::Engine>& entries) {
     engineCards.clear(); engineContent.removeAllChildren();
+    engineRoutes.resize(entries.size(), {0, 0});
     for (size_t i = 0; i < entries.size(); ++i) {
         auto card = std::make_unique<EngineCard>((int)i, entries[i].colour);
+        card->routeChanged = [this, i](int mic, int ref) { engineRoutes[i] = {mic > 1 ? mic - 1 : 0, ref > 1 ? ref - 1 : 0}; };
+        card->setChannels(inputChannels, engineRoutes[i].first, engineRoutes[i].second);
         engineContent.addAndMakeVisible(*card);
         engineCards.push_back(std::move(card));
     }
     resized();
+}
+
+void VirtualDSPSidebar::setInputChannels(const StringArray& channels) {
+    inputChannels = channels;
+    for (size_t i = 0; i < engineCards.size(); ++i)
+        engineCards[i]->setChannels(inputChannels, engineRoutes[i].first, engineRoutes[i].second);
+}
+
+void VirtualDSPSidebar::setRoute(int engine, int mic, int ref) {
+    if (engine < 0 || (size_t)engine >= engineRoutes.size()) return;
+    engineRoutes[(size_t)engine] = {mic, ref};
+    engineCards[(size_t)engine]->setChannels(inputChannels, mic, ref);
+}
+
+std::pair<int,int> VirtualDSPSidebar::route(int engine) const {
+    return engine >= 0 && (size_t)engine < engineRoutes.size() ? engineRoutes[(size_t)engine] : std::pair<int,int>{0, 0};
 }
 
 void VirtualDSPSidebar::resized() {

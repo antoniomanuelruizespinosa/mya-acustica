@@ -35,7 +35,8 @@ int main(int argc,char**){
  x.smoothing={{4,7}};assert(state(*find(313),x).checked);assert(state(*find(326),x).checked);assert(!state(*find(310),x).checked);
  for(auto lang:{Language::ES,Language::EN}){x.language=lang;assert(state(*find(380),x).checked==(lang==Language::ES));assert(state(*find(381),x).checked==(lang==Language::EN));}
  assert(shortcut('k',false,false,false,true,false)==972);assert(shortcut('k',false,true,false,true,false)==971);assert(shortcut('k',false,false,false,true,true)==0);assert(shortcut('k',false,true,false,true,true)==0);
- assert(shortcut('b',false,false,false,true,false)==405);assert(shortcut('o',false,false,false,true,false)==406);
+ assert(shortcut('o',false,false,false,true,false)==405);assert(shortcut('O',false,false,false,true,false)==405);
+ assert(shortcut('b',false,false,false,true,false)==406);assert(shortcut('B',false,false,false,true,false)==406);
  assert(shortcut('l',false,false,false,true,false)==502&&shortcut('f',false,false,false,true,false)==502);
  assert(shortcut('g',false,false,false,true,false)==504&&shortcut('s',false,false,false,true,false)==505);
  assert(shortcut(' ',false,false,false,true,false)==103);assert(shortcut('5',false,true,false,true,false)==409);

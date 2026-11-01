@@ -4,6 +4,7 @@
 #include <array>
 #include <functional>
 #include <memory>
+#include <utility>
 #include <vector>
 
 // Visual DSP console. Filter and export controls remain disabled until their
@@ -41,6 +42,9 @@ public:
     VirtualDSPSidebar();
     ~VirtualDSPSidebar() override;
     void setEngines(const std::vector<VirtualDSPPanel::Engine>&);
+    void setInputChannels(const juce::StringArray& channels);
+    void setRoute(int engine, int measurementInput, int referenceInput);
+    std::pair<int,int> route(int engine) const;
     std::function<void()> onSum, onAverage;
     void resized() override;
     void paint(juce::Graphics&) override;
@@ -49,6 +53,8 @@ private:
     juce::Viewport engineViewport;
     juce::Component engineContent;
     std::vector<std::unique_ptr<EngineCard>> engineCards;
+    juce::StringArray inputChannels;
+    std::vector<std::pair<int,int>> engineRoutes;
     std::array<juce::TextButton,8> globalButtons;
-    int cardHeight = 62;
+    int cardHeight = 72;
 };
