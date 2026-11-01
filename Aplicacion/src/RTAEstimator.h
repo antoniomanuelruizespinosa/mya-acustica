@@ -16,6 +16,7 @@ class RTAEstimator {
  int size=16384;
  using Complex=std::complex<double>;
  std::array<Complex,capacity> spectrum{};
+ std::array<double,capacity> recent{};
  std::array<double,capacity/2+1> power{};
  int filled=0,frames=0;
  double sampleRate=0;
@@ -40,11 +41,12 @@ public:
  void setFFTSize(int value){if(value<128||value>capacity||(value&(value-1))!=0||size==value)return;size=value;reset();}
  int fftSize()const{return size;}
  void reset(){filled=frames=0;sampleRate=0;valid=false;spectrum.fill({});power.fill(0);multi->reset();++revisionNumber;}
+ void clearAveragePreservingHistory(){frames=0;power.fill(0);multi->clearAveragePreservingHistory();if(valid&&sampleRate>0){for(int i=0;i<size;++i)spectrum[(size_t)i]={recent[(size_t)i],0};calculate();for(int i=0;i<filled;++i)spectrum[(size_t)i]={recent[(size_t)i],0};}++revisionNumber;}
  void setWindowType(SignalWindow::Type type){if(windowType==type)return;windowType=type;reset();multi->setWindowType(type);}
  SignalWindow::Type getWindowType()const{return windowType;}
  void setMultiWindowEnabled(bool enabled){if(multiWindowEnabled==enabled)return;multiWindowEnabled=enabled;reset();}
  bool isMultiWindowEnabled()const{return multiWindowEnabled;}
- void feed(const TransferFunctionCore::RawBlock& block){if(block.count<=0||block.count>TransferFunctionCore::blockCapacity||!std::isfinite(block.sampleRate)||block.sampleRate<=0)return;if(sampleRate>0&&std::abs(sampleRate-block.sampleRate)>1.e-6)reset();sampleRate=block.sampleRate;for(int i=0;i<block.count;++i){float sample=block.mic[(size_t)i];if(!std::isfinite(sample)){reset();return;}if(multiWindowEnabled)multi->feed(sample,0,block.sampleRate);spectrum[(size_t)filled]={sample,0};if(++filled==size){calculate();filled=0;}}}
+ void feed(const TransferFunctionCore::RawBlock& block){if(block.count<=0||block.count>TransferFunctionCore::blockCapacity||!std::isfinite(block.sampleRate)||block.sampleRate<=0)return;if(sampleRate>0&&std::abs(sampleRate-block.sampleRate)>1.e-6)reset();sampleRate=block.sampleRate;for(int i=0;i<block.count;++i){float sample=block.mic[(size_t)i];if(!std::isfinite(sample)){reset();return;}if(multiWindowEnabled)multi->feed(sample,0,block.sampleRate);recent[(size_t)filled]=sample;spectrum[(size_t)filled]={sample,0};if(++filled==size){calculate();filled=0;}}}
  std::optional<double> dbfs(double hz)const{if(!valid||hz<=0||sampleRate<=0)return {};if(multiWindowEnabled)if(auto value=multi->rtaDbfs(hz))return value;int k=(int)std::round(hz*size/sampleRate);if(k<1||k>size/2)return {};return 10.*std::log10(std::max(1.e-20,power[(size_t)k]));}
  std::optional<double> smoothedDbfs(double hz,double divisions)const{auto original=dbfs(hz);if(!original||divisions<=0)return original;double ratio=std::pow(2.,.5/divisions);int samples=std::clamp((int)std::ceil(MultiWindowSpectrum::pointsPerOctave/divisions),4,32);double total=0;int count=0;for(int i=0;i<=samples;++i){auto value=dbfs(hz*std::pow(ratio,2.*i/samples-1.));if(value){total+=std::pow(10.,*value/10.);++count;}}return count?std::optional<double>(10.*std::log10(std::max(1.e-20,total/count))):original;}
  bool ready()const{return valid;}

@@ -163,7 +163,7 @@ public:
   if(outputSignal!=Signal::None){
    if(plan.groups.size()!=1||juce::String::fromUTF8(plan.groups.front().key.c_str())!=outputDeviceKey){error="El loop requiere la misma tarjeta para entrada y salida";return false;}
    auto* outputEndpoint=findEndpoint(endpoints,outputDeviceKey);
-   if(!outputEndpoint||outputEndpoint->outputs.isEmpty()||outputChannel<1||(outputChannel>outputEndpoint->outputs.size()&&!(outputSignal==Signal::Pink&&outputChannel==InputLevels::maxChannels+1)&&!(outputSignal==Signal::Pink&&outputChannel==InputLevels::stereoOutput&&outputEndpoint->outputs.size()>=2))){error="Canal de salida no disponible";return false;}
+   if(!outputEndpoint||outputEndpoint->outputs.isEmpty()||outputChannel<1||(outputChannel>outputEndpoint->outputs.size()&&!(outputChannel==InputLevels::maxChannels+1)&&!(outputChannel==InputLevels::stereoOutput&&outputEndpoint->outputs.size()>=2))){error="Canal de salida no disponible";return false;}
   }
   for(const auto& group:plan.groups){
    auto* endpoint=findEndpoint(endpoints,juce::String::fromUTF8(group.key.c_str()));

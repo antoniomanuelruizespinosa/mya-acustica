@@ -92,6 +92,7 @@ public:
  void setFFTSize(int value){if(value<128||value>maxFftSize||(value&(value-1))!=0||activeSize==value)return;activeSize=value;reset();}
  int fftSizeSamples()const{return activeSize;}
  void reset(){filled=averages=0;rateHz=0;lastSequence=0;readyFlag=false;sweepMeasurement=false;pendingAlignmentReset=false;previousRef.fill(0);cross.fill({});refPower.fill(0);micPower.fill(0);result.fill({});transfer.fill({});impulse.fill(0);envelope.fill(0);multi->reset();++revisionNumber;}
+ void clearAveragePreservingHistory(){if(sweepMeasurement)return;bool hadMeasurement=readyFlag;averages=0;readyFlag=false;cross.fill({});refPower.fill(0);micPower.fill(0);result.fill({});transfer.fill({});impulse.fill(0);envelope.fill(0);multi->clearAveragePreservingHistory();if(hadMeasurement&&rateHz>0){int depth=averageDepth;averageDepth=1;calculate();averageDepth=depth;}++revisionNumber;}
  void setWindowType(SignalWindow::Type type){if(windowType==type)return;windowType=type;reset();multi->setWindowType(type);}
  SignalWindow::Type getWindowType()const{return windowType;}
  void setMultiWindowEnabled(bool enabled){if(multiWindowEnabled==enabled)return;multiWindowEnabled=enabled;reset();}

@@ -36,7 +36,7 @@ private:
   double powerScale=1;
   std::uint64_t revision=0;
   void reset(){write=count=hop=averages=0;revision=0;mic.fill(0);ref.fill(0);cross.fill({});micPower.fill(0);refPower.fill(0);}
-  void resetAverage(){averages=0;cross.fill({});micPower.fill(0);refPower.fill(0);}
+  void resetAverage(){averages=0;cross.fill({});micPower.fill(0);refPower.fill(0);if(count>=size)revision=0;}
   static void fft(std::array<Complex,size>& data){for(int i=1,j=0;i<size;++i){int bit=size>>1;for(;j&bit;bit>>=1)j^=bit;j^=bit;if(i<j)std::swap(data[(size_t)i],data[(size_t)j]);}for(int length=2;length<=size;length<<=1){Complex step=std::polar(1.,-2.*3.14159265358979323846/length);for(int start=0;start<size;start+=length){Complex w{1,0};for(int j=0;j<length/2;++j){auto u=data[(size_t)(start+j)],v=data[(size_t)(start+j+length/2)]*w;data[(size_t)(start+j)]=u+v;data[(size_t)(start+j+length/2)]=u-v;w*=step;}}}}
   void calculate(double stageRate,double alignmentMs,int depth,SignalWindow::Type window){int delay=std::clamp((int)std::llround(alignmentMs*stageRate/1000.),0,history-size);double windowSum=0;for(int i=0;i<size;++i){double w=SignalWindow::coefficient(window,i,size);int index=(write-size+i+history)%history;int reference=(index-delay+history)%history;xm[(size_t)i]={mic[(size_t)index]*w,0};xr[(size_t)i]={ref[(size_t)reference]*w,0};windowSum+=w;}fft(xm);fft(xr);double scale=2./windowSum;powerScale=scale*scale;double alpha=1./std::max(1,depth);for(int k=1;k<=size/2;++k){double gain=(k==size/2?.5:1.)*scale;auto c=xm[(size_t)k]*std::conj(xr[(size_t)k]);double mp=std::norm(xm[(size_t)k])*gain*gain,rp=std::norm(xr[(size_t)k])*gain*gain;if(averages==0){cross[(size_t)k]=c;micPower[(size_t)k]=mp;refPower[(size_t)k]=rp;}else{cross[(size_t)k]=cross[(size_t)k]*(1-alpha)+c*alpha;micPower[(size_t)k]=micPower[(size_t)k]*(1-alpha)+mp*alpha;refPower[(size_t)k]=refPower[(size_t)k]*(1-alpha)+rp*alpha;}}++averages;++revision;}
   void push(double m,double r,double stageRate,double alignmentMs,int depth,SignalWindow::Type window){mic[(size_t)write]=m;ref[(size_t)write]=r;write=(write+1)%history;count=std::min(count+1,history);if(count<size)return;if(++hop>=size/2||(count==size&&revision==0)){hop=0;calculate(stageRate,alignmentMs,depth,window);}}
@@ -49,6 +49,7 @@ private:
  static int stageFor(double hz,double rate){int stage=0;while(stage<levels-1&&rate/(size*(1<<stage))>hz*(std::pow(2.,1./pointsPerOctave)-1.))++stage;return stage;}
 public:
  void reset(){for(auto& level:stages)level.reset();decimators={};sampleRate=0;}
+ void clearAveragePreservingHistory(){for(size_t i=0;i<stages.size();++i){auto& level=stages[i];level.resetAverage();if(level.count>=size)level.calculate(sampleRate/(1<<(i+1)),delayMs,averageDepth,windowType);}}
  void setWindowType(SignalWindow::Type type){if(windowType!=type){windowType=type;reset();}}
  void setAverageDepth(int depth){if(depth>0&&depth!=averageDepth)averageDepth=depth;}
  void setDelayMs(double value){if(std::isfinite(value)&&value>=0&&std::abs(value-delayMs)>1.e-9){delayMs=value;for(auto& stage:stages)stage.resetAverage();}}

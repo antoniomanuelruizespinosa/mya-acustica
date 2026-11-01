@@ -45,7 +45,7 @@ class CaptureLibraryPanel : public juce::Component, public juce::DragAndDropCont
  };
  CaptureLibrary& library;juce::TreeView tree;std::unique_ptr<Item> root;
  juce::Label destination,empty;juce::TextEditor search;
- juce::TextButton tracesTab{"TF+AVG"},irTab{"Sweeps"};juce::TextButton newProject{"Proyecto +"},newFolder{"Carpeta +"};juce::TextButton more{juce::String::fromUTF8("≡")},info{"Info"},remove{"Eliminar"};
+ juce::TextButton tracesTab{"TF+AVG"},irTab{"Barridos"};juce::TextButton newProject{"Proyecto +"},newFolder{"Carpeta +"};juce::TextButton more{juce::String::fromUTF8("≡")},info{"Info"},remove{"Eliminar"};
  std::map<juce::String,bool> openChanges;
  juce::Button* captureControl=nullptr;
  bool rebuilding=false;MyaCommands::MeterSequence meterSequence;
@@ -68,10 +68,10 @@ class CaptureLibraryPanel : public juce::Component, public juce::DragAndDropCont
   if(n.kind==Kind::Folder){bool showAll=inherited||(searching&&matches(n));for(const auto& c:library.state().nodes)if(c.parent==n.id&&c.id!=library.state().active)append(*item,c,showAll);item->setOpen(searching||n.expanded);}
  }
  juce::String folderForNew() const{
-  auto ids=selected();if(ids.size()==1){auto* n=library.find(ids[0]);if(n&&n->kind==Kind::Folder)return n->id;}return library.state().active;
+  auto ids=selected();if(ids.size()!=1)return {};auto* n=library.find(ids[0]);if(!n||n->kind!=Kind::Folder)return {};while(n->parent.isNotEmpty()){n=library.find(n->parent);if(!n||n->kind!=Kind::Folder)return {};}return n->id;
  }
  void askName(juce::String title,juce::String initial,std::function<void(juce::String)> apply){
-  auto* box=new juce::AlertWindow(title,"Nombre / Name",juce::MessageBoxIconType::NoIcon);box->addTextEditor("name",initial);box->addButton("Aceptar / OK",1,juce::KeyPress(juce::KeyPress::returnKey));box->addButton("Cancelar / Cancel",0,juce::KeyPress(juce::KeyPress::escapeKey));
+  auto* box=new juce::AlertWindow(title,"Escribe un nombre:",juce::MessageBoxIconType::NoIcon);box->addTextEditor("name",initial,"Nombre");if(auto* editor=box->getTextEditor("name")){editor->setColour(juce::TextEditor::backgroundColourId,juce::Colour(0xfff2f7fa));editor->setColour(juce::TextEditor::textColourId,juce::Colour(0xff17222b));editor->setColour(juce::TextEditor::outlineColourId,juce::Colour(0xff00c9d8));}box->addButton("Aceptar",1,juce::KeyPress(juce::KeyPress::returnKey));box->addButton("Cancelar",0,juce::KeyPress(juce::KeyPress::escapeKey));
   juce::Component::SafePointer<CaptureLibraryPanel> safe(this);
   box->enterModalState(true,juce::ModalCallbackFunction::create([safe,box,callback=std::move(apply)](int result){if(safe&&result==1)callback(box->getTextEditorContents("name"));}),true);
  }
@@ -83,11 +83,11 @@ class CaptureLibraryPanel : public juce::Component, public juce::DragAndDropCont
  }
  void showInfo(){
   auto ids=selected();if(ids.size()!=1)return;auto* n=library.find(ids.front());if(!n)return;
-  juce::String text="ID: "+n->id+"\nCarpeta / Folder: "+library.folderPath(n->parent)+"\nArchivo / File: "+library.dataFile(n->id).getFullPathName();
-  if(n->kind!=Kind::Folder){auto trace=library.readTrace(n->id);text+="\nTipo / Type: "+juce::String(n->kind==Kind::SnapshotTF?(n->role=="average"?"TF / AVG":"TF / Individual"):n->kind==Kind::ImpulseResponse?"IR":"RTA")+"\nOrigen / Origin: "+n->origin+juce::String::fromUTF8("\nMétodo / Method: ")+n->method+"\nOriginal ID: "+(n->derivedFrom.isEmpty()?n->id:n->derivedFrom);
+  juce::String text="ID: "+n->id+"\nCarpeta: "+library.folderPath(n->parent)+"\nArchivo: "+library.dataFile(n->id).getFullPathName();
+  if(n->kind!=Kind::Folder){auto trace=library.readTrace(n->id);text+="\nTipo: "+juce::String(n->kind==Kind::SnapshotTF?(n->role=="average"?"TF / AVG":"TF / Individual"):n->kind==Kind::ImpulseResponse?"IR":"RTA")+"\nOrigen: "+n->origin+juce::String::fromUTF8("\nMétodo: ")+n->method+"\nOriginal ID: "+(n->derivedFrom.isEmpty()?n->id:n->derivedFrom);
    if(trace){const auto& v=trace->metadata;int coh=0;for(const auto& s:trace->samples)if(s.coherence)++coh;
-    auto value=[&](const juce::String& key){auto item=v[juce::Identifier(key)];return !item.isVoid()&&!item.isUndefined()&&item.toString().isNotEmpty()?item.toString():juce::String("desconocido / unknown");};
-    text+="\nMuestras / Samples: "+juce::String(trace->samples.size())+"\nCoherencia / Coherence: "+juce::String(coh)+" / "+juce::String(trace->samples.size())+"\nFs: "+value("sampleRateHz")+juce::String::fromUTF8("\nDelay de medición / Measurement delay (ms): ")+value("measurementDelayMs")+"\nReferencia temporal / Time reference: "+value("timeReference")+"\nDSP en captura / Capture DSP: "+value("captureDSPState");
+    auto value=[&](const juce::String& key){auto item=v[juce::Identifier(key)];return !item.isVoid()&&!item.isUndefined()&&item.toString().isNotEmpty()?item.toString():juce::String("desconocido");};
+    text+="\nMuestras: "+juce::String(trace->samples.size())+"\nCoherencia: "+juce::String(coh)+" / "+juce::String(trace->samples.size())+"\nFs: "+value("sampleRateHz")+juce::String::fromUTF8("\nRetardo de medición (ms): ")+value("measurementDelayMs")+"\nReferencia temporal: "+value("timeReference")+"\nDSP en captura: "+value("captureDSPState");
    }
   }
   juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::InfoIcon,n->name,text,"OK");
@@ -104,10 +104,10 @@ public:
   tracesTab.onClick=[this]{if(onCommand)onCommand(913);};irTab.onClick=[this]{if(onCommand)onCommand(914);};addAndMakeVisible(tracesTab);addAndMakeVisible(irTab);
   destination.setFont(juce::Font(juce::FontOptions(11.f)));addAndMakeVisible(destination);
   newProject.onClick=[this]{command(900);};newFolder.onClick=[this]{command(901);};addAndMakeVisible(newProject);addAndMakeVisible(newFolder);
-  search.setTextToShowWhenEmpty("Buscar / Search",juce::Colour(0xffa9bac8));search.onTextChange=[this]{refresh();};addAndMakeVisible(search);
+  search.setTextToShowWhenEmpty("Buscar",juce::Colour(0xffa9bac8));search.onTextChange=[this]{refresh();};addAndMakeVisible(search);
   tree.setRootItemVisible(false);tree.setMultiSelectEnabled(true);tree.setIndentSize(11);tree.setColour(juce::TreeView::backgroundColourId,juce::Colour(0xff11181e));addAndMakeVisible(tree);
   more.onClick=[this]{menu();};addAndMakeVisible(more);info.onClick=[this]{if(onCommand)onCommand(907);};addAndMakeVisible(info);
-  remove.setEnabled(false);remove.setTooltip("Borrado recuperable pendiente / Recoverable deletion pending");addAndMakeVisible(remove);
+  remove.setEnabled(false);remove.setTooltip("El borrado recuperable aún no está disponible");addAndMakeVisible(remove);
   empty.setFont(juce::Font(juce::FontOptions(11.f)));empty.setJustificationType(juce::Justification::topLeft);empty.setInterceptsMouseClicks(false,false);addAndMakeVisible(empty);
   refresh();
  }
@@ -124,14 +124,14 @@ public:
   root->setOpen(true);tree.setRootItem(root.get());
   std::function<void(Item&)> restore=[&](Item& p){if(std::find(selection.begin(),selection.end(),p.id)!=selection.end())p.setSelected(true,false);for(int i=0;i<p.getNumSubItems();++i)restore(*static_cast<Item*>(p.getSubItem(i)));};restore(*root);
   rebuilding=false;tracesTab.setToggleState(library.state().view==Kind::SnapshotTF,juce::dontSendNotification);irTab.setToggleState(library.state().view==Kind::Sweep,juce::dontSendNotification);tracesTab.setEnabled(library.ready());irTab.setEnabled(library.ready());
-  destination.setText(juce::String::fromUTF8("→ ")+library.folderPath(library.state().active),juce::dontSendNotification);destination.setTooltip("Destino de captura / Capture destination: "+library.folderPath(library.state().active));
+  destination.setText(juce::String::fromUTF8("→ ")+library.folderPath(library.state().active),juce::dontSendNotification);destination.setTooltip("Destino de captura: "+library.folderPath(library.state().active));
   int count=0;for(const auto& n:library.state().nodes)if(n.kind==library.state().view)++count;
   empty.setText(!library.ready()?library.lastError():count==0?(library.state().view==Kind::SnapshotTF?"Sin capturas TF.":library.state().view==Kind::Sweep?"Sin barridos guardados.":"Sin datos guardados."):juce::String{},juce::dontSendNotification);empty.setVisible(false);tree.setTooltip(empty.getText());info.setEnabled(selection.size()==1);resized();repaint();
  }
  void finish(bool success){if(!success&&onError)onError(library.lastError());refresh();if(onChange)onChange();if(onSelection)onSelection();}
  void menu(){if(!onCommand)return;juce::PopupMenu m;
   for(int id:{913,914,912,900,901,902,903,904,905,906,907,908,909,910,911}){
-   auto* c=MyaCommands::find(id);auto x=context();auto s=MyaCommands::state(*c,x);m.addItem(id,commandText?commandText(id):juce::String::fromUTF8(c->name.es.c_str()),s.enabled,s.checked);
+   auto* c=MyaCommands::find(id);auto x=context();auto s=MyaCommands::state(*c,x);m.addItem(id,juce::String::fromUTF8(c->name.es.c_str()),s.enabled,s.checked);
   }
   juce::Component::SafePointer<CaptureLibraryPanel> safe(this);m.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(&more),[safe](int id){if(safe&&id&&safe->onCommand)safe->onCommand(id);});
  }
@@ -142,14 +142,14 @@ public:
  void command(int id){
   auto ids=selected();juce::Component::SafePointer<CaptureLibraryPanel> safe(this);
   switch(id){
-  case 900:askName(juce::String::fromUTF8("Nuevo Proyecto / New Project"),"",[safe](juce::String name){if(safe)safe->finish(safe->library.createFolder(name,{},true).isNotEmpty());});break;
-  case 901:{auto parent=folderForNew();askName("Nueva carpeta / New folder","",[safe,parent](juce::String name){if(safe)safe->finish(safe->library.createFolder(name,parent).isNotEmpty());});break;}
-  case 902:if(ids.size()==1){auto key=ids[0];askName("Renombrar / Rename",library.find(key)->name,[safe,key](juce::String name){if(!safe)return;bool ok=safe->onRename?safe->onRename(key,name):safe->library.rename(key,name);if(ok)safe->finish(true);else safe->refresh();});}break;
+  case 900:askName("Nuevo proyecto","",[safe](juce::String name){if(safe)safe->finish(safe->library.createFolder(name,{},true).isNotEmpty());});break;
+  case 901:{auto parent=folderForNew();if(parent.isEmpty()){if(onError)onError("Selecciona un proyecto en la lista antes de crear una carpeta.");break;}askName("Nueva carpeta","",[safe,parent](juce::String name){if(safe)safe->finish(safe->library.createFolder(name,parent).isNotEmpty());});break;}
+  case 902:if(ids.size()==1){auto key=ids[0];askName("Renombrar",library.find(key)->name,[safe,key](juce::String name){if(!safe)return;bool ok=safe->onRename?safe->onRename(key,name):safe->library.rename(key,name);if(ok)safe->finish(true);else safe->refresh();});}break;
   case 903:if(ids.size()==1)finish(library.setDestination(ids[0]));break;
   case 904:chooseMove();break;
   case 905:case 906:finish(library.setVisibility(ids,id==905));break;
   case 907:showInfo();break;
-  case 908:{juce::PopupMenu colors;const char* names[]={"Verde / Green","Azul / Blue","Magenta","Amarillo / Yellow","Cian / Cyan","Naranja / Orange"};for(int i=0;i<6;++i)colors.addItem(i+1,names[i]);colors.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(&more),[safe,ids](int c){const char* values[]={"ff54ee22","ff4d88ff","fff03baf","ffffe33b","ff00e5ed","ffffac24"};if(safe&&c>0&&c<=6)safe->finish(safe->library.setColour(ids,values[c-1]));});break;}
+  case 908:{juce::PopupMenu colors;const char* names[]={"Verde","Azul","Magenta","Amarillo","Cian","Naranja"};for(int i=0;i<6;++i)colors.addItem(i+1,names[i]);colors.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(&more),[safe,ids](int c){const char* values[]={"ff54ee22","ff4d88ff","fff03baf","ffffe33b","ff00e5ed","ffffac24"};if(safe&&c>0&&c<=6)safe->finish(safe->library.setColour(ids,values[c-1]));});break;}
   case 911:finish(library.reload());break;
   case 912:finish(library.setView(Kind::RTA));break;case 913:finish(library.setView(Kind::SnapshotTF));break;case 914:finish(library.setView(Kind::Sweep));break;
   default:break;

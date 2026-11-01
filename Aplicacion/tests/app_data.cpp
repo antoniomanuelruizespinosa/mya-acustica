@@ -45,6 +45,16 @@ int main(int argc,char** argv){
   assert(migrateFrom(linked,root.getChildFile("linked-target"))==MigrationResult::Failed);
   assert(!root.getChildFile("linked-target").exists());
  }
- auto configRoot=root.getChildFile("config-test");assert(configRoot.createDirectory().wasOk());auto project=configRoot.getChildFile("proyecto-demo.json");assert(project.replaceWithText("{\"schema\":1,\"micros\":[{\"name\":\"MIC 1\"}]}"));assert(configRoot.getChildFile("entradas-niveles.json").replaceWithText("{\"schema\":3,\"routes\":[]}"));assert(configRoot.getChildFile("calibraciones-spl.json").replaceWithText("{\"offset\":42}"));auto bundle=ConfigurationBundle::capture(project,"Prueba OCTA");assert(ConfigurationBundle::valid(bundle));auto exported=configRoot.getChildFile("export.json");assert(ConfigurationBundle::write(exported,bundle));assert(project.replaceWithText("{\"schema\":1,\"micros\":[]}"));assert(configRoot.getChildFile("calibraciones-spl.json").replaceWithText("{\"offset\":99}"));assert(ConfigurationBundle::restore(project,juce::JSON::parse(exported)));assert(project.loadFileAsString().contains("MIC 1"));assert(configRoot.getChildFile("calibraciones-spl.json").loadFileAsString().contains("99"));
+ auto configRoot=root.getChildFile("config-test");assert(configRoot.createDirectory().wasOk());
+ auto project=configRoot.getChildFile("proyecto-demo.json");assert(project.replaceWithText(R"({"schema":1,"micros":[{"name":"MIC 1"}]})"));
+ assert(configRoot.getChildFile("entradas-niveles.json").replaceWithText(R"({"schema":3,"routes":[]})"));
+ auto calibration=configRoot.getChildFile("calibraciones-spl.json");
+ auto makeCalibration=[](int channel,double digital,double offset){auto* root=new juce::DynamicObject();root->setProperty("schema",1);root->setProperty("convention","rms-sample-power-v1");auto* record=new juce::DynamicObject();record->setProperty("deviceKey","Core / Card");record->setProperty("backend","Core");record->setProperty("device","Card");record->setProperty("channel",channel);record->setProperty("microphone","Mic");record->setProperty("gainDeclared","20 dB");record->setProperty("dateISO8601","2026-11-01T12:00:00+01:00");record->setProperty("referenceDb",94.);record->setProperty("digitalRmsDbFS",digital);record->setProperty("offsetDb",offset);record->setProperty("durationSeconds",5.);record->setProperty("rangeDb",0.);juce::Array<juce::var> rows;rows.add(juce::var(record));root->setProperty("records",rows);return juce::JSON::toString(juce::var(root));};
+ assert(calibration.replaceWithText(makeCalibration(1,-43.,137.)));
+ auto bundle=ConfigurationBundle::capture(project,"Prueba OCTA");assert(ConfigurationBundle::valid(bundle));auto exported=configRoot.getChildFile("export.json");assert(ConfigurationBundle::write(exported,bundle));
+ assert(project.replaceWithText(R"({"schema":1,"micros":[]})"));assert(calibration.replaceWithText(makeCalibration(9,-40.,134.)));
+ assert(ConfigurationBundle::restore(project,juce::JSON::parse(exported)));assert(project.loadFileAsString().contains("MIC 1"));
+ auto restored=juce::JSON::parse(calibration);assert(restored["records"].getArray()->size()==2);bool one=false,nine=false;for(const auto& row:*restored["records"].getArray()){if(int(row["channel"])==1)one=double(row["offsetDb"])==137.;if(int(row["channel"])==9)nine=double(row["offsetDb"])==134.;}assert(one&&nine);
+
  std::cout<<"PASS stable per-user path, explicit migration of project/routes/calibrations/library/captures, source preserved, existing destination not overwritten, unrelated files excluded.\n";
 }

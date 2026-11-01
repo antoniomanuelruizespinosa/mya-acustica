@@ -12,16 +12,18 @@ int main(){
  assert(!CoherenceBlanking::passes(.49,50.,true));
  assert(CoherenceBlanking::passes(.49,70.,false));
  assert(!CoherenceBlanking::passes(.49,70.1,false));
- TransferFunctionCore::Estimator estimator;
+ TransferFunctionCore::Estimator estimator;RTAEstimator retainedRta;
  constexpr double rate=48000.,frequency=1000.,gain=.5,phase=.4;
  int sample=0;
  for(int block=0;block<320;++block){
   TransferFunctionCore::RawBlock b;b.sequence=(std::uint64_t)block+1;b.sampleRate=rate;b.count=512;
   for(int i=0;i<b.count;++i,++sample){double angle=2*3.14159265358979323846*frequency*sample/rate;b.ref[(size_t)i]=(float)(.5*std::sin(angle));b.mic[(size_t)i]=(float)(.5*gain*std::sin(angle+phase));}
-  estimator.feed(b);
+  estimator.feed(b);retainedRta.feed(b);
  }
  assert(estimator.ready());auto point=estimator.at(frequency);assert(point);
  assert(std::abs(point->magnitudeDb-20*std::log10(gain))<.2);
+ estimator.clearAveragePreservingHistory();assert(estimator.ready());auto refreshed=estimator.at(frequency);assert(refreshed&&std::abs(refreshed->magnitudeDb-20*std::log10(gain))<.2);
+ assert(retainedRta.ready()&&retainedRta.dbfs(frequency));retainedRta.clearAveragePreservingHistory();assert(retainedRta.ready()&&retainedRta.dbfs(frequency));
  assert(std::abs(point->phaseDegrees-phase*180/3.14159265358979323846)<2.);
  assert(point->coherence>.99);
  // Input noise without a usable reference must not appear as a valid TF.
