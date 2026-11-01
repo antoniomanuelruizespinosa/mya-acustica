@@ -2,11 +2,16 @@
 #include "../src/RTAEstimator.h"
 #include "../src/SweepMeasurementCore.h"
 #include "../src/LoopSweep.h"
+#include "../src/CoherenceBlanking.h"
 #include <cassert>
 #include <cmath>
 #include <iostream>
 
 int main(){
+ assert(CoherenceBlanking::passes(.49,0.,true));
+ assert(!CoherenceBlanking::passes(.49,50.,true));
+ assert(CoherenceBlanking::passes(.49,70.,false));
+ assert(!CoherenceBlanking::passes(.49,70.1,false));
  TransferFunctionCore::Estimator estimator;
  constexpr double rate=48000.,frequency=1000.,gain=.5,phase=.4;
  int sample=0;
