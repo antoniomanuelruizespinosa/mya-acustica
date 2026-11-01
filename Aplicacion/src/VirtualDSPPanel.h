@@ -33,5 +33,22 @@ private:
     int selectedEngine = 0;
     static constexpr int rowHeight = 29;
     static constexpr int headerHeight = 30;
-    static constexpr int actionsWidth = 232;
+    static constexpr int actionsWidth = 0;
+};
+
+class VirtualDSPSidebar : public juce::Component {
+public:
+    VirtualDSPSidebar();
+    ~VirtualDSPSidebar() override;
+    void setEngines(const std::vector<VirtualDSPPanel::Engine>&);
+    std::function<void()> onSum, onAverage;
+    void resized() override;
+    void paint(juce::Graphics&) override;
+private:
+    struct EngineCard;
+    juce::Viewport engineViewport;
+    juce::Component engineContent;
+    std::vector<std::unique_ptr<EngineCard>> engineCards;
+    std::array<juce::TextButton,8> globalButtons;
+    int cardHeight = 62;
 };

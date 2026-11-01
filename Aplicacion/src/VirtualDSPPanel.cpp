@@ -7,7 +7,7 @@ struct VirtualDSPPanel::EngineRow : Component {
     int index = 0;
     Colour colour;
     Label name, gain, delay, time;
-    TextButton polarity{String::fromUTF8("Ø")}, equalizer{"Equalizer"}, find{"Find"}, clear{"C"};
+    TextButton polarity{String::fromUTF8("\xC3\x98")}, equalizer{"Equalizer"}, find{"Find"}, clear{"C"};
     ComboBox hpf, lpf;
     std::array<Label,6> filterFields;
     std::function<void(int)> findRequested;
@@ -19,6 +19,9 @@ struct VirtualDSPPanel::EngineRow : Component {
         time.setText("0.00", dontSendNotification);
         for (auto* label : {&name, &gain, &delay, &time}) {
             label->setColour(Label::textColourId, Colours::white);
+            label->setColour(Label::backgroundColourId, Colour(0xff111a20));
+            label->setColour(Label::outlineColourId, Colour(0xff44545e));
+            label->setFont(Font(FontOptions(11.f)));
             label->setJustificationType(Justification::centred);
             addAndMakeVisible(*label);
         }
@@ -29,9 +32,13 @@ struct VirtualDSPPanel::EngineRow : Component {
             choice->setTooltip("Filtro pendiente del motor DSP");
             addAndMakeVisible(*choice);
         }
-        for (auto& field : filterFields) {
-            field.setText("—", dontSendNotification);
+        for (size_t i = 0; i < filterFields.size(); ++i) {
+            auto& field = filterFields[i];
+            field.setText(i % 3 == 0 ? "1000" : i % 3 == 1 ? "1" : "1.0", dontSendNotification);
             field.setColour(Label::textColourId, Colours::grey);
+            field.setColour(Label::backgroundColourId, Colour(0xff111a20));
+            field.setColour(Label::outlineColourId, Colour(0xff44545e));
+            field.setFont(Font(FontOptions(11.f)));
             field.setJustificationType(Justification::centred);
             addAndMakeVisible(field);
         }
@@ -45,11 +52,12 @@ struct VirtualDSPPanel::EngineRow : Component {
     }
 
     void resized() override {
-        int x = 34, h = getHeight() - 4;
-        auto place = [&](Component& c, int w) { c.setBounds(x, 2, w, h); x += w + 3; };
+        const double scale = getWidth() / 970.0;
+        int x = roundToInt(34 * scale), h = getHeight() - 4;
+        auto place = [&](Component& c, int w) { int scaled = roundToInt(w * scale); c.setBounds(x, 2, scaled, h); x += scaled + roundToInt(3 * scale); };
         place(name, 106); place(gain, 52); place(polarity, 27); place(delay, 54);
         place(hpf, 92); for (int i = 0; i < 3; ++i) place(filterFields[(size_t)i], 38);
-        place(equalizer, 112 + std::max(0, getWidth() - 970)); place(lpf, 92);
+        place(equalizer, 112); place(lpf, 92);
         for (int i = 3; i < 6; ++i) place(filterFields[(size_t)i], 38);
         place(find, 48); place(time, 48); place(clear, 26);
     }
@@ -57,9 +65,10 @@ struct VirtualDSPPanel::EngineRow : Component {
     void paint(Graphics& g) override {
         g.fillAll(Colour(0xff080b0e));
         g.setColour(Colour(0xff253944)); g.drawRect(getLocalBounds(), 1);
-        g.setColour(colour); g.fillRect(4, 4, 26, getHeight() - 8);
+        int patch = roundToInt(26 * getWidth() / 970.0);
+        g.setColour(colour); g.fillRect(4, 4, patch, getHeight() - 8);
         g.setColour(Colours::black); g.setFont(12.f);
-        g.drawText(String(index + 1), 4, 4, 26, getHeight() - 8, Justification::centred);
+        g.drawText(String(index + 1), 4, 4, patch, getHeight() - 8, Justification::centred);
     }
 };
 
@@ -73,8 +82,8 @@ VirtualDSPPanel::VirtualDSPPanel() {
     for (size_t i = 0; i < globalButtons.size(); ++i) {
         globalButtons[i].setButtonText(names[i]);
         globalButtons[i].setEnabled(i == 0 || i == 4);
-        if (!globalButtons[i].isEnabled()) globalButtons[i].setTooltip("Comando pendiente de implementación");
-        addAndMakeVisible(globalButtons[i]);
+        if (!globalButtons[i].isEnabled()) globalButtons[i].setTooltip("Comando pendiente de implementacion");
+        addChildComponent(globalButtons[i]);
     }
     globalButtons[0].onClick = [this] { if (onSum) onSum(); };
     globalButtons[4].onClick = [this] { if (onAverage) onAverage(); };
@@ -114,7 +123,127 @@ void VirtualDSPPanel::paint(Graphics& g) {
     g.setColour(Colour(0xff284652)); g.drawRect(getLocalBounds(), 1);
     g.setColour(Colours::white); g.setFont(11.f);
     g.drawText("DSP", 12, 3, 40, 20, Justification::centredLeft);
-    const String headings = "ENGINE                     GAIN    Ø     DLY          HPF      FREQ    ORD      Q             EQ                  LPF      FREQ    ORD      G          FIND      TIME      C";
-    g.setColour(Colour(0xff9db5c4)); g.drawFittedText(headings, 10, 23, getWidth() - actionsWidth - 22, 15, Justification::centredLeft, 1);
-    g.setColour(Colours::white); g.drawText("GLOBAL", getWidth() - actionsWidth + 3, 5, 90, 18, Justification::centredLeft);
+    g.setColour(Colour(0xffdce8ee)); g.setFont(Font(FontOptions(12.f)).boldened());
+    const double scale = rows.getWidth() / 970.0;
+    auto heading = [&](const String& label, int x, int width) {
+        g.drawText(label, roundToInt(4 + x * scale), 23, roundToInt(width * scale), 15, Justification::centred, false);
+    };
+    heading("ENGINE", 38, 106); heading("GAIN", 147, 52); heading(String::fromUTF8("\xC3\x98"), 202, 27);
+    heading("DLY", 232, 54); heading("HPF", 289, 92);
+    heading("FREQ", 384, 38); heading("ORD", 425, 38); heading("Q", 466, 38);
+    heading("EQ", 507, 112); heading("LPF", 622, 92);
+    heading("FREQ", 717, 38); heading("ORD", 758, 38);
+    heading("Q", 799, 38); heading("FIND", 840, 48);
+    heading("TIME", 891, 48); heading("C", 942, 26);
+}
+
+struct VirtualDSPSidebar::EngineCard : Component {
+    int number;
+    Colour colour;
+    TextButton micro{"Micro"}, reference{"RF"};
+    EngineCard(int index, Colour engineColour) : number(index + 1), colour(engineColour) {
+        for (auto* button : {&micro, &reference}) {
+            button->setEnabled(false);
+            button->setTooltip("Configuracion de entrada pendiente");
+            addAndMakeVisible(*button);
+        }
+    }
+    void resized() override {
+        const int buttonWidth = 42;
+        micro.setBounds(getWidth() - 2 * buttonWidth - 8, 7, buttonWidth, getHeight() - 14);
+        reference.setBounds(getWidth() - buttonWidth - 4, 7, buttonWidth, getHeight() - 14);
+    }
+    void paint(Graphics& g) override {
+        g.fillAll(Colour(0xff141c22));
+        g.setColour(Colour(0xff52616a)); g.drawRect(getLocalBounds(), 1);
+        g.setColour(colour); g.fillRect(5, 6, 24, 17);
+        g.setFont(11.f); g.drawText("Engine " + String(number), 35, 4, getWidth() - 125, 20, Justification::centredLeft);
+        const int meterRight = getWidth() - 102;
+        for (int row = 0; row < 2; ++row) {
+            const int y = 27 + row * 14;
+            g.setColour(Colours::white); g.drawText(row == 0 ? "M" : "R", 6, y - 2, 13, 13, Justification::centred);
+            g.setColour(Colour(0xff0a0d10)); g.fillRect(22, y, std::max(10, meterRight - 22), 7);
+            g.setColour(Colour(0xff4a5a62)); g.drawRect(22, y, std::max(10, meterRight - 22), 7, 1);
+            g.setColour(Colour(0xffb7c8d1)); g.setFont(9.f);
+            g.drawText("-- dBFS", meterRight - 42, y - 4, 42, 14, Justification::centredRight);
+        }
+    }
+};
+
+VirtualDSPSidebar::VirtualDSPSidebar() {
+    setOpaque(true);
+    engineViewport.setViewedComponent(&engineContent, false);
+    engineViewport.setScrollBarsShown(true, false);
+    engineViewport.setScrollBarThickness(7);
+    addAndMakeVisible(engineViewport);
+    const char* labels[] = {"Suma", "Snap All", "Export All", "Sinc All", "AVG", "Limpiar Delays", "Limpiar Find", "Limpiar DSP"};
+    for (size_t i = 0; i < globalButtons.size(); ++i) {
+        auto& button = globalButtons[i];
+        button.setButtonText(labels[i]);
+        button.setEnabled(i == 0 || i == 4);
+        if (!button.isEnabled()) button.setTooltip("Comando pendiente de implementacion");
+        addAndMakeVisible(button);
+    }
+    globalButtons[0].onClick = [this] { if (onSum) onSum(); };
+    globalButtons[4].onClick = [this] { if (onAverage) onAverage(); };
+}
+
+VirtualDSPSidebar::~VirtualDSPSidebar() = default;
+
+void VirtualDSPSidebar::setEngines(const std::vector<VirtualDSPPanel::Engine>& entries) {
+    engineCards.clear(); engineContent.removeAllChildren();
+    for (size_t i = 0; i < entries.size(); ++i) {
+        auto card = std::make_unique<EngineCard>((int)i, entries[i].colour);
+        engineContent.addAndMakeVisible(*card);
+        engineCards.push_back(std::move(card));
+    }
+    resized();
+}
+
+void VirtualDSPSidebar::resized() {
+    auto bounds = getLocalBounds().reduced(5);
+    const int globalHeight = 110;
+    const int engineTop = 239;
+    engineViewport.setBounds(bounds.getX(), engineTop, bounds.getWidth(), std::max(20, getHeight() - engineTop - globalHeight - 8));
+    engineContent.setSize(std::max(100, engineViewport.getWidth() - 8), (int)engineCards.size() * cardHeight);
+    for (size_t i = 0; i < engineCards.size(); ++i)
+        engineCards[i]->setBounds(0, (int)i * cardHeight, engineContent.getWidth(), cardHeight);
+    const int x = bounds.getX(), width = bounds.getWidth(), top = getHeight() - globalHeight;
+    const int third = (width - 8) / 3;
+    for (int i = 0; i < 6; ++i)
+        globalButtons[(size_t)i].setBounds(x + (i % 3) * (third + 4), top + 18 + (i / 3) * 29, third, 26);
+    globalButtons[6].setBounds(x, top + 76, (width - 4) / 2, 27);
+    globalButtons[7].setBounds(x + (width + 4) / 2, top + 76, (width - 4) / 2, 27);
+}
+
+void VirtualDSPSidebar::paint(Graphics& g) {
+    g.fillAll(Colour(0xff222a30));
+    g.setColour(Colour(0xff56636d)); g.drawRect(getLocalBounds(), 1);
+    auto box = [&](Rectangle<int> r, const String& text, bool cyan = false) {
+        g.setColour(Colour(0xff141c22)); g.fillRect(r);
+        g.setColour(Colour(0xff52616a)); g.drawRect(r, 1);
+        g.setColour(cyan ? Colour(0xff00e5ed) : Colours::white); g.setFont(11.f);
+        g.drawText(text, r, Justification::centred);
+    };
+    const int x = 5, w = getWidth() - 10;
+    g.setColour(Colours::white); g.setFont(11.f); g.drawText("Generador", x + 3, 2, w, 19, Justification::centredLeft);
+    box({x, 22, (w - 4) / 2, 30}, "Gen"); box({x + (w + 4) / 2, 22, (w - 4) / 2, 30}, "-24");
+    box({x, 56, (w - 4) / 2, 29}, "Pink"); box({x + (w + 4) / 2, 56, (w - 4) / 2, 29}, "Sweep");
+    g.setColour(Colours::white); g.drawText("OUT 1", x, 91, 44, 23, Justification::centredLeft);
+    box({x + 44, 91, (w - 96) / 2, 23}, "1");
+    g.drawText("OUT 2", x + 50 + (w - 96) / 2, 91, 44, 23, Justification::centredLeft);
+    box({x + 96 + (w - 96) / 2, 91, (w - 96) / 2, 23}, "2");
+    g.setColour(Colour(0xff14212a)); g.fillRect(x + 3, 125, w - 52, 5);
+    g.setColour(Colour(0xff00c9eb)); g.fillRect(x + 3, 125, (w - 52) / 2, 5);
+    box({x + w - 42, 116, 42, 23}, "0");
+    g.setColour(Colour(0xff536775)); g.drawHorizontalLine(152, (float)x, (float)(x + w));
+    g.setColour(Colours::white); g.drawText("FFT", x + 2, 158, 42, 26, Justification::centredLeft);
+    box({x + 47, 158, w - 47, 26}, "64 FPPO");
+    g.drawText("Smth", x + 2, 190, 42, 26, Justification::centredLeft);
+    box({x + 47, 190, w - 47, 26}, "1/48 Oct");
+    g.setColour(Colour(0xff536775)); g.drawHorizontalLine(230, (float)x, (float)(x + w));
+    const int footer = getHeight() - 110;
+    g.drawHorizontalLine(footer, (float)x, (float)(x + w));
+    g.setColour(Colours::white); g.drawText("GLOBAL", x + 3, footer + 1, 75, 17, Justification::centredLeft);
+    g.drawText("RTA", x + 82, footer + 1, 45, 17, Justification::centredLeft);
 }
