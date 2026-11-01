@@ -181,7 +181,8 @@ void TransferFunctionPanel::drawGrid(juce::Graphics& g,juce::Rectangle<float> ar
 }
 
 void TransferFunctionPanel::drawTraces(juce::Graphics& g,juce::Rectangle<float> area,bool phase)const{
- for(const auto& trace:traces){
+ for(int layer=0;layer<2;++layer)for(const auto& trace:traces){
+  if(trace.selected!=(layer==1))continue;
   if(phase?!trace.showPhase:!trace.showMagnitude)continue;
   juce::Path path;bool started=false;double previousPhase=0.0;
   for(const auto& sample:trace.samples){
@@ -199,7 +200,8 @@ void TransferFunctionPanel::drawTraces(juce::Graphics& g,juce::Rectangle<float> 
 
 void TransferFunctionPanel::drawCoherence(juce::Graphics& g,juce::Rectangle<float> area)const{
  if(!coherenceVisible)return;
- for(const auto& trace:traces){
+ for(int layer=0;layer<2;++layer)for(const auto& trace:traces){
+  if(trace.selected!=(layer==1))continue;
   if(!trace.showMagnitude)continue;
   juce::Path path;bool started=false;
   for(const auto& sample:trace.samples){
