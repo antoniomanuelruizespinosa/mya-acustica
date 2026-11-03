@@ -22,6 +22,7 @@ public:
  bool multiWindow() const { return multiWindowMode; }
  void setDisplayOptions(bool multi, int smooth);
  void setWindowCount(int count);
+ void updateComponentLanguage(bool spanish);
  int windowCountChoice() const { return windowCount.getSelectedId(); }
  void setLineThickness(float pixels);
  std::function<void(juce::String)> onCursorReadout;
@@ -50,5 +51,6 @@ private:
  int smoothingMode=2;
  double lastUpdateMs=0;
  float lineThickness=2.f;
+ bool spanishLanguage=true;
  bool frozen=false;
 };

@@ -14,7 +14,7 @@ struct Menu { std::string es,en; std::vector<Item> items; };
 inline const std::vector<Menu>& analyzer(){
     static const std::vector<Menu> menus{
         {"Archivo","File",{{"About Mya Analyzer...","About Mya Analyzer...",703,true},
-            {"Importar Traza","Import Trace"},{"Buscar Actualizaciones","Check for Updates",790,true},
+            {"Importar Traza","Import Trace",16013,true},{"Buscar Actualizaciones","Check for Updates",790,true},
             {"Salir","Quit",16011,true}}},
         {"Dispositivos","Devices",{{"Configuración I-O (Octa-Capture/Dante)","I-O Configuration (Octa-Capture/Dante)",201,true},
             {"Ajustes de Hardware por Defecto","Default Hardware Settings"}}},

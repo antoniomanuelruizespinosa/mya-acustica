@@ -18,9 +18,12 @@ struct VirtualDSPPanel::EngineRow : Component {
     std::function<void(int,bool,OfflineDSPCore::Crossover)> crossoverChanged;
     std::function<void(int)> equalizerRequested;
     bool isSelected = false;
+    bool spanishLanguage=true;
+    bool defaultName=false;
+    void updateComponentLanguage(bool spanish){spanishLanguage=spanish;if(defaultName)name.setText((spanish?"Motor ":"Engine ")+String(index+1),dontSendNotification);equalizer.setButtonText(spanish?"Ecualizador":"Equalizer");find.setButtonText(spanish?"Buscar":"Find");for(auto* choice:{&hpf,&lpf})choice->changeItemText(1,spanish?"Ninguno":"None");repaint();}
 
     EngineRow(int number, const Engine& engine) : index(number), colour(engine.colour) {
-        name.setText(engine.name.isEmpty() ? "Engine " + String(number + 1) : engine.name, dontSendNotification);
+        defaultName=engine.name.isEmpty()||engine.name=="Engine "+String(number+1)||engine.name=="Motor "+String(number+1);name.setText(defaultName ? "Engine " + String(number + 1) : engine.name, dontSendNotification);
         time.setText("0.00", dontSendNotification);
         for (auto* label : {&name, &time}) {
             label->setColour(Label::textColourId, Colours::white);
@@ -169,6 +172,7 @@ void VirtualDSPPanel::setEngines(const std::vector<Engine>& entries) {
     for (int i = 0; i < OfflineDSPCore::channelCount; ++i) {
         Engine entry = (size_t)i < entries.size() ? entries[(size_t)i] : Engine{"Engine " + String(i + 1), defaults[(size_t)i]};
         auto row = std::make_unique<EngineRow>(i, entry);
+        row->updateComponentLanguage(spanishLanguage);
         row->findRequested = [this](int index) { if (onFind) onFind(index); };
         row->selected = [this](int index) { setSelectedEngine(index); };
         row->gainChanged = [this](int index, double value) {
@@ -264,18 +268,22 @@ void VirtualDSPPanel::paint(Graphics& g) {
     auto heading = [&](const String& label, int x, int width) {
         g.drawText(label, roundToInt(4 + x * scale), 23, roundToInt(width * scale), 15, Justification::centred, false);
     };
-    heading("ENGINE", 38, 106); heading("GAIN", 147, 52); heading(String::fromUTF8("\xC3\x98"), 202, 27);
-    heading("DLY", 232, 54); heading("HPF", 289, 92);
+    heading(spanishLanguage?"MOTOR":"ENGINE", 38, 106); heading(spanishLanguage?"GAN":"GAIN", 147, 52); heading(String::fromUTF8("\xC3\x98"), 202, 27);
+    heading(spanishLanguage?"RET":"DLY", 232, 54); heading("HPF", 289, 92);
     heading("FREQ", 384, 38); heading("ORD", 425, 38); heading("Q", 466, 38);
     heading("EQ", 507, 112); heading("LPF", 622, 92);
     heading("FREQ", 717, 38); heading("ORD", 758, 38);
-    heading("Q", 799, 38); heading("FIND", 840, 48);
-    heading("TIME", 891, 48); heading("C", 942, 26);
+    heading("Q", 799, 38); heading(spanishLanguage?"BUSCAR":"FIND", 840, 48);
+    heading(spanishLanguage?"TIEMPO":"TIME", 891, 48); heading("C", 942, 26);
 }
+
+void VirtualDSPPanel::updateComponentLanguage(bool spanish){spanishLanguage=spanish;for(auto& row:engines)row->updateComponentLanguage(spanish);const char* es[]={"Suma","Snap All","Export All","Sinc All","AVG","Limpiar Delays","Limpiar Find","Limpiar DSP"};const char* en[]={"Sum","Snap All","Export All","Sync All","AVG","Clear Delays","Clear Find","Clear DSP"};for(size_t i=0;i<globalButtons.size();++i)globalButtons[i].setButtonText(spanish?es[i]:en[i]);repaint();}
 
 struct VirtualDSPSidebar::EngineCard : Component {
     int number;
     Colour colour;
+    bool spanishLanguage=true;
+    void updateComponentLanguage(bool spanish){spanishLanguage=spanish;repaint();}
     ComboBox measurement, reference;
     std::function<void(int,int)> routeChanged;
     EngineCard(int index, Colour engineColour) : number(index + 1), colour(engineColour) {
@@ -305,7 +313,7 @@ struct VirtualDSPSidebar::EngineCard : Component {
         g.fillAll(Colour(0xff141c22));
         g.setColour(Colour(0xff52616a)); g.drawRect(getLocalBounds(), 1);
         g.setColour(colour); g.fillRect(5, 6, 24, 17);
-        g.setFont(11.f); g.drawText("Engine " + String(number), 35, 4, getWidth() - 125, 20, Justification::centredLeft);
+        g.setFont(11.f); g.drawText((spanishLanguage?"Motor ":"Engine ") + String(number), 35, 4, getWidth() - 125, 20, Justification::centredLeft);
         const int meterRight = getWidth() - 105;
         g.setColour(Colour(0xffb7c8d1)); g.setFont(10.f);
         g.drawText("M", getWidth() - 2 * 42 - 8, 8, 42, 15, Justification::centred);
@@ -340,12 +348,14 @@ VirtualDSPSidebar::VirtualDSPSidebar() {
 }
 
 VirtualDSPSidebar::~VirtualDSPSidebar() = default;
+void VirtualDSPSidebar::updateComponentLanguage(bool spanish){spanishLanguage=spanish;for(auto& card:engineCards)card->updateComponentLanguage(spanish);const char* es[]={"Suma","Snap All","Export All","Sinc All","AVG","Limpiar Delays","Limpiar Find","Limpiar DSP"};const char* en[]={"Sum","Snap All","Export All","Sync All","AVG","Clear Delays","Clear Find","Clear DSP"};for(size_t i=0;i<globalButtons.size();++i)globalButtons[i].setButtonText(spanish?es[i]:en[i]);repaint();}
 
 void VirtualDSPSidebar::setEngines(const std::vector<VirtualDSPPanel::Engine>& entries) {
     engineCards.clear(); engineContent.removeAllChildren();
     engineRoutes.resize(entries.size(), {0, 0});
     for (size_t i = 0; i < entries.size(); ++i) {
         auto card = std::make_unique<EngineCard>((int)i, entries[i].colour);
+        card->updateComponentLanguage(spanishLanguage);
         card->routeChanged = [this, i](int mic, int ref) { engineRoutes[i] = {mic > 1 ? mic - 1 : 0, ref > 1 ? ref - 1 : 0}; };
         card->setChannels(inputChannels, engineRoutes[i].first, engineRoutes[i].second);
         engineContent.addAndMakeVisible(*card);
@@ -396,9 +406,9 @@ void VirtualDSPSidebar::paint(Graphics& g) {
         g.drawText(text, r, Justification::centred);
     };
     const int x = 5, w = getWidth() - 10;
-    g.setColour(Colours::white); g.setFont(11.f); g.drawText("Generador", x + 3, 2, w, 19, Justification::centredLeft);
+    g.setColour(Colours::white); g.setFont(11.f); g.drawText(spanishLanguage?"Generador":"Generator", x + 3, 2, w, 19, Justification::centredLeft);
     box({x, 22, (w - 4) / 2, 30}, "Gen"); box({x + (w + 4) / 2, 22, (w - 4) / 2, 30}, "-24");
-    box({x, 56, (w - 4) / 2, 29}, "Pink"); box({x + (w + 4) / 2, 56, (w - 4) / 2, 29}, "Sweep");
+    box({x, 56, (w - 4) / 2, 29}, spanishLanguage?"Rosa":"Pink"); box({x + (w + 4) / 2, 56, (w - 4) / 2, 29}, spanishLanguage?"Barrido":"Sweep");
     g.setColour(Colours::white); g.drawText("OUT 1", x, 91, 44, 23, Justification::centredLeft);
     box({x + 44, 91, (w - 96) / 2, 23}, "1");
     g.drawText("OUT 2", x + 50 + (w - 96) / 2, 91, 44, 23, Justification::centredLeft);
@@ -409,7 +419,7 @@ void VirtualDSPSidebar::paint(Graphics& g) {
     g.setColour(Colour(0xff536775)); g.drawHorizontalLine(152, (float)x, (float)(x + w));
     g.setColour(Colours::white); g.drawText("FFT", x + 2, 158, 42, 26, Justification::centredLeft);
     box({x + 47, 158, w - 47, 26}, "64 FPPO");
-    g.drawText("Smth", x + 2, 190, 42, 26, Justification::centredLeft);
+    g.drawText(spanishLanguage?"Suav.":"Smth", x + 2, 190, 42, 26, Justification::centredLeft);
     box({x + 47, 190, w - 47, 26}, "1/48 Oct");
     g.setColour(Colour(0xff536775)); g.drawHorizontalLine(230, (float)x, (float)(x + w));
     const int footer = getHeight() - 110;

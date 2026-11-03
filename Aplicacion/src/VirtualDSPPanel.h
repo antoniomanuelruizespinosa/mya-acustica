@@ -22,6 +22,7 @@ public:
     ~VirtualDSPPanel() override;
     void setEngines(const std::vector<Engine>& engines);
     void setSelectedEngine(int index);
+    void updateComponentLanguage(bool spanish);
     int selectedEngineIndex() const { return selectedEngine; }
     bool loadImpulse(int index, std::vector<float> impulse, double sampleRate, std::size_t capacity = 0);
     void unloadImpulse(int index);
@@ -44,6 +45,7 @@ private:
     std::vector<std::unique_ptr<EngineRow>> engines;
     std::array<juce::TextButton,8> globalButtons;
     int selectedEngine = 0;
+    bool spanishLanguage=true;
     OfflineDSPCore offlineCore;
     std::array<std::unique_ptr<OfflineEQWindow>,8> eqWindows;
     void openEqualizer(int index);
@@ -57,6 +59,7 @@ public:
     VirtualDSPSidebar();
     ~VirtualDSPSidebar() override;
     void setEngines(const std::vector<VirtualDSPPanel::Engine>&);
+    void updateComponentLanguage(bool spanish);
     void setInputChannels(const juce::StringArray& channels);
     void setRoute(int engine, int measurementInput, int referenceInput);
     std::pair<int,int> route(int engine) const;
@@ -72,4 +75,5 @@ private:
     std::vector<std::pair<int,int>> engineRoutes;
     std::array<juce::TextButton,8> globalButtons;
     int cardHeight = 72;
+    bool spanishLanguage=true;
 };

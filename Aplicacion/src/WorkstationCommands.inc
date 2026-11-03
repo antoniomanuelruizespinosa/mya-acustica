@@ -9,6 +9,27 @@ void refreshModeMenus(){
  navigationMenus.setButtonText(spanish?"Todos los menús...":"All menus...");
  menuItemsChanged();
 }
+void updateInterfaceLanguage(){
+ const bool es=commands.language==MyaCommands::Language::ES;
+ refreshModeMenus();
+ commands.refresh();
+ libraryPanel.updateComponentLanguage(es);
+ dspConsole.updateComponentLanguage(es);
+ dspSidebar.updateComponentLanguage(es);
+ offlineDSPPlot.updateComponentLanguage(es);
+ offlineDSPPhasePlot.updateComponentLanguage(es);
+ offlineDSPMagnitudePlot.updateComponentLanguage(es);
+ if(mainTabs)mainTabs->rtaPanel().updateComponentLanguage(es);
+ globalSmthLabel.setText(es?"Suav.":"Smth",dontSendNotification);
+ globalSmth.changeItemText(1,es?"Ninguno":"Off");
+ const int depths[]={1,2,4,5,8,16,32,64};for(int i=0;i<8;++i)averageChoice.changeItemText(i+1,String(es?"Prom.":"Avg.")+String(depths[i]));
+ generatorOutput.setTextWhenNothingSelected(es?"Sin asignar":"Not assigned");
+ if(measure)measure->setButtonText("Mya Analyzer");
+ if(dsp)dsp->setButtonText("Mya DSP");
+ tracesPage.setButtonText("Snap");
+ if(onModeTitleChanged)onModeTitleChanged(mode);
+ repaint();
+}
 MyaCommands::Context commandContext() const {
  MyaCommands::Context x;x.mode=mode;x.measurementView=measurementView;x.selectedTF=source.getSelectedId();x.tfCount=(int)micNames.size();
  x.drawer=settingsDrawer&&settingsDrawer->isVisible();x.left=leftVisible;x.right=rightVisible;
@@ -69,7 +90,7 @@ void executeCommand(int id){
   if(linkSmooth.getToggleState()){plotSmooth[1].setSelectedId(plotSmooth[0].getSelectedId(),dontSendNotification);}
   break;
  }
- case 380:case 381:commands.language=id==380?MyaCommands::Language::ES:MyaCommands::Language::EN;if(graphWindow&&graphWindow->isVisible()){int tab=graphWindow->selectedTab();tfGraphSettings(tab,false);}refreshModeMenus();break;
+ case 380:case 381:commands.language=id==380?MyaCommands::Language::ES:MyaCommands::Language::EN;if(graphWindow&&graphWindow->isVisible()){int tab=graphWindow->selectedTab();tfGraphSettings(tab,false);}updateInterfaceLanguage();break;
  case 980:select(0);measurementView=0;plotChoice.setSelectedId(1,dontSendNotification);tfSettings.showIR=true;cursorPlot=-1;activePlot=1;status="Vista TF / magnitud, fase, coherencia e impulso de la TF M/R activa";break;
  case 981:measurementView=1;cursorPlot=-1;activePlot=0;status=selectedTFEstimator().ready()?"IR M/R medido / tiempo relativo al delay de TF":"IR demo sintetica / inicia TF con referencia para medir";break;
  case 420:measurementView=2;cursorPlot=-1;activePlot=2;status="RTA: pulsa Play en una TF o Play general para medir el espectro de cada micro.";break;
