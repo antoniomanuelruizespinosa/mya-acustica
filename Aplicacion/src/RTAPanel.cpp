@@ -2,6 +2,7 @@
 #include "PlotPresentation.h"
 #include "MultiWindowSpectrum.h"
 #include "GraphCursor.h"
+#include "MyaBrandAssets.h"
 #include <cmath>
 #include <limits>
 
@@ -20,7 +21,7 @@ juce::Colour heat(float db,double lower,double upper){
 RTAPanel::RTAPanel(DataProvider provider):dataProvider(std::move(provider)){
  speed.addItemList({"Fast","Slow","Prom.16"},1);speed.setSelectedId(1);speed.setTooltip("Respuesta temporal de la curva RTA");speed.onChange=[this]{history.clear();lastUpdateMs=0;};addAndMakeVisible(speed);
  windowCount.addItem("1 Ventana",1);windowCount.addItem("2 Ventanas",2);windowCount.setSelectedId(1);windowCount.onChange=[this]{resized();repaint();};addAndMakeVisible(windowCount);
- bandedStyle.addItem("Barras",1);bandedStyle.addItem(juce::String::fromUTF8("Líneas"),2);bandedStyle.addItem("Ambas",3);bandedStyle.setSelectedId(2);bandedStyle.onChange=[this]{repaint();};addAndMakeVisible(bandedStyle);
+ bandedStyle.addItem("Barras",1);bandedStyle.addItem(juce::String::fromUTF8("Líneas"),2);bandedStyle.addItem("Ambas",3);bandedStyle.addItem("3D",4);bandedStyle.setSelectedId(2);bandedStyle.onChange=[this]{repaint();};addAndMakeVisible(bandedStyle);
  smoothingChoiceBox.addItem("Ninguno",1);smoothingChoiceBox.addItem("1/3 Oct",2);smoothingChoiceBox.addItem("1/12 Oct",3);smoothingChoiceBox.addItem("1/24 Oct",4);smoothingChoiceBox.addItem("1/48 Oct",5);smoothingChoiceBox.setSelectedId(5);smoothingChoiceBox.onChange=[this]{const int choices[]={0,1,6,4,3,2};int id=smoothingChoiceBox.getSelectedId();if(id>=1&&id<=5){smoothingMode=choices[id];if(onSmoothingChanged)onSmoothingChanged(smoothingMode);repaint();}};addAndMakeVisible(smoothingChoiceBox);
  microphoneChoice.setTextWhenNothingSelected("Micro");microphoneChoice.onChange=[this]{spectrogramTraceId=-1;spectrogramHistory.clear();spectrogramImage={};spectrogramDirty=true;cursorVisible=false;cursorReading.clear();publishCursor();repaint();};addAndMakeVisible(microphoneChoice);
  peakTracker.setTooltip("Seguir el pico de nivel entre 20 Hz y Nyquist de la traza seleccionada");peakTracker.onClick=[this]{if(cursorVisible&&peakTracker.getToggleState())if(auto* trace=selectedTrace()){int index=peakIndex(*trace);if(index>=0)updateCursor(*trace,plotArea(),index);}repaint();};addAndMakeVisible(peakTracker);resized();
@@ -28,7 +29,7 @@ RTAPanel::RTAPanel(DataProvider provider):dataProvider(std::move(provider)){
 
 void RTAPanel::setDisplayOptions(bool multi,int smooth){if(multiWindowMode!=multi){multiWindowMode=multi;if(onResolutionChanged)onResolutionChanged(multi);}smoothingMode=juce::jlimit(1,6,smooth);int selected=smoothingMode==1?1:smoothingMode==6?2:smoothingMode==4?3:smoothingMode==3?4:smoothingMode==2?5:0;smoothingChoiceBox.setSelectedId(selected,juce::dontSendNotification);if(selected==0)smoothingChoiceBox.setText("1/6 Oct",juce::dontSendNotification);}
 void RTAPanel::setWindowCount(int count){if(count==1||count==2)windowCount.setSelectedId(count,juce::sendNotificationSync);}
-void RTAPanel::updateComponentLanguage(bool spanish){spanishLanguage=spanish;windowCount.changeItemText(1,spanish?"1 Ventana":"1 Window");windowCount.changeItemText(2,spanish?"2 Ventanas":"2 Windows");bandedStyle.changeItemText(1,spanish?"Barras":"Bar");bandedStyle.changeItemText(2,spanish?juce::String::fromUTF8("Líneas"):"Line");bandedStyle.changeItemText(3,spanish?"Ambas":"Both");smoothingChoiceBox.changeItemText(1,spanish?"Ninguno":"None");microphoneChoice.setTextWhenNothingSelected(spanish?juce::String::fromUTF8("Micrófono"):"Microphone");speed.changeItemText(1,spanish?juce::String::fromUTF8("Rápido"):"Fast");speed.changeItemText(2,spanish?"Lento":"Slow");peakTracker.setButtonText(spanish?"Seguir pico":"Peak Tracker");refreshMicrophoneChoices();repaint();}
+void RTAPanel::updateComponentLanguage(bool spanish){spanishLanguage=spanish;windowCount.changeItemText(1,spanish?"1 Ventana":"1 Window");windowCount.changeItemText(2,spanish?"2 Ventanas":"2 Windows");bandedStyle.changeItemText(1,spanish?"Barras":"Bar");bandedStyle.changeItemText(2,spanish?juce::String::fromUTF8("Líneas"):"Line");bandedStyle.changeItemText(3,spanish?"Ambas":"Both");bandedStyle.changeItemText(4,"3D");smoothingChoiceBox.changeItemText(1,spanish?"Ninguno":"None");microphoneChoice.setTextWhenNothingSelected(spanish?juce::String::fromUTF8("Micrófono"):"Microphone");speed.changeItemText(1,spanish?juce::String::fromUTF8("Rápido"):"Fast");speed.changeItemText(2,spanish?"Lento":"Slow");peakTracker.setButtonText(spanish?"Seguir pico":"Peak Tracker");refreshMicrophoneChoices();repaint();}
 void RTAPanel::setLineThickness(float pixels){lineThickness=juce::jlimit(1.f,4.f,pixels);repaint();}
 void RTAPanel::setFrozen(bool shouldFreeze){frozen=shouldFreeze;if(frozen)stopTimer();}
 void RTAPanel::clearTraces(){traces.clear();history.clear();spectrogramHistory.clear();spectrogramImage={};spectrogramDirty=true;spectrogramHead=0;spectrogramTraceId=-1;lastUpdateMs=0;cursorVisible=false;cursorReading.clear();microphoneSignature.clear();microphoneChoice.clear(juce::dontSendNotification);publishCursor();repaint();}
@@ -105,7 +106,16 @@ void RTAPanel::updateSpectrogramImage(){
  }
 }
 void RTAPanel::paint(juce::Graphics& g){
- using namespace juce;const Colour plot(0xff080a0c),line(0xff626e78),muted(0xffa9bac8),green(0xff54ee22),orange(0xffffac24);auto bounds=getLocalBounds();g.fillAll(plot);auto p=plotArea();if(p.isEmpty())return;g.setColour(line);g.drawRect(p);
+ using namespace juce;const Colour plot(0xff080a0c),line(0xff626e78),muted(0xffa9bac8),green(0xff54ee22),orange(0xffffac24);auto bounds=getLocalBounds();g.fillAll(plot);auto p=plotArea();if(p.isEmpty())return;
+ if(bandedStyle.getSelectedId()==4){
+  g.setColour(Colour(0xff101b26));g.fillRoundedRectangle(p.toFloat(),12.f);
+  auto logo=ImageCache::getFromMemory(MyaBrandAssets::myaanalyzericonv1_png,MyaBrandAssets::myaanalyzericonv1_pngSize);
+  if(logo.isValid()){auto size=jmin(p.getWidth()/3,p.getHeight()/2);g.setOpacity(.065f);g.drawImageWithin(logo,p.getCentreX()-size/2,p.getCentreY()-size/2,size,size,RectanglePlacement::centred);g.setOpacity(1.f);}
+  g.setColour(Colour(0xffa9c9d8));g.setFont(16.f);
+  g.drawFittedText(spanishLanguage?String::fromUTF8("Modo 3D: Preparado para inyección de malla de aceleración por hardware"):String::fromUTF8("3D Mode: Ready for hardware acceleration mesh injection"),p.reduced(24),Justification::centred,2);
+  return;
+ }
+ g.setColour(line);g.drawRect(p);
  for(int db=-120;db<=0;db+=20){float y=(float)(p.getBottom()-(db+120.)/120.*p.getHeight());g.setColour(line.withAlpha(.55f));g.drawHorizontalLine((int)y,(float)p.getX(),(float)p.getRight());g.setColour(muted);g.setFont(10.f);g.drawText(String(db),5,(int)y-9,43,18,Justification::centredLeft);}
  for(double hz:PlotPresentation::frequencyTicks){float x=(float)(p.getX()+std::log(hz/20.)/std::log(1000.)*p.getWidth());g.setColour(line.withAlpha(.45f));g.drawVerticalLine((int)x,(float)p.getY(),(float)p.getBottom());g.setColour(muted);g.setFont(10.f);g.drawText(hz>=1000?String(hz/1000.,hz==1000?0:1)+"k":String(hz,0),(int)x-24,p.getBottom()+5,48,18,Justification::centred);}
  for(const auto& trace:traces){if(microphoneChoice.getSelectedId()>0&&trace.id!=microphoneChoice.getSelectedId()-1)continue;if(trace.dbfs.size()<2)continue;Path path;bool started=false;g.setColour(trace.colour);for(size_t i=0;i<trace.dbfs.size();++i){if(!std::isfinite(trace.dbfs[i])){started=false;continue;}float x=(float)p.getX()+(float)i/(float)(trace.dbfs.size()-1)*(float)p.getWidth();float y=(float)(p.getBottom()-jlimit(0.f,120.f,trace.dbfs[i]+120.f)/120.f*p.getHeight());if(bandedStyle.getSelectedId()!=2)g.drawLine(x,y,x,(float)p.getBottom(),juce::jmax(1.f,(float)p.getWidth()/(float)trace.dbfs.size()*.75f));if(!started){path.startNewSubPath(x,y);started=true;}else path.lineTo(x,y);}if(bandedStyle.getSelectedId()!=1)g.strokePath(path,PathStrokeType(lineThickness));}
