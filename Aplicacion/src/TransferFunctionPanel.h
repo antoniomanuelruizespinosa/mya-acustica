@@ -56,6 +56,7 @@ public:
  std::optional<Sample> sampleAt(int traceId,double frequencyHz,bool phase) const;
  std::function<void(double)> onCoherenceThresholdChanged;
  std::function<void()> onCoherenceThresholdCommitted;
+ std::function<void(int,double,bool)> onCursorMoved;
 
 private:
  class PlotPane;
@@ -68,6 +69,7 @@ private:
  float coherenceLineY(juce::Rectangle<float> bounds) const;
  void dragCoherenceHandle(float panelY);
  void updateCoherenceHandle();
+ void updatePaneCursor(int plot,juce::Point<float> position,bool leaving);
  std::optional<float> frequencyPosition(double frequencyHz,juce::Rectangle<float> bounds,bool phase) const;
  float valuePosition(double value,juce::Rectangle<float> bounds,bool phase) const;
 

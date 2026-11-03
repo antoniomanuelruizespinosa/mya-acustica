@@ -38,8 +38,8 @@ class TransferFunctionPanel::PlotPane : public juce::Component {
 public:
  PlotPane(TransferFunctionPanel& panel,bool isPhase):owner(panel),phase(isPhase){setInterceptsMouseClicks(true,false);}
  void paint(juce::Graphics& g) override{owner.paintPane(g,getLocalBounds().toFloat(),phase);}
- void mouseMove(const juce::MouseEvent& e) override{if(auto* parent=owner.getParentComponent())parent->mouseMove(e.getEventRelativeTo(parent));}
- void mouseExit(const juce::MouseEvent& e) override{if(auto* parent=owner.getParentComponent())parent->mouseExit(e.getEventRelativeTo(parent));}
+ void mouseMove(const juce::MouseEvent& e) override{owner.updatePaneCursor(phase?1:2,e.position,false);}
+ void mouseExit(const juce::MouseEvent&) override{owner.updatePaneCursor(phase?1:2,{},true);}
 private:
  TransferFunctionPanel& owner;
  bool phase;
@@ -161,6 +161,26 @@ void TransferFunctionPanel::setPlotCursor(int plot,std::optional<juce::Point<flo
  if(plot!=1&&plot!=2)return;
  plotCursors[(size_t)plot]=position;
  (plot==1?phasePane:magnitudePane)->repaint();
+}
+
+void TransferFunctionPanel::updatePaneCursor(int plot,juce::Point<float> position,bool leaving){
+ auto& pane=plot==1?*phasePane:*magnitudePane;
+ auto area=pane.getLocalBounds().toFloat().reduced(0.f);
+ area={area.getX()+44.f,area.getY()+23.f,area.getWidth()-52.f,area.getHeight()-48.f};
+ if(leaving||area.isEmpty()||!area.contains(position)){setPlotCursor(plot,{});if(onCursorMoved)onCursorMoved(plot,0.,false);return;}
+ const auto index=(size_t)plot;
+ const double screen=(position.x-area.getX())/area.getWidth();
+ const double u=PlotPresentation::coordinate(screen,panX[index],zoomX[index]);
+ const double hz=minHz*std::pow(maxHz/minHz,u);
+ const Trace* focus=nullptr;
+ for(const auto& trace:traces)if(!suppressedTraces.count(trace.id)&&(plot==1?trace.showPhase:trace.showMagnitude)){
+  if(!focus||trace.selected)focus=&trace;
+  if(trace.selected)break;
+ }
+ const auto sample=focus?sampleAt(focus->id,hz,plot==1):std::optional<Sample>{};
+ if(sample){const float y=valuePosition(plot==1?sample->phaseDegrees:sample->magnitudeDb,area,plot==1);setPlotCursor(plot,juce::Point<float>{(float)screen,(y-area.getY())/area.getHeight()});}
+ else setPlotCursor(plot,{});
+ if(onCursorMoved)onCursorMoved(plot,u,sample.has_value());
 }
 
 std::optional<float> TransferFunctionPanel::frequencyPosition(double hz,juce::Rectangle<float> area,bool phase)const{
