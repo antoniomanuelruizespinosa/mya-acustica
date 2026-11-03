@@ -71,7 +71,7 @@ void RTAPanel::timerCallback(){
  lastUpdateMs=now;
  const auto rawSpectrum=incoming.front().dbfs;
  if(temporalMode==2||temporalMode==3){
-  const double tau=temporalMode==2?.28:1.1;
+  const double tau=temporalMode==2?.16:.55;
   const double retention=std::exp(-dt/tau);
   for(auto& current:incoming)for(const auto& previous:traces)if(previous.id==current.id&&previous.dbfs.size()==current.dbfs.size()){
    for(size_t i=0;i<current.dbfs.size();++i){auto& value=current.dbfs[i];const float old=previous.dbfs[i];if(std::isfinite(value)&&std::isfinite(old)&&value<old)value=(float)(value+(old-value)*retention);}
@@ -93,7 +93,7 @@ void RTAPanel::mouseDown(const juce::MouseEvent& event){
  draggedLimit=upperDistance<=lowerDistance?DragLimit::Upper:DragLimit::Lower;
  dragLimitTo(event.position.y);
 }
-void RTAPanel::mouseDrag(const juce::MouseEvent& event){if(draggedLimit!=DragLimit::None)dragLimitTo(event.position.y);}
+void RTAPanel::mouseDrag(const juce::MouseEvent& event){if(draggedLimit!=DragLimit::None)dragLimitTo(event.position.y);else mouseMove(event);}
 void RTAPanel::mouseUp(const juce::MouseEvent&){draggedLimit=DragLimit::None;}
 void RTAPanel::dragLimitTo(float y){
  auto area=spectrogramArea();if(area.isEmpty())return;

@@ -56,7 +56,7 @@ public:
  std::optional<Sample> sampleAt(int traceId,double frequencyHz,bool phase) const;
  std::function<void(double)> onCoherenceThresholdChanged;
  std::function<void()> onCoherenceThresholdCommitted;
- std::function<void(int,double,bool)> onCursorMoved;
+ std::function<void(int,double,std::optional<Sample>)> onCursorMoved;
 
 private:
  class PlotPane;

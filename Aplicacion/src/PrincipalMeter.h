@@ -82,8 +82,8 @@ public:
   const int width=getWidth();
   input.setBounds(2,2,juce::jmax(1,width-28),21);
   floating.setBounds(juce::jmax(0,width-23),2,21,21);
-  reset.setBounds(juce::jmax(0,width-20),75,18,16);
-  type.setBounds(2,91,juce::jmax(1,width-4),19);
+  reset.setBounds(juce::jmax(0,width-20),getHeight()-37,18,16);
+  type.setBounds(2,getHeight()-21,juce::jmax(1,width-4),19);
  }
  void paint(juce::Graphics& g)override{
   auto* c=model.primaryCard();const auto& runtime=model.runtime(c?c->id:juce::String{});
@@ -99,14 +99,14 @@ public:
   const bool valid=c&&runtime.acquisitionValid&&(c->metric==1||runtime.calibrated);
   const auto current=valid?runtime.current:std::nullopt;
   const auto maximum=valid?runtime.maximum:std::nullopt;
-  const juce::Rectangle<int> readingBox(3,27,juce::jmax(1,getWidth()-6),46);
+  const juce::Rectangle<int> readingBox(3,27,juce::jmax(1,getWidth()-6),juce::jmax(46,getHeight()-66));
   g.setColour(background.darker(.15f));g.fillRoundedRectangle(readingBox.toFloat(),3.f);
   g.setColour(c?juce::Colour::fromString(c->textColour):juce::Colours::white);
   g.setFont(model.state().clock?25.f:juce::jlimit(20.f,38.f,(float)getWidth()/6.f));
   const auto value=model.state().clock?juce::Time::getCurrentTime().formatted(model.state().clock24?"%H:%M:%S":"%I:%M %p"):MeterState::valueText(current);
   g.drawFittedText(value,readingBox.reduced(5,2),juce::Justification::centred,1,.7f);
   g.setFont(10.f);g.setColour(juce::Colour(0xffa9bac8));
-  g.drawFittedText(valid&&runtime.overload?juce::String("OVERLOAD"):"Max: "+MeterState::valueText(maximum),5,75,juce::jmax(1,getWidth()-29),15,juce::Justification::centred,1);
+  g.drawFittedText(valid&&runtime.overload?juce::String("OVERLOAD"):"Max: "+MeterState::valueText(maximum),5,getHeight()-37,juce::jmax(1,getWidth()-29),15,juce::Justification::centred,1);
  }
  void mouseUp(const juce::MouseEvent& e)override{if(e.originalComponent!=this||reset.getBounds().contains(e.getPosition()))return;if(e.mods.isPopupMenu()){juce::PopupMenu menu;menu.addItem(973,"SPL Config");menu.addItem(972,"Medidor / reloj [K]");auto* c=model.primaryCard();menu.addItem(974,"Reset Max",c&&model.runtime(c->id).maximum.has_value());menu.addItem(975,"Reset Leq",c&&model.runtime(c->id).leqFill.has_value());menu.addItem(290,"Calibrar SPL RMS");menu.addItem(203,"Flotantes [E,E]");menu.addItem(971,"Ocultar principal [Option K]");juce::Component::SafePointer<PrincipalMeter> safe(this);menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(this),[safe](int id){if(safe&&id&&safe->command)safe->command(id);});}else if(e.y>=24&&command)command(973);}
 };
