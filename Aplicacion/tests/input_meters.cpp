@@ -1,7 +1,15 @@
 #include "../src/WorkspaceViewState.h"
+#include "../src/MeterPulse.h"
 #include <cassert>
 #include <iostream>
 int main(int argc,char** argv){
+ using MeterPulse::Level;
+ assert(MeterPulse::classify(std::nullopt)==Level::None);
+ assert(MeterPulse::classify(-12.01)==Level::None);
+ assert(MeterPulse::classify(-12.0)==Level::Orange);
+ assert(MeterPulse::classify(-0.01)==Level::Orange);
+ assert(MeterPulse::classify(0.0)==Level::Red);
+ assert(MeterPulse::classify(std::nullopt,true)==Level::Red);
  assert(argc==2);TFMeterSettings s;assert(s.valid()&&s.orangeDbFS==-12&&s.redDbFS==-6);TFMeterChannel ch;
  assert(TFMeterChannel::position(-12,17,200)==177&&TFMeterChannel::position(-6,17,200)==197);assert(TFMeterChannel::position(-18,10,100)==80&&TFMeterChannel::position(-3,10,100)==105);
  assert(!ch.level&&!ch.peak&&!ch.clipped());ch.update(-30.,0,s);assert(*ch.level==-30&&*ch.peak==-30);

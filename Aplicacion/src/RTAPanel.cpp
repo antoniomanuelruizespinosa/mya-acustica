@@ -1,6 +1,7 @@
 #include "RTAPanel.h"
 #include "PlotPresentation.h"
 #include "MultiWindowSpectrum.h"
+#include "GraphCursor.h"
 #include <cmath>
 #include <limits>
 
@@ -37,7 +38,18 @@ juce::Rectangle<int> RTAPanel::spectrogramArea()const{if(windowCount.getSelected
 const RTAPanel::Trace* RTAPanel::selectedTrace()const{for(const auto& trace:traces)if(trace.selected)return &trace;return traces.empty()?nullptr:&traces.front();}
 int RTAPanel::peakIndex(const Trace& trace)const{float maximum=-std::numeric_limits<float>::infinity();int best=-1;for(size_t i=0;i<trace.dbfs.size();++i){double hz=MultiWindowSpectrum::gridFrequency((int)i);if(hz<20.||hz>trace.nyquistHz)continue;if(std::isfinite(trace.dbfs[i])&&trace.dbfs[i]>maximum){maximum=trace.dbfs[i];best=(int)i;}}return best;}
 void RTAPanel::publishCursor(){if(onCursorReadout)onCursorReadout(cursorVisible?cursorReading:juce::String{});}
-void RTAPanel::updateCursor(const Trace& trace,juce::Rectangle<int> area,int index){if(index<0||index>=(int)trace.dbfs.size()||trace.dbfs.size()<2||area.isEmpty())return;float db=trace.dbfs[(size_t)index];if(!std::isfinite(db)){cursorReading.clear();publishCursor();return;}cursorX=(float)area.getX()+(float)index/(float)(trace.dbfs.size()-1)*area.getWidth();cursorY=(float)area.getBottom()-juce::jlimit(0.f,120.f,db+120.f)/120.f*area.getHeight();cursorReading=juce::String(MultiWindowSpectrum::gridFrequency(index),1)+" Hz / "+juce::String(db,1)+" dBFS";publishCursor();}
+void RTAPanel::updateCursor(const Trace& trace,juce::Rectangle<int> area,double index){
+ if(trace.dbfs.size()<2||area.isEmpty()||!std::isfinite(index)||index<0||index>(double)(trace.dbfs.size()-1))return;
+ const auto lo=(size_t)std::floor(index),hi=juce::jmin(lo+1,trace.dbfs.size()-1);
+ const double a=trace.dbfs[lo],b=trace.dbfs[hi],fraction=index-(double)lo;
+ if(!std::isfinite(a)||(fraction>0.&&!std::isfinite(b))){cursorVisible=false;cursorReading.clear();publishCursor();return;}
+ auto db=fraction==0.?std::optional<double>(a):GraphCursor::interpolate(a,b,fraction);
+ auto hz=GraphCursor::interpolateLogFrequency(MultiWindowSpectrum::gridFrequency((int)lo),MultiWindowSpectrum::gridFrequency((int)hi),fraction);
+ if(!db||!hz||*hz<20.||*hz>trace.nyquistHz){cursorVisible=false;cursorReading.clear();publishCursor();return;}
+ cursorX=(float)area.getX()+(float)(index/(trace.dbfs.size()-1))*area.getWidth();
+ cursorY=(float)area.getBottom()-juce::jlimit(0.f,120.f,(float)*db+120.f)/120.f*area.getHeight();
+ cursorReading=juce::String(*hz,1)+" Hz / "+juce::String(*db,1)+" dBFS";publishCursor();
+}
 void RTAPanel::timerCallback(){
  if(frozen)return;
  auto incoming=dataProvider?dataProvider():std::vector<Trace>{};if(incoming.empty()){traces.clear();history.clear();spectrogramHistory.clear();spectrogramHead=0;spectrogramTraceId=-1;cursorReading.clear();publishCursor();repaint();return;}
@@ -48,7 +60,7 @@ void RTAPanel::timerCallback(){
  repaint();
 }
 void RTAPanel::resized(){speed.setBounds(juce::jmax(8,getWidth()-120),8,108,23);peakTracker.setBounds(juce::jmax(8,getWidth()-255),8,130,23);windowCount.setBounds(juce::jmax(8,getWidth()-392),8,128,23);bool two=windowCount.getSelectedId()==2;upperLimit.setVisible(two);lowerLimit.setVisible(two);if(two){auto area=spectrogramArea();upperLimit.setBounds(area.getRight()+5,area.getY(),47,juce::jmax(24,area.getHeight()/2-3));lowerLimit.setBounds(area.getRight()+5,area.getCentreY()+3,47,juce::jmax(24,area.getHeight()/2-3));}}
-void RTAPanel::mouseMove(const juce::MouseEvent& event){auto p=plotArea();if(!p.contains(event.getPosition())){mouseExit(event);return;}const auto* chosen=selectedTrace();cursorX=(float)event.x;cursorY=(float)event.y;cursorVisible=true;cursorReading.clear();if(chosen&&chosen->dbfs.size()>1){int index=juce::jlimit(0,(int)chosen->dbfs.size()-1,juce::roundToInt((cursorX-p.getX())*(chosen->dbfs.size()-1)/p.getWidth()));if(peakTracker.getToggleState())index=peakIndex(*chosen);updateCursor(*chosen,p,index);}else publishCursor();repaint();}
+void RTAPanel::mouseMove(const juce::MouseEvent& event){auto p=plotArea();if(!p.contains(event.getPosition())){mouseExit(event);return;}const auto* chosen=selectedTrace();cursorVisible=false;cursorReading.clear();if(chosen&&chosen->dbfs.size()>1){double index=juce::jlimit(0.0,(double)chosen->dbfs.size()-1.0,(double)(event.position.x-p.getX())*(double)(chosen->dbfs.size()-1)/(double)p.getWidth());if(peakTracker.getToggleState())index=peakIndex(*chosen);if(index>=0){cursorVisible=true;updateCursor(*chosen,p,index);}}else publishCursor();repaint();}
 void RTAPanel::mouseExit(const juce::MouseEvent&){cursorVisible=false;cursorReading.clear();publishCursor();repaint();}
 void RTAPanel::paint(juce::Graphics& g){
  using namespace juce;const Colour plot(0xff080a0c),line(0xff626e78),muted(0xffa9bac8),green(0xff54ee22),orange(0xffffac24);auto bounds=getLocalBounds();g.fillAll(plot);auto p=plotArea();if(p.isEmpty())return;g.setColour(line);g.drawRect(p);

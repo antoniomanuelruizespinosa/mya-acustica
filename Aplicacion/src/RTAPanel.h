@@ -31,7 +31,7 @@ private:
  juce::Rectangle<int> plotArea() const;
  juce::Rectangle<int> spectrogramArea() const;
  const Trace* selectedTrace() const;
- void updateCursor(const Trace& trace,juce::Rectangle<int> area,int index);
+ void updateCursor(const Trace& trace,juce::Rectangle<int> area,double index);
  int peakIndex(const Trace& trace) const;
  void publishCursor();
  DataProvider dataProvider;

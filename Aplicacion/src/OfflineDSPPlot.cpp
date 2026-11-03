@@ -1,4 +1,5 @@
 #include "OfflineDSPPlot.h"
+#include "GraphCursor.h"
 #include <algorithm>
 #include <cmath>
 
@@ -21,6 +22,12 @@ void OfflineDSPPlot::setPrediction(std::vector<float> source, std::vector<float>
     original = std::move(source);
     prediction = std::move(processed);
     rate = sampleRate;
+    impulsePeak=1.0e-9f;
+    for(float value:original)impulsePeak=std::max(impulsePeak,std::abs(value));
+    for(float value:prediction)impulsePeak=std::max(impulsePeak,std::abs(value));
+    cursorVisible=false;
+    cursorSample.reset();
+    if(onCursorReadout)onCursorReadout({});
     repaint();
 }
 
@@ -28,8 +35,47 @@ void OfflineDSPPlot::clear() {
     original.clear();
     prediction.clear();
     rate = 0.0;
+    impulsePeak=1.0e-9f;
+    cursorVisible=false;
+    cursorSample.reset();
+    if(onCursorReadout)onCursorReadout({});
     repaint();
 }
+
+void OfflineDSPPlot::clearCursor(){cursorVisible=false;cursorSample.reset();if(onCursorReadout)onCursorReadout({});repaint();}
+
+void OfflineDSPPlot::updateCursor(juce::Point<float> point) {
+    const auto area=frequencyView?frequencyArea(*this):getLocalBounds().reduced(30,18).toFloat();
+    if(!area.contains(point)||area.getWidth()<=0.f){clearCursor();return;}
+    CursorSample reading;
+    if(frequencyView){
+        if(!core||!core->state(engine).loaded){clearCursor();return;}
+        reading.frequencyDomain=true;
+        reading.x=frequencyFor(point.x,area,maxFrequency(core,engine));
+        auto response=core->complexResponse(engine,reading.x);
+        if(!std::isfinite(response.real())||!std::isfinite(response.imag())||std::abs(response)<=1.e-12){clearCursor();return;}
+        reading.magnitudeDb=dbOf(response);
+        reading.phaseDegrees=std::arg(response)*180.0/OfflineDSPFilters::pi;
+        cursorY=phaseView?area.getY()+area.getHeight()*(float)((180.0-*reading.phaseDegrees)/360.0):yFor(*reading.magnitudeDb,area);
+    }else{
+        if(prediction.empty()||rate<=0.0){clearCursor();return;}
+        const double sample=(point.x-area.getX())/area.getWidth()*(prediction.size()-1);
+        const auto lo=(size_t)std::floor(sample),hi=std::min(lo+1,prediction.size()-1);
+        auto interpolated=GraphCursor::interpolate(prediction[lo],prediction[hi],sample-lo);
+        if(!interpolated){clearCursor();return;}
+        const double value=*interpolated;
+        reading.x=sample*1000.0/rate;
+        reading.amplitude=value;
+        cursorY=area.getCentreY()-(float)(value/impulsePeak)*area.getHeight()*0.45f;
+    }
+    cursorX=point.x;cursorY=juce::jlimit(area.getY(),area.getBottom()-1.f,cursorY);
+    cursorVisible=true;cursorSample=reading;
+    if(onCursorReadout)onCursorReadout(cursorSample);
+    repaint();
+}
+
+void OfflineDSPPlot::mouseMove(const juce::MouseEvent& event){updateCursor(event.position);}
+void OfflineDSPPlot::mouseExit(const juce::MouseEvent&){clearCursor();}
 
 void OfflineDSPPlot::mouseDown(const juce::MouseEvent& event){
     dragBand=-1;
@@ -52,6 +98,7 @@ void OfflineDSPPlot::mouseDrag(const juce::MouseEvent& event){
 void OfflineDSPPlot::paint(juce::Graphics& g) {
     using namespace juce;
     g.fillAll(Colours::black);
+    auto drawCursor=[&](Rectangle<float> area){if(!cursorVisible||!area.contains(cursorX,cursorY))return;g.setColour(Colour(0xff00cdda).withAlpha(.75f));g.drawVerticalLine(roundToInt(cursorX),area.getY(),area.getBottom());g.drawHorizontalLine(roundToInt(cursorY),area.getX(),area.getRight());};
     if(frequencyView){
         auto r=frequencyArea(*this);if(r.isEmpty())return;
         const double maximum=maxFrequency(core,engine);
@@ -85,6 +132,7 @@ void OfflineDSPPlot::paint(juce::Graphics& g) {
             trace(Colours::white,3.0f,[&](double f){return core->vectorSum(active,f);});}
         if(graphicEQ&&!phaseView){g.setFont(10.f);for(int i=0;i<20;++i){auto b=core->band(engine,i);if(!b.enabled||b.frequency>maximum)continue;
             const float x=xFor(b.frequency,r,maximum),y=yFor(b.gainDb,r);g.setColour(Colour(0xff60e4ff));g.fillEllipse(x-9,y-9,18,18);g.setColour(Colours::black);g.drawText(String(i+1),roundToInt(x)-9,roundToInt(y)-8,18,16,Justification::centred);}}
+        drawCursor(r);
         g.setColour(Colours::white);g.setFont(11.f);g.drawText(spanishLanguage?(phaseView?juce::String::fromUTF8("FASE DSP · EQ azul / vía verde / suma blanca"):juce::String::fromUTF8("MAGNITUD DSP · EQ azul / vía verde / suma blanca")):(phaseView?juce::String::fromUTF8("DSP PHASE · blue EQ / green channel / white sum"):juce::String::fromUTF8("DSP MAGNITUDE · blue EQ / green channel / white sum")),40,2,getWidth()-80,18,Justification::centredLeft);
         return;
     }
@@ -106,15 +154,12 @@ void OfflineDSPPlot::paint(juce::Graphics& g) {
         return;
     }
     const auto count = prediction.size();
-    float peak = 1.0e-9f;
-    for (float sample : original) peak = std::max(peak, std::abs(sample));
-    for (float sample : prediction) peak = std::max(peak, std::abs(sample));
     auto draw = [&](const std::vector<float>& samples, Colour colour) {
         Path path;
         for (std::size_t i = 0; i < count; ++i) {
             const float value = i < samples.size() ? samples[i] : 0.0f;
             const float x = plot.getX() + plot.getWidth() * (float)i / (float)std::max<std::size_t>(1, count - 1);
-            const float y = plot.getCentreY() - (value / peak) * plot.getHeight() * 0.45f;
+            const float y = plot.getCentreY() - (value / impulsePeak) * plot.getHeight() * 0.45f;
             if (i == 0) path.startNewSubPath(x, y); else path.lineTo(x, y);
         }
         g.setColour(colour);
@@ -122,6 +167,7 @@ void OfflineDSPPlot::paint(juce::Graphics& g) {
     };
     draw(original, Colour(0xff19d7ea));
     draw(prediction, Colour(0xff6df23d));
+    drawCursor(plot);
     g.setColour(Colour(0xffdcebf0));
     g.drawText((spanishLanguage?juce::String::fromUTF8("IR en frío · "):juce::String::fromUTF8("Offline IR · ")) + String((double)count * 1000.0 / rate, 2) + " ms", 34, 1, getWidth() - 68, 16, Justification::centredLeft);
 }

@@ -1,9 +1,15 @@
 #include "../src/PlotPresentation.h"
+#include "../src/GraphCursor.h"
 #include <cassert>
 #include <iostream>
 #include <limits>
 using namespace PlotPresentation;
 int main(){
+ assert(GraphCursor::interpolate(-12.,0.,.5)==-6.);
+ assert(!GraphCursor::interpolate(std::numeric_limits<double>::quiet_NaN(),0.,.5));
+ auto frequency=GraphCursor::interpolateLogFrequency(100.,400.,.5);assert(frequency&&std::abs(*frequency-200.)<1.e-9);
+ assert(std::abs(GraphCursor::screenY(.25,0.,1.)-.25)<1.e-12);
+ assert(std::abs(GraphCursor::screenY(.75,0.,1.)+.25)<1.e-12);
  std::array<bool,4> visible{{true,true,true,true}};
  // Phase TF1 and magnitude TF3 must resolve independently of selected global TF2.
  assert(frontTrace(2,1,visible)==0);assert(frontTrace(4,1,visible)==2);

@@ -1,9 +1,11 @@
 #pragma once
 #include "TFMeterModel.h"
 #include "CompactLayout.h"
+#include "MeterPulse.h"
 #include <juce_gui_extra/juce_gui_extra.h>
 
-class TFInputMeters : public juce::Component, public juce::SettableTooltipClient {
+class TFInputMeters : public juce::Component, public juce::SettableTooltipClient, private juce::Timer {
+ void timerCallback() override{if(!isShowing()){stopTimer();return;}repaint();}
 public:
  juce::Colour colour{0xff54ee22};TFMeterSettings settings;std::array<TFMeterChannel,2> channels;
  std::function<void()> openOptions;
@@ -12,8 +14,12 @@ public:
  float thresholdPosition(double db,int channel=0)const{auto b=CompactLayout::meterBar(getWidth(),channel);return (float)TFMeterChannel::position(db,b.x,b.w);}
  void resetPeaks(){for(auto& c:channels)c.peak.reset();repaint();}
  void paint(juce::Graphics& g) override{
+  bool pulsing=false;
   for(int ch=0;ch<2;++ch){auto& c=channels[(size_t)ch];auto box=CompactLayout::meterBar(getWidth(),ch);float y=(float)ch*24;juce::Rectangle<float> bar{(float)box.x,(float)box.y,(float)box.w,(float)box.h};
-   g.setColour(juce::Colour(0xff090d10));g.fillRoundedRectangle(bar,5);g.setColour(juce::Colour(0xff48525a));g.drawRoundedRectangle(bar,.0f+5,.7f);
+   auto alert=MeterPulse::classify(c.level);pulsing|=alert!=MeterPulse::Level::None;
+   auto background=juce::Colour(0xff090d10);
+   if(alert!=MeterPulse::Level::None)background=background.interpolatedWith(alert==MeterPulse::Level::Red?juce::Colour(0xffff4040):juce::Colour(0xffffac24),MeterPulse::opacity(juce::Time::getMillisecondCounterHiRes()));
+   g.setColour(background);g.fillRoundedRectangle(bar,5);g.setColour(juce::Colour(0xff48525a));g.drawRoundedRectangle(bar,.0f+5,.7f);
    g.setFont(10.f);g.setColour(juce::Colour(0xffa9bac8));g.drawText(ch==0?"M":"R",0,(int)y,14,12,juce::Justification::centredLeft);
    if(c.level&&std::isfinite(*c.level)){
     // Clip each threshold section to the same capsule. The base colour never changes.
@@ -24,6 +30,7 @@ public:
     if(settings.gloss){g.setGradientFill(juce::ColourGradient(juce::Colours::white.withAlpha(.22f),0,bar.getY(),juce::Colours::transparentWhite,0,bar.getCentreY(),false));g.fillRect(bar.withWidth(juce::jmax(0.f,end-bar.getX())));}
     g.restoreState();
    }
+   if(alert!=MeterPulse::Level::None){g.setColour((alert==MeterPulse::Level::Red?juce::Colour(0xffff4040):juce::Colour(0xffffac24)).withAlpha(MeterPulse::opacity(juce::Time::getMillisecondCounterHiRes())));g.drawRoundedRectangle(bar.expanded(1.f),5.f,2.f);}
    const float dash[]={2.f,2.f};g.setColour(juce::Colour(0xffa9bac8));for(double threshold:{settings.orangeDbFS,settings.redDbFS}){float x=thresholdPosition(threshold,ch);g.drawDashedLine(juce::Line<float>{x,bar.getY()+1,x,bar.getBottom()-1},dash,2,.75f);}
    if(settings.peakOn&&c.peak&&std::isfinite(*c.peak)){float x=juce::jlimit(bar.getX()+1,bar.getRight()-1,(float)TFMeterChannel::position(*c.peak,bar.getX(),bar.getWidth()));g.setColour(juce::Colours::white);g.drawLine(x,bar.getY()+1,x,bar.getBottom()-1,1.5f);}
    auto scale=CompactLayout::meterScale(getWidth(),ch);g.setFont(8.f);g.setColour(juce::Colour(0xffa9bac8));
@@ -33,6 +40,7 @@ public:
    if(c.level&&std::isfinite(*c.level)){float fill=(float)TFMeterChannel::position(*c.level,0,bar.getWidth());juce::Path ink;ink.addRoundedRectangle(bar.withWidth(fill),juce::jmin(5.f,fill*.5f));g.saveState();g.reduceClipRegion(ink);g.setColour(juce::Colour(0xff071015));g.drawText(label,bar,juce::Justification::centred);g.restoreState();}
 
   }
+  if(pulsing&&isShowing()){if(!isTimerRunning())startTimerHz(25);}else stopTimer();
  }
 };
 

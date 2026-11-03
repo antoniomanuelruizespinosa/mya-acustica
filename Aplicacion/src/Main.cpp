@@ -34,6 +34,7 @@
 #include "PrincipalMeter.h"
 #include "Branding.h"
 #include "EnvironmentalSetupWindow.h"
+#include "GraphCursor.h"
 #include "NativeTitleBranding.h"
 #include "UpdateCheck.h"
 #include "AppDataLocation.h"
@@ -336,6 +337,7 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
  }
  };
  Readout cursorReadout;
+ int dspCursorPlot=-1;
  std::unique_ptr<MainTabsComponent> mainTabs;
  std::unique_ptr<TransferFunctionPanel> tfPanel;
  ReticleOverlay reticleOverlay;
@@ -346,8 +348,9 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
  bool dspShowIR=true,dspShowFrequency=true,dspGraphicEQ=false;
  VirtualDSPSidebar dspSidebar;
  void refreshDspInputs(){const auto* endpoint=findEndpoint(audioEndpoints,deviceKeys.empty()?String():deviceKeys.front());if(!endpoint&&!audioEndpoints.empty())endpoint=&audioEndpoints.front();dspSidebar.setInputChannels(endpoint?endpoint->inputs:StringArray{});}
- int cursorPlot=-1;double cursorU=.5,cursorY=.5;
+ int cursorPlot=-1;double cursorU=.5;
  std::array<double,3> plotCursorU{{.5,.5,.5}};
+ std::array<double,3> plotCursorY{{.5,.5,.5}};
  std::array<bool,3> plotCursorVisible{};
  Label generatorLevel;
  PaintSurface tfContent;
@@ -734,6 +737,19 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
   if(type>0&&id.isNotEmpty())return savedValue(id,u,type);
   return plotValue(u,frontTrace(type),type);
  }
+ std::optional<double> cursorNormalizedValue(int type,double u){
+  if(type==0)return panelValue(u,0);
+  const int kind=displayType(type);
+  int traceId=frontTrace(type);
+  auto saved=capturedFront(type);
+  if(saved.isNotEmpty())for(size_t i=0;i<capturedChoices.size();++i)if(capturedChoices[i]==saved){traceId=100000+(int)i;break;}
+  if(tfPanel&&(saved.isNotEmpty()||measuring(traceId)||displayingFrozen(traceId)||traceId<=-2)){
+   auto sample=tfPanel->sampleAt(traceId,tfSettings.frequency(u),kind==1);
+   if(!sample)return {};
+   return tfSettings.normalize(kind==1?sample->phaseDegrees:sample->magnitudeDb,kind);
+  }
+  return panelValue(u,type);
+ }
  String panelName(int type) const{
   if(auto* n=savedTraces.find(capturedFront(type)))return "Captura: "+n->name+" / "+n->method;
   int index=frontTrace(type);return index==-2?avgName+" / TF seleccionadas compatibles":index>=0?micNames[(size_t)index].getText()+(measuring(index)?" / M/R en directo":" / DEMO"):String("sin trazo");
@@ -835,7 +851,7 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
   }
  }
  void setup(Slider& s,Label& l,String name,double lo,double hi,double step,double value){s.setRange(lo,hi,step);s.setValue(value);s.setSliderStyle(Slider::LinearHorizontal);s.setTextBoxStyle(Slider::TextBoxRight,false,72,25);s.onValueChange=[this]{repaint();};l.setText(name,dontSendNotification);addAndMakeVisible(s);addAndMakeVisible(l);}
- void select(int n){navigationOverlay.setVisible(false);navigationTab.setButtonText("v");if(anchoredOptions)anchoredOptions->setVisible(false);closeCalibration();if(settingsDrawer)settingsDrawer->setVisible(false);mode=n;if(n==1)refreshDspInputs();measure->setToggleState(n==0,dontSendNotification);dsp->setToggleState(n==1,dontSendNotification);vision->setToggleState(n==2,dontSendNotification);lab->setToggleState(n==3,dontSendNotification);updateInterfaceLanguage();resized();repaint();}
+ void select(int n){navigationOverlay.setVisible(false);navigationTab.setButtonText("v");if(anchoredOptions)anchoredOptions->setVisible(false);closeCalibration();if(settingsDrawer)settingsDrawer->setVisible(false);mode=n;if(n==1){refreshDspInputs();dspCursorPlot=0;updateDspReadout(0,{});}measure->setToggleState(n==0,dontSendNotification);dsp->setToggleState(n==1,dontSendNotification);vision->setToggleState(n==2,dontSendNotification);lab->setToggleState(n==3,dontSendNotification);updateInterfaceLanguage();resized();repaint();}
  void save(){commitAverage();DynamicObject::Ptr o=new DynamicObject();o->setProperty("schema",1);o->setProperty("synthetic",true);DynamicObject::Ptr lib=new DynamicObject();lib->setProperty("libraryId",captureLibrary.state().id);lib->setProperty("manifest","Biblioteca/biblioteca.json");lib->setProperty("bindings",libraryDSPBindings);o->setProperty("captureLibrary",var(lib.get()));o->setProperty("gainDB",gain.getValue());o->setProperty("delayMs",delay.getValue());o->setProperty("polarity",polarity);o->setProperty("stacks",stacks.getValue());o->setProperty("boxesPerStack",boxes.getValue());o->setProperty("spacingM",spacing.getValue());o->setProperty("linked",adjustmentLinked);Array<var> micros;for(size_t i=0;i<micNames.size();++i){DynamicObject::Ptr m=new DynamicObject();m->setProperty("name",micNames[i].getText());m->setProperty("present",bool(tfPresent[i]));m->setProperty("deviceKey",deviceKeys[i]);m->setProperty("micInput",micInputs[i]);m->setProperty("refInput",refInputs[i]);m->setProperty("visible",traceSwitch[i].getToggleState());m->setProperty("colour",traceSwitch[i].colour.toString());m->setProperty("measurementDelayMs",micDelay[i].getValue());m->setProperty("averageDepth",tfAverageDepth[i]);micros.add(var(m.get()));}o->setProperty("micros",micros);DynamicObject::Ptr avg=new DynamicObject();avg->setProperty("configured",avgConfigured);avg->setProperty("active",avgActive);avg->setProperty("name",avgName);Array<var> members;for(bool selected:avgMembers)members.add(var(selected));avg->setProperty("members",members);o->setProperty("averageTF",var(avg.get()));Array<var> averages;for(const auto& entry:averageEntries){auto* item=new DynamicObject();item->setProperty("id",entry.id);item->setProperty("name",entry.name);item->setProperty("colour",entry.colour.toString());item->setProperty("active",entry.active);Array<var> members;for(bool on:entry.members)members.add(on);item->setProperty("members",members);averages.add(var(item));}o->setProperty("averageTFs",averages);
  DynamicObject::Ptr view=new DynamicObject();
  view->setProperty("leftVisible",leftVisible);view->setProperty("rightVisible",rightVisible);
@@ -1002,7 +1018,7 @@ public:
   return result;
  });
  tfPanel->onResolutionChanged=[this](bool multi){for(auto& estimator:liveTFs)estimator.setMultiWindowEnabled(multi);};tfPanel->onCoherenceThresholdChanged=[this](double percent){coherenceThreshold.setValue(percent,dontSendNotification);tfSettings.coherenceThreshold=percent;status="Coherence Threshold: "+String(percent,1)+"%";repaint();};tfPanel->onCoherenceThresholdCommitted=[this]{persistTF();};tfPanel->setInterceptsMouseClicks(false,true);addAndMakeVisible(*tfPanel);tfPanel->setVisible(false);
- reticleOverlay.draw=[this](Graphics& g){for(int t=1;t<=2;++t)if(plotCursorVisible[(size_t)t]){auto p=plotArea(plotBounds(t)).translated(-reticleOverlay.getX(),-reticleOverlay.getY());double u=plotCursorU[(size_t)t];float x=(float)(p.getX()+((u-plotPanX[(size_t)t]-.5)*plotZoomX[(size_t)t]+.5)*p.getWidth());if(x<p.getX()||x>p.getRight())continue;float y=(float)(p.getY()+cursorY*p.getHeight());g.setColour(Palette::cyan.withAlpha(.6f));g.drawVerticalLine(roundToInt(x),(float)p.getY(),(float)p.getBottom());if(t==cursorPlot)g.drawHorizontalLine(roundToInt(y),(float)p.getX(),(float)p.getRight());}};addAndMakeVisible(reticleOverlay);reticleOverlay.setVisible(false);
+ reticleOverlay.draw=[this](Graphics& g){for(int t=1;t<=2;++t)if(plotCursorVisible[(size_t)t]){auto p=plotArea(plotBounds(t)).translated(-reticleOverlay.getX(),-reticleOverlay.getY());double u=plotCursorU[(size_t)t];float x=(float)(p.getX()+((u-plotPanX[(size_t)t]-.5)*plotZoomX[(size_t)t]+.5)*p.getWidth());if(x<p.getX()||x>p.getRight())continue;float y=(float)(p.getY()+plotCursorY[(size_t)t]*p.getHeight());g.setColour(Palette::cyan.withAlpha(.6f));g.drawVerticalLine(roundToInt(x),(float)p.getY(),(float)p.getBottom());g.drawHorizontalLine(roundToInt(y),(float)p.getX(),(float)p.getRight());}};addAndMakeVisible(reticleOverlay);reticleOverlay.setVisible(false);
 
  for(int i=0;i<2;++i){auto& divider=plotDividers[(size_t)i];addAndMakeVisible(divider);divider.reset=[this]{irFraction=.14;phaseFraction=.5;resized();repaint();};divider.moved=[this,i](int y){int height=getHeight()-183;if(i==0)irFraction=jlimit(60.,(double)jmax(60,height-176),(double)y-118)/height;else{auto p=plotBounds(1);int remaining=118+height-p.getY()-8;phaseFraction=jlimit(80.,(double)jmax(80,remaining-80),(double)y-p.getY())/remaining;}resized();repaint();};}
  dspPlotLayout.setItemLayout(0,60,-1,-0.14);
@@ -1062,6 +1078,9 @@ public:
  offlineDSPMagnitudePlot.onBandDragged=[this](int engine,int band,OfflineDSPCore::EQBand value){dspConsole.setBand(engine,band,value);};
  addAndMakeVisible(offlineDSPMagnitudePlot);
  offlineDSPMagnitudePlot.setVisible(false);
+ offlineDSPPlot.onCursorReadout=[this](std::optional<OfflineDSPPlot::CursorSample> sample){updateDspReadout(0,sample);};
+ offlineDSPPhasePlot.onCursorReadout=[this](std::optional<OfflineDSPPlot::CursorSample> sample){updateDspReadout(1,sample);};
+ offlineDSPMagnitudePlot.onCursorReadout=[this](std::optional<OfflineDSPPlot::CursorSample> sample){updateDspReadout(2,sample);};
  dspConsole.onGraphicEQChanged=[this](bool enabled){if(mode==1){dspGraphicEQ=enabled;offlineDSPMagnitudePlot.setGraphicEQ(enabled);menuItemsChanged();}};
  dspConsole.onPredictionChanged=[this](int engine){
   if(mode!=1||engine!=dspConsole.selectedEngineIndex())return;
@@ -1169,6 +1188,22 @@ public:
   if(!std::isfinite(h.real())||!std::isfinite(h.imag())||std::abs(h)<=1.e-15)return std::nullopt;
   return tfSettings.normalize(kind==1?std::arg(h)*180/MathConstants<double>::pi:20*std::log10(std::abs(h)),kind);
  }
+ void updateDspReadout(int plot,std::optional<OfflineDSPPlot::CursorSample> sample){
+  if(mode!=1)return;
+  if(!sample){if(dspCursorPlot!=plot)return;dspCursorPlot=-1;}
+  else dspCursorPlot=plot;
+  const bool es=commands.language==MyaCommands::Language::ES;
+  cursorReadout.parts.clear();
+  if(plot==0){
+   cursorReadout.parts.push_back({es?"Tiempo":"Time",sample?String(sample->x,2)+" ms":"-- ms",Palette::cyan});
+   cursorReadout.parts.push_back({es?"Amplitud":"Amplitude",sample&&sample->amplitude?String(*sample->amplitude,4):"--",Palette::green});
+  }else{
+   cursorReadout.parts.push_back({es?"Frecuencia":"Frequency",sample?String(sample->x,1)+" Hz":"-- Hz",Palette::cyan});
+   cursorReadout.parts.push_back({es?"Magnitud":"Magnitude",sample&&sample->magnitudeDb?String(*sample->magnitudeDb,2)+" dB":"-- dB",Palette::green});
+   cursorReadout.parts.push_back({es?"Fase":"Phase",sample&&sample->phaseDegrees?String(*sample->phaseDegrees,1)+String::fromUTF8("°"):String::fromUTF8("--°"),Colour(0xfff03baf)});
+  }
+  cursorReadout.repaint();
+ }
  void updateCursorReadout(){
   cursorReadout.parts.clear();auto add=[this](String label,String value,Colour colour){cursorReadout.parts.push_back({label,value,colour});};
   auto pink=Colour(0xfff03baf),red=Colour(0xffff4040);
@@ -1193,11 +1228,13 @@ public:
  void mouseMove(const MouseEvent& event) override{
  if(mode!=0)return;auto point=event.getEventRelativeTo(this).getPosition();
  for(int t=0;t<3;++t){if(measurementView==1&&t>0)continue;if(t==0&&plotChoice.getSelectedId()==2&&measurementView==0)continue;auto p=plotArea(plotBounds(t));if(!p.contains(point))continue;
- cursorPlot=t;cursorY=((double)point.y-p.getY())/p.getHeight();cursorU=PlotPresentation::coordinate(((double)point.x-p.getX())/p.getWidth(),plotPanX[(size_t)t],plotZoomX[(size_t)t]);
- if(t==0)plotCursorVisible.fill(false);else plotCursorVisible[0]=false;
- plotCursorU[(size_t)t]=cursorU;plotCursorVisible[(size_t)t]=true;
- // TF cursors share frequency, but each horizontal arm follows its own trace value.
- if(t>0){plotCursorU[1]=plotCursorU[2]=cursorU;plotCursorVisible[1]=plotCursorVisible[2]=true;}
+ cursorPlot=t;cursorU=PlotPresentation::coordinate(((double)point.x-p.getX())/p.getWidth(),plotPanX[(size_t)t],plotZoomX[(size_t)t]);
+ plotCursorVisible.fill(false);plotCursorU[(size_t)t]=cursorU;
+ if(auto value=cursorNormalizedValue(t,cursorU)){
+  const double y=GraphCursor::screenY(*value,plotPanY[(size_t)t],plotZoomY[(size_t)t]);
+  plotCursorY[(size_t)t]=jlimit(0.,1.,y);
+  plotCursorVisible[(size_t)t]=true;
+ }
  updateCursorReadout();reticleOverlay.repaint();repaint();return;
  }
  if(cursorPlot!=-1){cursorPlot=-1;plotCursorVisible.fill(false);cursorReadout.setText("-- Hz       -- dB       -- deg",dontSendNotification);reticleOverlay.repaint();repaint();}
@@ -1263,7 +1300,7 @@ public:
  }
  void resized() override {if(buttons.size()<19)return;int excess=jmax(0,680-centerWidth());if(rightVisible){int reduction=jmin(excess,rightWidth-WorkspaceViewState::rightMin);rightWidth-=reduction;excess-=reduction;}if(leftVisible)leftWidth-=jmin(excess,leftWidth-WorkspaceViewState::leftMin);
  Component* dspItems[]{&dspPlotSlots[0],&dspPlotResizers[0],&dspPlotSlots[1],&dspPlotResizers[1],&dspPlotSlots[2]};
- dspPlotLayout.layOutComponents(dspItems,5,centerX()+8,90,centerWidth()-16,getHeight()-282,true,true);
+ dspPlotLayout.layOutComponents(dspItems,5,centerX()+8,106,centerWidth()-16,getHeight()-298,true,true);
  for(auto& bar:dspPlotResizers)bar.setVisible(mode==1);
  const bool showAnalyzerIR=plotChoice.getSelectedId()!=2;
  const auto analyzerHeights=CompactLayout::heights(getHeight()-183,showAnalyzerIR,irFraction,phaseFraction);
@@ -1287,11 +1324,11 @@ public:
  for(int i=12;i<19;++i)buttons[(size_t)i]->setVisible(rightVisible);
  for(int i=12;i<19;++i)if(mode==1)buttons[(size_t)i]->setVisible(false);
  gain.setVisible(rightVisible&&mode!=1);gainLabel.setVisible(rightVisible&&mode!=1);delay.setVisible(rightVisible&&mode!=1);delayLabel.setVisible(rightVisible&&mode!=1);
- source.setBounds(centerX()+8,91,jmax(120,centerWidth()-250),28);source.setVisible(mode==2||mode==3);cursorReadout.setVisible(mode==0);cursorReadout.setBounds(centerX()+8,87,jmax(120,centerWidth()-16),24);
+ source.setBounds(centerX()+8,91,jmax(120,centerWidth()-250),28);source.setVisible(mode==2||mode==3);cursorReadout.setVisible(mode==0||mode==1);cursorReadout.setBounds(centerX()+8,mode==1?82:87,jmax(120,centerWidth()-16),24);
  dspConsole.setVisible(mode==1);dspConsole.setBounds(centerX()+8,getHeight()-190,centerWidth()-16,155);if(mode==1)dspConsole.toFront(false);
  offlineDSPPlot.setBounds(plotBounds(0));offlineDSPPlot.setVisible(mode==1&&dspShowIR);if(mode==1&&dspShowIR)offlineDSPPlot.toFront(false);
  offlineDSPPhasePlot.setBounds(plotBounds(1));offlineDSPPhasePlot.setVisible(mode==1&&dspShowFrequency);if(mode==1&&dspShowFrequency)offlineDSPPhasePlot.toFront(false);
- offlineDSPMagnitudePlot.setBounds(plotBounds(2));offlineDSPMagnitudePlot.setVisible(mode==1&&dspShowFrequency);if(mode==1&&dspShowFrequency)offlineDSPMagnitudePlot.toFront(false);
+ offlineDSPMagnitudePlot.setBounds(plotBounds(2));offlineDSPMagnitudePlot.setVisible(mode==1&&dspShowFrequency);if(mode==1&&dspShowFrequency)offlineDSPMagnitudePlot.toFront(false);if(mode==1){cursorReadout.toFront(false);if(navigationOverlay.isVisible())navigationOverlay.toFront(false);}
  dspSidebar.setVisible(mode==1&&rightVisible);dspSidebar.setBounds(getWidth()-rightWidth-8,82,rightWidth,getHeight()-115);if(mode==1&&rightVisible)dspSidebar.toFront(false);
  linkSmooth.setVisible(false);
  for(int i=0;i<2;++i){auto r=plotBounds(i);plotDividers[(size_t)i].setVisible(mode==0&&measurementView==0&&(i!=0||plotChoice.getSelectedId()!=2));plotDividers[(size_t)i].setBounds(r.getX(),r.getBottom(),r.getWidth(),8);}
@@ -1374,7 +1411,7 @@ public:
  if(mode==0&&plotCursorVisible[(size_t)type]){
  double cu=plotCursorU[(size_t)type];float cx=(float)(p.getX()+((cu-panX-.5)*zoomX+.5)*p.getWidth());
  if(cx>=(float)p.getX()&&cx<=(float)p.getRight()){
- int cy=roundToInt(p.getY()+cursorY*p.getHeight());
+ int cy=roundToInt(p.getY()+plotCursorY[(size_t)type]*p.getHeight());
  g.setColour(Palette::ink.withAlpha(.5f));g.drawVerticalLine(roundToInt(cx),(float)p.getY(),(float)p.getBottom());g.drawHorizontalLine(cy,(float)p.getX(),(float)p.getRight());
  }}g.restoreState();if(mode==0&&type>0){auto legend=captureLegend(type);int selected=frontTrace(type);if(measuring(selected))legend+=(legend.isNotEmpty()?" / ":"")+String("TF ")+String(selected+1)+(liveTFs[(size_t)selected].ready()?juce::String::fromUTF8(" · M/R EN DIRECTO"):juce::String::fromUTF8(" · ESPERANDO M/R"));if(legend.isNotEmpty())text(g,legend,{r.getX()+230,r.getY()+2,jmax(1,r.getWidth()-360),18},10,Palette::muted);plotMic[(size_t)type].setTooltip(legend);}if(mode==0&&kind==0){int selected=frontTrace(0);bool live=measuring(selected)||displayingFrozen(selected);bool ready=live&&liveTFs[(size_t)selected].ready();if(selected<=-2){size_t a=(size_t)(-2-selected);if(a<averageEntries.size()){const auto& members=a==selectedAverage?avgMembers:averageEntries[a].members;for(size_t i=0;i<members.size()&&i<liveTFs.size();++i)if(members[i]&&(measuring((int)i)||displayingFrozen((int)i))&&liveTFs[i].ready()){ready=true;break;}}}auto caption=analyzerFrozen&&ready?String::fromUTF8("IR · MEDICIÓN CONGELADA"):selected<=-2?(ready?String::fromUTF8("IR AVG · MICRÓFONOS ACTIVOS"):String::fromUTF8("IR AVG · ESPERANDO MEDICIÓN")):live?(ready?String::fromUTF8("IR M/R MEDIDO · relativo al delay · ms"):String::fromUTF8("IR M/R · ESPERANDO PROMEDIO")):(commands.language==MyaCommands::Language::ES?String::fromUTF8("IR · SIN MEDICIÓN"):String::fromUTF8("IR · NO MEASUREMENT"));text(g,caption,{r.getX()+110,r.getY()+2,jmax(1,r.getWidth()-240),20},11,ready?Palette::green:Palette::orange);}else if(mode!=0)text(g,label,{r.getX()+9,r.getY()+2,r.getWidth()-18,20},12,Palette::muted);}
  void scene(Graphics& g,Rectangle<int> r){g.setColour(Palette::plot);g.fillRect(r);auto a=rotation.getValue()*MathConstants<double>::pi/180.;auto proj=[&](double x,double y,double z){return Point<float>((float)(r.getCentreX()+(x*std::cos(a)-y*std::sin(a))*r.getWidth()/85.),(float)(r.getY()+90+(x*std::sin(a)+y*std::cos(a))*6-z*8));};for(int i=-20;i<=20;i+=2){g.setColour(Colour(0xff29414c));g.drawLine({proj(i,0,0),proj(i,40,0)});}for(int j=0;j<=40;j+=2)g.drawLine({proj(-20,j,0),proj(20,j,0)});Path stage;stage.startNewSubPath(proj(-17,-7,0));stage.lineTo(proj(17,-7,0));stage.lineTo(proj(17,0,0));stage.lineTo(proj(-17,0,0));stage.closeSubPath();g.setColour(Colour(0xff233b48));g.fillPath(stage);int n=(int)stacks.getValue(),b=(int)boxes.getValue();for(int i=0;i<n;++i)for(int k=0;k<b;++k){auto p=proj((i-(n-1)/2.)*spacing.getValue(),0,k*1.1);g.setColour(Palette::orange);g.fillRect(p.x-6,p.y-10,12.f,10.f);g.setColour(Palette::plot);g.drawRect(p.x-6,p.y-10,12.f,10.f);}for(int side:{-1,1})for(int k=0;k<8;++k){auto p=proj(side*17,0,7+k*.7);g.setColour(Palette::cyan);g.drawRect(p.x-5,p.y-5,10.f,5.f);}text(g,String::fromUTF8("GEOMETRÍA 3D · ")+String(n)+String::fromUTF8(" stacks × ")+String(b)+" cajas = "+String(n*b)+" recintos",r.removeFromTop(30).reduced(10,0),13,Palette::cyan);text(g,String::fromUTF8("Sin mapa SPL: solver acústico pendiente"),{r.getX()+10,r.getBottom()-32,r.getWidth()-20,24},12,Palette::orange);}
