@@ -30,6 +30,19 @@ void updateInterfaceLanguage(){
  if(onModeTitleChanged)onModeTitleChanged(mode);
  repaint();
 }
+void showEnvironmentalSetup(){
+ const bool es=commands.language==MyaCommands::Language::ES;
+ auto* dialog=new AlertWindow(es?"Configuración Ambiental":"Environmental Setup",
+  es?"La temperatura y la humedad se usarán para calcular la velocidad del sonido. La edición estará disponible en una versión posterior.":"Temperature and humidity will be used to calculate the speed of sound. Editing will be available in a later version.",
+  MessageBoxIconType::InfoIcon);
+ dialog->addTextEditor("temperature","20",es?"Temperatura (°C)":"Temperature (°C)");
+ dialog->addTextEditor("humidity","50",es?"Humedad (%)":"Humidity (%)");
+ if(auto* editor=dialog->getTextEditor("temperature"))editor->setEnabled(false);
+ if(auto* editor=dialog->getTextEditor("humidity"))editor->setEnabled(false);
+ dialog->addButton(es?"Cerrar":"Close",0);
+ dialog->enterModalState(true,nullptr,true);
+ dialog->toFront(true);
+}
 MyaCommands::Context commandContext() const {
  MyaCommands::Context x;x.mode=mode;x.measurementView=measurementView;x.selectedTF=source.getSelectedId();x.tfCount=(int)micNames.size();
  x.drawer=settingsDrawer&&settingsDrawer->isVisible();x.left=leftVisible;x.right=rightVisible;
