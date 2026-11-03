@@ -19,6 +19,7 @@ void updateInterfaceLanguage(){
  offlineDSPPhasePlot.updateComponentLanguage(es);
  offlineDSPMagnitudePlot.updateComponentLanguage(es);
  if(mainTabs)mainTabs->rtaPanel().updateComponentLanguage(es);
+ principalMeter.updateComponentLanguage(es);
  globalSmthLabel.setText(es?"Suav.":"Smth",dontSendNotification);
  globalSmth.changeItemText(1,es?"Ninguno":"Off");
  const int depths[]={1,2,4,5,8,16,32,64};for(int i=0;i<8;++i)averageChoice.changeItemText(i+1,String(es?"Prom.":"Avg.")+String(depths[i]));
