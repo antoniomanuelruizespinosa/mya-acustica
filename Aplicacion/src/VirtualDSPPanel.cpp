@@ -6,18 +6,21 @@ using namespace juce;
 struct VirtualDSPPanel::EngineRow : Component {
     int index = 0;
     Colour colour;
-    Label name, gain, delay, time;
+    Label name, time;
+    Slider gain, delay;
     TextButton polarity{String::fromUTF8("\xC3\x98")}, equalizer{"Equalizer"}, find{"Find"}, clear{"C"};
     ComboBox hpf, lpf;
     std::array<Label,6> filterFields;
     std::function<void(int)> findRequested;
+    std::function<void(int)> selected;
+    std::function<void(int,double)> gainChanged, delayChanged;
+    std::function<void(int,bool)> polarityChanged;
+    bool isSelected = false;
 
     EngineRow(int number, const Engine& engine) : index(number), colour(engine.colour) {
         name.setText(engine.name.isEmpty() ? "Engine " + String(number + 1) : engine.name, dontSendNotification);
-        gain.setText("0.00", dontSendNotification);
-        delay.setText("0.00", dontSendNotification);
         time.setText("0.00", dontSendNotification);
-        for (auto* label : {&name, &gain, &delay, &time}) {
+        for (auto* label : {&name, &time}) {
             label->setColour(Label::textColourId, Colours::white);
             label->setColour(Label::backgroundColourId, Colour(0xff111a20));
             label->setColour(Label::outlineColourId, Colour(0xff44545e));
@@ -25,6 +28,21 @@ struct VirtualDSPPanel::EngineRow : Component {
             label->setJustificationType(Justification::centred);
             addAndMakeVisible(*label);
         }
+        name.setInterceptsMouseClicks(false, false);
+        name.setTooltip("Seleccionar esta vía DSP para cargar una captura");
+        for (auto* slider : {&gain, &delay}) {
+            slider->setSliderStyle(Slider::IncDecButtons);
+            slider->setTextBoxStyle(Slider::TextBoxLeft, false, 48, 22);
+            slider->setColour(Slider::textBoxTextColourId, Colours::white);
+            slider->setColour(Slider::textBoxBackgroundColourId, Colour(0xff111a20));
+            slider->setColour(Slider::textBoxOutlineColourId, Colour(0xff44545e));
+            slider->setEnabled(false);
+            addAndMakeVisible(*slider);
+        }
+        gain.setRange(-30.0, 30.0, 0.5);
+        delay.setRange(0.0, 1.0, 1.0);
+        gain.onValueChange = [this] { if (gainChanged) gainChanged(index, gain.getValue()); };
+        delay.onValueChange = [this] { if (delayChanged) delayChanged(index, delay.getValue()); };
         for (auto* choice : {&hpf, &lpf}) {
             choice->addItem("Ninguno", 1);
             choice->setSelectedId(1, dontSendNotification);
@@ -47,8 +65,23 @@ struct VirtualDSPPanel::EngineRow : Component {
         equalizer.setEnabled(false);
         find.setEnabled(false);
         clear.setEnabled(false);
-        for (auto* button : {&polarity, &equalizer, &clear}) button->setTooltip("Pendiente de procesamiento DSP por motor");
+        polarity.setClickingTogglesState(true);
+        polarity.onClick = [this] { if (polarityChanged) polarityChanged(index, polarity.getToggleState()); };
+        for (auto* button : {&equalizer, &clear}) button->setTooltip("Pendiente de procesamiento DSP por motor");
         find.onClick = [this] { if (findRequested) findRequested(index); };
+    }
+
+    void setOfflineState(const OfflineDSPCore::State& state) {
+        gain.setEnabled(state.loaded);
+        delay.setEnabled(state.loaded);
+        polarity.setEnabled(state.loaded);
+        gain.setValue(state.gainDb, dontSendNotification);
+        polarity.setToggleState(state.inverted, dontSendNotification);
+        if (state.loaded) {
+            const double step = 1000.0 / state.sampleRate;
+            delay.setRange(0.0, static_cast<double>(state.capacity - 1) * step, step);
+        }
+        delay.setValue(state.delayMs, dontSendNotification);
     }
 
     void resized() override {
@@ -62,9 +95,14 @@ struct VirtualDSPPanel::EngineRow : Component {
         place(find, 48); place(time, 48); place(clear, 26);
     }
 
+    void mouseDown(const MouseEvent&) override {
+        if (selected) selected(index);
+    }
+
     void paint(Graphics& g) override {
         g.fillAll(Colour(0xff080b0e));
-        g.setColour(Colour(0xff253944)); g.drawRect(getLocalBounds(), 1);
+        g.setColour(isSelected ? Colour(0xff00d5e8) : Colour(0xff253944));
+        g.drawRect(getLocalBounds(), isSelected ? 2 : 1);
         int patch = roundToInt(26 * getWidth() / 970.0);
         g.setColour(colour); g.fillRect(4, 4, patch, getHeight() - 8);
         g.setColour(Colours::black); g.setFont(12.f);
@@ -94,16 +132,59 @@ VirtualDSPPanel::~VirtualDSPPanel() = default;
 void VirtualDSPPanel::setEngines(const std::vector<Engine>& entries) {
     engines.clear();
     rows.removeAllChildren();
-    for (size_t i = 0; i < entries.size(); ++i) {
-        auto row = std::make_unique<EngineRow>((int)i, entries[i]);
+    static const std::array<Colour,8> defaults = { Colour(0xff20b8ff), Colour(0xff28ca67),
+        Colour(0xffedb52b), Colour(0xffed6932), Colour(0xff1ed8db), Colour(0xffe33bce),
+        Colour(0xffd2ca54), Colour(0xffe43751) };
+    for (int i = 0; i < OfflineDSPCore::channelCount; ++i) {
+        Engine entry = (size_t)i < entries.size() ? entries[(size_t)i] : Engine{"Engine " + String(i + 1), defaults[(size_t)i]};
+        auto row = std::make_unique<EngineRow>(i, entry);
         row->findRequested = [this](int index) { if (onFind) onFind(index); };
+        row->selected = [this](int index) { setSelectedEngine(index); };
+        row->gainChanged = [this](int index, double value) {
+            if (offlineCore.setGainDb(index, value)) {
+                engines[(size_t)index]->setOfflineState(offlineCore.state(index));
+                if (onPredictionChanged) onPredictionChanged(index);
+            }
+        };
+        row->delayChanged = [this](int index, double value) {
+            if (offlineCore.setDelayMs(index, value)) {
+                engines[(size_t)index]->setOfflineState(offlineCore.state(index));
+                if (onPredictionChanged) onPredictionChanged(index);
+            }
+        };
+        row->polarityChanged = [this](int index, bool value) {
+            if (offlineCore.setPolarity(index, value) && onPredictionChanged) onPredictionChanged(index);
+        };
+        row->setOfflineState(offlineCore.state(i));
+        row->isSelected = i == selectedEngine;
         rows.addAndMakeVisible(*row);
         engines.push_back(std::move(row));
     }
     resized();
 }
 
-void VirtualDSPPanel::setSelectedEngine(int index) { selectedEngine = index; }
+void VirtualDSPPanel::setSelectedEngine(int index) {
+    if (index < 0 || index >= OfflineDSPCore::channelCount) return;
+    selectedEngine = index;
+    for (size_t i = 0; i < engines.size(); ++i) {
+        engines[i]->isSelected = (int)i == index;
+        engines[i]->repaint();
+    }
+    if (onPredictionChanged) onPredictionChanged(index);
+}
+
+bool VirtualDSPPanel::loadImpulse(int index, std::vector<float> impulse, double sampleRate, std::size_t capacity) {
+    if (!offlineCore.load(index, std::move(impulse), sampleRate, capacity)) return false;
+    if ((size_t)index < engines.size()) engines[(size_t)index]->setOfflineState(offlineCore.state(index));
+    if (onPredictionChanged) onPredictionChanged(index);
+    return true;
+}
+
+void VirtualDSPPanel::unloadImpulse(int index) {
+    offlineCore.unload(index);
+    if (index >= 0 && (size_t)index < engines.size()) engines[(size_t)index]->setOfflineState(offlineCore.state(index));
+    if (onPredictionChanged) onPredictionChanged(index);
+}
 
 void VirtualDSPPanel::resized() {
     auto table = getLocalBounds().reduced(4).removeFromLeft(std::max(200, getWidth() - actionsWidth - 12));

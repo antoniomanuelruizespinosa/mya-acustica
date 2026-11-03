@@ -1,6 +1,7 @@
 #pragma once
 
 #include <juce_gui_basics/juce_gui_basics.h>
+#include "OfflineDSPCore.h"
 #include <array>
 #include <functional>
 #include <memory>
@@ -20,6 +21,13 @@ public:
     ~VirtualDSPPanel() override;
     void setEngines(const std::vector<Engine>& engines);
     void setSelectedEngine(int index);
+    int selectedEngineIndex() const { return selectedEngine; }
+    bool loadImpulse(int index, std::vector<float> impulse, double sampleRate, std::size_t capacity = 0);
+    void unloadImpulse(int index);
+    OfflineDSPCore::State engineState(int index) const { return offlineCore.state(index); }
+    std::vector<float> sourceImpulse(int index) const { return offlineCore.source(index); }
+    std::vector<float> processedImpulse(int index) const { return offlineCore.render(index); }
+    std::function<void(int)> onPredictionChanged;
     std::function<void(int)> onFind;
     std::function<void()> onSum, onAverage;
     void resized() override;
@@ -32,6 +40,7 @@ private:
     std::vector<std::unique_ptr<EngineRow>> engines;
     std::array<juce::TextButton,8> globalButtons;
     int selectedEngine = 0;
+    OfflineDSPCore offlineCore;
     static constexpr int rowHeight = 29;
     static constexpr int headerHeight = 30;
     static constexpr int actionsWidth = 0;
