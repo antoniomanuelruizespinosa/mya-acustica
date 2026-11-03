@@ -1,4 +1,5 @@
 #include "OfflineEQWindow.h"
+#include "PremiumWindowSkin.h"
 #include <memory>
 
 using namespace juce;
@@ -47,7 +48,7 @@ struct OfflineEQWindow::Editor : Component {
     }
     void refresh(){for(int i=0;i<20;++i)bands[(size_t)i]->set(core.band(engine,i));for(int i=0;i<2;++i){auto a=core.allPass(engine,i);apEnable[(size_t)i].setToggleState(a.enabled,dontSendNotification);apFrequency[(size_t)i].setValue(a.frequency,dontSendNotification);apQ[(size_t)i].setValue(a.q,dontSendNotification);}auto c=core.chingonizer(engine);chingEnable.setToggleState(c.enabled,dontSendNotification);ching[0].setValue(c.lowFrequency,dontSendNotification);ching[1].setValue(c.highFrequency,dontSendNotification);ching[2].setValue(c.lowGainDb,dontSendNotification);ching[3].setValue(c.highGainDb,dontSendNotification);}
     void resized()override{auto area=getLocalBounds().reduced(8);auto footer=area.removeFromBottom(110);viewport.setBounds(area);content.setSize(std::max(530,viewport.getWidth()-8),20*29);for(int i=0;i<20;++i)bands[(size_t)i]->setBounds(0,i*29,content.getWidth(),28);for(int i=0;i<2;++i){auto line=footer.removeFromTop(26);apEnable[(size_t)i].setBounds(line.removeFromLeft(80));apFrequency[(size_t)i].setBounds(line.removeFromLeft(120));apQ[(size_t)i].setBounds(line.removeFromLeft(120));}auto line=footer.removeFromTop(27);chingEnable.setBounds(line.removeFromLeft(115));for(auto& s:ching)s.setBounds(line.removeFromLeft(100));graphic.setBounds(footer.removeFromTop(25));}
-    void paint(Graphics& g)override{g.fillAll(Colour(0xff10171c));}
+    void paint(Graphics& g)override{PremiumWindowSkin::paint(g,getLocalBounds());}
 };
 
 OfflineEQWindow::OfflineEQWindow(int engine,OfflineDSPCore& core,std::function<void(int)> changed,std::function<void(bool)> graphicChanged)

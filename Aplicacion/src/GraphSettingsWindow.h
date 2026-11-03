@@ -2,6 +2,7 @@
 #include "TFSettingsPanel.h"
 #include "GraphOptionInventory.h"
 #include "Commands.h"
+#include "PremiumWindowSkin.h"
 class PendingGraphPage : public juce::Component {
  juce::Viewport viewport;juce::Component content;std::vector<std::unique_ptr<juce::Label>> labels;juce::ComboBox irScale;bool impulse;std::function<int()> irMode;std::function<void(int)> action;std::function<TFDisplayState()> readTF;std::function<void(TFDisplayState)> applyTF;juce::Slider foreground,background;juce::Label foregroundLabel,backgroundLabel;
 public:
@@ -25,6 +26,7 @@ public:
 class GraphSettingsWindow : public juce::DocumentWindow {
  class Body : public juce::Component {
   juce::TabbedComponent tabs{juce::TabbedButtonBar::TabsAtTop};juce::TextButton measurement,ok;
+  void paint(juce::Graphics& g) override { PremiumWindowSkin::paint(g,getLocalBounds()); }
  public:
   Body(bool english,std::function<TFDisplayState()> read,std::function<void(TFDisplayState)> apply,std::function<void(int)> action,std::function<int()> irMode,std::function<void()> close){
    addAndMakeVisible(tabs);tabs.addTab(english?"Spectrum":"Espectro",juce::Colour(0xff222427),new PendingGraphPage("Spectrum",english,irMode,action),true);tabs.addTab(english?"Transfer Function":juce::String::fromUTF8("Función de transferencia"),juce::Colour(0xff222427),new TFSettingsPanel(read,apply,action,english),true);tabs.addTab(english?"Impulse Response":"Respuesta al impulso",juce::Colour(0xff222427),new PendingGraphPage("IR",english,irMode,action,read,apply),true);

@@ -4,6 +4,7 @@
 #include "MeterAlarm.h"
 #include "MeterSurface.h"
 #include "MeterPulse.h"
+#include "PremiumWindowSkin.h"
 #include "Commands.h"
 #include <juce_gui_extra/juce_gui_extra.h>
 
@@ -95,7 +96,7 @@ public:
  void refreshNow(){cancelPendingUpdate();refresh();}
  void mouseUp(const juce::MouseEvent& e)override{if(e.mods.isPopupMenu())options();}
  bool keyPressed(const juce::KeyPress& key)override{if(meterInputHasFocus()){sequence.reset();return false;}auto m=key.getModifiers();if(MyaCommands::isPlainMeterKey(key.getKeyCode(),m.isCommandDown(),m.isCtrlDown(),m.isAltDown(),m.isShiftDown())){int id=sequence.press(juce::Time::getMillisecondCounterHiRes(),true);if(id&&toggleRequested)toggleRequested();return true;}sequence.reset();return false;}
- void paint(juce::Graphics& g)override{g.fillAll(juce::Colour(0xff222427));}
+ void paint(juce::Graphics& g)override{PremiumWindowSkin::paint(g,getLocalBounds());}
  void resized()override{viewport.setBounds(getLocalBounds());const auto& s=model.state();page=juce::jlimit(0,pages()-1,page);int height=juce::jmax(getHeight(),112*s.rows);bool scroll=height>getHeight();viewport.setScrollBarsShown(scroll,false);int width=juce::jmax(1,getWidth()-(scroll?viewport.getScrollBarThickness():0));content.setSize(width,height);for(size_t i=0;i<tiles.size();++i){int local=(int)i-page*capacity();bool show=local>=0&&local<capacity();tiles[i]->setVisible(show);if(show){int col=local%s.columns,row=local/s.columns;int x=col*width/s.columns,right=(col+1)*width/s.columns,y=row*height/s.rows,bottom=(row+1)*height/s.rows;tiles[i]->setBounds(x,y,right-x,bottom-y);}}}
  #if defined(MYA_OFFSCREEN_RENDER)
  bool previewPages(){refreshNow();int old=page;for(int p=0;p<pages();++p){page=p;resized();for(size_t i=0;i<tiles.size();++i){int local=(int)i-p*capacity();bool expected=local>=0&&local<capacity();if(tiles[i]->isVisible()!=expected)return false;if(expected){auto b=tiles[i]->getBounds();int col=local%model.state().columns,row=local/model.state().columns,w=content.getWidth(),h=content.getHeight();if(b.getX()!=col*w/model.state().columns||b.getRight()!=(col+1)*w/model.state().columns||b.getY()!=row*h/model.state().rows||b.getBottom()!=(row+1)*h/model.state().rows||b.getHeight()<112)return false;}}}page=old;resized();return viewport.getBounds()==getLocalBounds()&&!viewport.isHorizontalScrollBarShown();}

@@ -1,10 +1,10 @@
 #pragma once
 #include <juce_gui_extra/juce_gui_extra.h>
 #include "MyaBrandAssets.h"
+#include "PremiumWindowSkin.h"
 
 // Visual preview only. Values never enter the acoustic or audio engines.
 class EnvironmentalSetupPanel : public juce::Component {
-    juce::Image logo=juce::ImageCache::getFromMemory(MyaBrandAssets::myaanalyzericonv1_png,MyaBrandAssets::myaanalyzericonv1_pngSize);
     juce::Label title,temperatureLabel,humidityLabel,note;
     juce::TextEditor temperature,humidity;
     juce::TextButton close;
@@ -55,15 +55,7 @@ public:
         note.setBounds(x,214,w,25);close.setBounds(getWidth()-126,getHeight()-39,96,27);
     }
     void paint(juce::Graphics& g) override{
-        g.fillAll(juce::Colour(0xff11191f));
-        auto area=getLocalBounds().toFloat().reduced(5.f);
-        g.setColour(juce::Colour(0xff1c2a33));g.fillRoundedRectangle(area,15.f);
-        if(logo.isValid()){
-            g.setOpacity(.075f);
-            g.drawImageWithin(logo,getWidth()/2-95,getHeight()/2-95,190,190,juce::RectanglePlacement::centred);
-            g.setOpacity(1.f);
-        }
-        g.setColour(juce::Colour(0xff405865));g.drawRoundedRectangle(area,15.f,1.f);
+        PremiumWindowSkin::paint(g,getLocalBounds());
         g.setColour(juce::Colour(0xff263c47));
         g.fillRoundedRectangle(juce::Rectangle<float>(34.f,94.f,(float)getWidth()-68.f,34.f),9.f);
         g.fillRoundedRectangle(juce::Rectangle<float>(34.f,168.f,(float)getWidth()-68.f,34.f),9.f);

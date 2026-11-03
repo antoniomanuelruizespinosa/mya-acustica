@@ -1,4 +1,5 @@
 #pragma once
+#include "PremiumWindowSkin.h"
 #include <juce_gui_extra/juce_gui_extra.h>
 #include "MyaBrandAssets.h"
 #include "MyaIdentity.h"
@@ -28,7 +29,7 @@ public:
  void resized()override{preview.setBounds(getWidth()/2-105,getHeight()-40,210,28);}
  bool assetValid()const{return icon.isValid()&&icon.hasAlphaChannel()&&icon.getPixelAt(0,0).getAlpha()==0;}
  void paint(juce::Graphics& g)override{
-  g.fillAll(juce::Colour(0xff222427));g.drawImageWithin(icon,getWidth()/2-48,12,96,96,juce::RectanglePlacement::centred);
+  PremiumWindowSkin::paint(g,getLocalBounds());g.drawImageWithin(icon,getWidth()/2-48,12,96,96,juce::RectanglePlacement::centred);
   g.setColour(juce::Colour(0xffe5edf4));g.setFont(23.f);g.drawText(MyaIdentity::brand(),12,118,getWidth()-24,30,juce::Justification::centred);
   g.setColour(juce::Colour(0xff00e5ed));g.setFont(17.f);g.drawText(MyaIdentity::descriptor(),12,151,getWidth()-24,25,juce::Justification::centred);
   g.setColour(juce::Colour(0xffa9bac8));g.setFont(12.f);g.drawFittedText(MyaIdentity::version()+juce::String::fromUTF8("\nEntradas dBFS con Play explícito\nSPL RMS calibrado / una TF M/R en directo / IR demo"),14,190,getWidth()-28,94,juce::Justification::centred,5);

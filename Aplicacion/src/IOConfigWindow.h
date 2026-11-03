@@ -2,6 +2,7 @@
 #include "AudioRouting.h"
 #include "InputLevelCore.h"
 #include "MeterPulse.h"
+#include "PremiumWindowSkin.h"
 #include <juce_gui_extra/juce_gui_extra.h>
 #include <map>
 
@@ -9,6 +10,7 @@
 // four TF selectors and the single generator output selector below them.
 class IOConfigWindow : public juce::DocumentWindow {
  class Body : public juce::Component, private juce::Timer {
+  void paint(juce::Graphics& g) override { PremiumWindowSkin::paint(g,getLocalBounds()); }
   class UseToggle : public juce::ToggleButton {
    void paintButton(juce::Graphics& g,bool hover,bool down) override{
     auto box=juce::Rectangle<float>(7.f,(getHeight()-19.f)*.5f,19.f,19.f);

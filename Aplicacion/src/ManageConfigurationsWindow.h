@@ -1,8 +1,10 @@
 #pragma once
 #include <juce_gui_extra/juce_gui_extra.h>
+#include "PremiumWindowSkin.h"
 
 class ManageConfigurationsWindow : public juce::DocumentWindow {
  class Body : public juce::Component {
+  void paint(juce::Graphics& g) override { PremiumWindowSkin::paint(g,getLocalBounds()); }
   juce::Label heading,feedback;
   juce::TextEditor name;
   juce::ComboBox saved;

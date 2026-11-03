@@ -34,6 +34,7 @@ void updateInterfaceLanguage(){
 void showEnvironmentalSetup(){
  const bool es=commands.language==MyaCommands::Language::ES;
  if(!environmentalWindow)environmentalWindow=std::make_unique<EnvironmentalSetupWindow>(es);
+ environmentalWindow->setLookAndFeel(&floatingLook);
  environmentalWindow->updateComponentLanguage(es);
  environmentalWindow->setVisible(true);
  environmentalWindow->toFront(true);

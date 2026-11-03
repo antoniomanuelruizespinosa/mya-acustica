@@ -39,6 +39,7 @@ private:
  std::map<int,std::vector<float>> history;
  juce::ComboBox speed;
  juce::ComboBox windowCount;
+ juce::ComboBox bandedStyle;
  juce::Slider upperLimit,lowerLimit;
  juce::ToggleButton peakTracker{"Peak Tracker"};
  std::vector<std::vector<float>> spectrogramHistory;
