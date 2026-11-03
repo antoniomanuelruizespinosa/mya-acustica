@@ -36,8 +36,10 @@ juce::String frequencyNumber(double hz,double interval){
 
 class TransferFunctionPanel::PlotPane : public juce::Component {
 public:
- PlotPane(TransferFunctionPanel& panel,bool isPhase):owner(panel),phase(isPhase){setInterceptsMouseClicks(false,false);}
+ PlotPane(TransferFunctionPanel& panel,bool isPhase):owner(panel),phase(isPhase){setInterceptsMouseClicks(true,false);}
  void paint(juce::Graphics& g) override{owner.paintPane(g,getLocalBounds().toFloat(),phase);}
+ void mouseMove(const juce::MouseEvent& e) override{if(auto* parent=owner.getParentComponent())parent->mouseMove(e.getEventRelativeTo(parent));}
+ void mouseExit(const juce::MouseEvent& e) override{if(auto* parent=owner.getParentComponent())parent->mouseExit(e.getEventRelativeTo(parent));}
 private:
  TransferFunctionPanel& owner;
  bool phase;

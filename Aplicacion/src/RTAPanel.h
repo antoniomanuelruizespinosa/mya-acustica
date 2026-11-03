@@ -22,6 +22,8 @@ public:
  void mouseUp(const juce::MouseEvent&) override;
  std::function<void(bool)> onResolutionChanged;
  std::function<void(int)> onSmoothingChanged;
+ std::function<void(int)> onTemporalModeChanged;
+ int temporalModeChoice() const { return speed.getSelectedId(); }
  int smoothingChoice() const { return smoothingMode; }
  bool multiWindow() const { return multiWindowMode; }
  void setDisplayOptions(bool multi, int smooth);
@@ -43,7 +45,6 @@ private:
  void dragLimitTo(float y);
  DataProvider dataProvider;
  std::vector<Trace> traces;
- std::map<int,std::vector<float>> history;
  juce::ComboBox speed;
  juce::ComboBox windowCount;
  juce::ComboBox bandedStyle;

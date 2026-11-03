@@ -47,6 +47,12 @@ int main(){
  estimator.setAverageDepth(2);assert(estimator.averaging()==2&&!estimator.ready());sample=0;for(int block=0;block<64;++block){TransferFunctionCore::RawBlock b;b.sequence=(std::uint64_t)block+1;b.sampleRate=rate;b.count=512;for(int i=0;i<b.count;++i,++sample){double a=2*3.14159265358979323846*frequency*sample/rate;b.ref[(size_t)i]=(float)(.5*std::sin(a));b.mic[(size_t)i]=(float)(.25*std::sin(a+phase));}estimator.feed(b);}assert(estimator.ready());auto smooth=estimator.smoothedAt(frequency,6.,false);assert(smooth&&estimator.at(frequency)&&smooth->magnitudeDb<estimator.at(frequency)->magnitudeDb-10.);
  // An RTA is a single-channel spectrum; a full-scale-normalized 0.5 sine reads -6 dBFS.
  RTAEstimator rta;sample=0;for(int block=0;block<32;++block){TransferFunctionCore::RawBlock b;b.count=512;b.sampleRate=rate;for(int i=0;i<b.count;++i,++sample)b.mic[(size_t)i]=(float)(.5*std::sin(2*3.14159265358979323846*frequency*sample/rate));rta.feed(b);}auto rtaLevel=rta.dbfs(frequency);assert(rtaLevel&&std::abs(*rtaLevel+6.02)<1.);
+ // A 1/3-octave band sums linear FFT-bin power; a two-window average uses exactly two powers.
+ RTAEstimator bandRta;bandRta.setMultiWindowEnabled(false);bandRta.setFFTSize(512);bandRta.setTemporalAveraging(MultiWindowSpectrum::TemporalMode::Linear,2);
+ for(int frame=0;frame<2;++frame){TransferFunctionCore::RawBlock b;b.count=512;b.sampleRate=rate;double amplitude=frame==0?.5:.25;for(int i=0;i<b.count;++i)b.mic[(size_t)i]=(float)(amplitude*std::sin(2.*3.14159265358979323846*1500.*(frame*512+i)/rate));bandRta.feed(b);}
+ auto twoFrames=bandRta.dbfs(1500.);assert(twoFrames&&std::abs(*twoFrames-10.*std::log10((.25+.0625)/2.))<.25);
+ auto bandLevel=bandRta.smoothedDbfs(1500.,3.);assert(bandLevel&&std::abs(*bandLevel-*twoFrames)<2.);
+ RTAEstimator longAverage;longAverage.setMultiWindowEnabled(false);longAverage.setFFTSize(512);longAverage.setTemporalAveraging(MultiWindowSpectrum::TemporalMode::Linear,64);for(int frame=0;frame<64;++frame){TransferFunctionCore::RawBlock b;b.count=512;b.sampleRate=rate;for(int i=0;i<b.count;++i)b.mic[(size_t)i]=frame==0?(float)(.5*std::sin(2.*3.14159265358979323846*1500.*i/rate)):0.f;longAverage.feed(b);}auto sixtyFour=longAverage.dbfs(1500.);assert(sixtyFour&&std::abs(*sixtyFour-(20.*std::log10(.5)-10.*std::log10(64.)))<.25);
  // Fixed FFT choices must alter the actual bin spacing and discard the old average.
  estimator.setMultiWindowEnabled(false);rta.setMultiWindowEnabled(false);estimator.setAverageDepth(2);
  for(int fftSize:{128,32768}){
