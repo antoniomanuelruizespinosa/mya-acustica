@@ -48,8 +48,8 @@ inline const std::vector<Command>& catalog(){
   {402,"view.dsp",{"Mya DSP","Mya DSP"},"",3,{"",""},Capability::Demo,{"Espacio de demostración; sin motor validado","Demo workspace; no validated engine"}},
   {403,"view.design",{"Mya Mapp Vision 3D","Mya Mapp Vision 3D"},"",3,{"",""},Capability::Demo,{"Espacio de demostración; sin motor validado","Demo workspace; no validated engine"}},
   {404,"view.lab",{"Laboratorio","Laboratory"},"",3,{"",""},Capability::Demo,{"Espacio de demostración; sin motor validado","Demo workspace; no validated engine"}},
-  {405,"view.left",{"Barra izquierda","Left bar"},"O",3,{"",""},Capability::Ready,{"",""}},
-  {406,"view.right",{"Barra derecha","Right bar"},"B",3,{"",""},Capability::Ready,{"",""}},
+  {405,"view.left",{"Barra izquierda","Left bar"},"B",3,{"",""},Capability::Ready,{"",""}},
+  {406,"view.right",{"Barra derecha","Right bar"},"O",3,{"",""},Capability::Ready,{"",""}},
   {407,"view.ir",{"Impulso superior en TF","Top impulse in TF"},"",3,{"",""},Capability::Demo,{"",""}},
   {408,"view.coherence",{"Coherencia","Coherence"},"C",3,{"",""},Capability::Ready,{"TF seleccionada: real; otras curvas: demo","Selected TF: live; other curves: demo"}},
   {409,"view.reset",{"Restaurar vista","Restore view"},"Option/Alt+5",3,{"",""},Capability::Ready,{"",""}},
@@ -248,7 +248,7 @@ inline int shortcut(char key,bool command,bool alt,bool shift,bool plotFocus,boo
  if(!command&&!alt&&(key=='v'||key=='V'))return 526;
  if(command||alt||shift)return 0;
  key=static_cast<char>(std::tolower(static_cast<unsigned char>(key)));
- switch(key){case 'k':return 972;case 'o':return 405;case 'b':return 406;case 'c':return 408;case ' ':return 103;case 'l':case 'f':return 502;case 'g':return 504;case 's':return 505;case 't':return 980;case 'v':return 526;default:break;}
+ switch(key){case 'k':return 972;case 'o':return 406;case 'b':return 405;case 'c':return 408;case ' ':return 103;case 'l':case 'f':return 502;case 'g':return 504;case 's':return 505;case 't':return 980;case 'v':return 526;default:break;}
  return 0;
 }
 inline bool isPlainMeterKey(int code,bool command,bool control,bool alt,bool shift){return (code=='e'||code=='E')&&!command&&!control&&!alt&&!shift;}

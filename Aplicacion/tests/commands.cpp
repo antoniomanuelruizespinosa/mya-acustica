@@ -7,16 +7,20 @@ using namespace MyaCommands;
 int main(int argc,char**){
  const auto& analyzerMenus=WorkstationModeMenus::analyzer();
  const auto& dspMenus=WorkstationModeMenus::dsp();
- assert(analyzerMenus.size()==5&&dspMenus.size()==7);
+ assert(analyzerMenus.size()==5&&dspMenus.size()==8);
  assert(analyzerMenus[0].en=="File"&&analyzerMenus[1].en=="Config"&&analyzerMenus[2].en=="Options"&&analyzerMenus[3].en=="View"&&analyzerMenus[4].en=="Command");
- assert(dspMenus[0].en=="RiTA"&&dspMenus[1].en=="File"&&dspMenus[2].en=="Devices"&&dspMenus[3].en=="Measurement"&&dspMenus[4].en=="DSP"&&dspMenus[5].en=="Tools"&&dspMenus[6].en=="Window");
+ assert(dspMenus[0].en=="RiTA"&&dspMenus[1].en=="File"&&dspMenus[2].en=="Config"&&dspMenus[3].en=="Devices"&&dspMenus[4].en=="Measurement"&&dspMenus[5].en=="DSP"&&dspMenus[6].en=="Tools"&&dspMenus[7].en=="Window");
+ assert(analyzerMenus[1].items.size()==8&&analyzerMenus[1].items[1].id==201&&analyzerMenus[1].items[2].id==202);
+ assert(!analyzerMenus[1].items[4].available&&analyzerMenus[1].items[4].id==0);
+ assert(dspMenus[2].items.size()==3&&dspMenus[2].items[1].id==16050&&dspMenus[2].items[1].available);
+ assert(!dspMenus[2].items[0].available&&!dspMenus[2].items[2].available);
  assert(WorkstationModeMenus::forMode(0).data()==analyzerMenus.data());
  assert(WorkstationModeMenus::forMode(1).data()==dspMenus.data());
  auto hasId=[](const auto& menus,int id){for(const auto& menu:menus)for(const auto& item:menu.items){if(item.id==id)return true;for(const auto& child:item.children)if(child.id==id)return true;}return false;};
  assert(hasId(analyzerMenus,16013)&&!hasId(dspMenus,16013));
  assert(hasId(analyzerMenus,16050)&&hasId(dspMenus,16050));
  assert(!analyzerMenus[0].items[1].children[1].available);
- assert(!dspMenus[1].items[0].available&&!dspMenus[4].items[0].available);
+ assert(!dspMenus[1].items[0].available&&!dspMenus[5].items[0].available);
  for(const auto& menus:{analyzerMenus,dspMenus})for(const auto& menu:menus){assert(!menu.es.empty()&&!menu.en.empty());for(const auto& item:menu.items){assert(!item.es.empty()&&!item.en.empty());if(!item.available)assert(item.id==0);}}
  Context x;std::set<int> ids;std::set<std::string> keys;int dispatched=0,pending=0;
  for(const auto& c:catalog()){
@@ -49,8 +53,8 @@ int main(int argc,char**){
  x.smoothing={{4,7}};assert(state(*find(313),x).checked);assert(state(*find(326),x).checked);assert(!state(*find(310),x).checked);
  for(auto lang:{Language::ES,Language::EN}){x.language=lang;assert(state(*find(380),x).checked==(lang==Language::ES));assert(state(*find(381),x).checked==(lang==Language::EN));}
  assert(shortcut('k',false,false,false,true,false)==972);assert(shortcut('k',false,true,false,true,false)==971);assert(shortcut('k',false,false,false,true,true)==0);assert(shortcut('k',false,true,false,true,true)==0);
- assert(shortcut('o',false,false,false,true,false)==405);assert(shortcut('O',false,false,false,true,false)==405);
- assert(shortcut('b',false,false,false,true,false)==406);assert(shortcut('B',false,false,false,true,false)==406);
+ assert(shortcut('o',false,false,false,true,false)==406);assert(shortcut('O',false,false,false,true,false)==406);
+ assert(shortcut('b',false,false,false,true,false)==405);assert(shortcut('B',false,false,false,true,false)==405);
  assert(shortcut('l',false,false,false,true,false)==502&&shortcut('f',false,false,false,true,false)==502);
  assert(shortcut('g',false,false,false,true,false)==504&&shortcut('s',false,false,false,true,false)==505);
  assert(shortcut(' ',false,false,false,true,false)==103);assert(shortcut('5',false,true,false,true,false)==409);

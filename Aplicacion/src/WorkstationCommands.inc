@@ -27,6 +27,7 @@ void updateInterfaceLanguage(){
  if(dsp)dsp->setButtonText("Mya DSP");
  tracesPage.setButtonText("Snap");
  if(environmentalWindow)environmentalWindow->updateComponentLanguage(es);
+ if(ioWindow)ioWindow->updateComponentLanguage(es);
  if(onModeTitleChanged)onModeTitleChanged(mode);
  repaint();
 }

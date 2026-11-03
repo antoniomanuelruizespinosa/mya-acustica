@@ -22,8 +22,8 @@ inline const std::vector<Menu>& analyzer(){
             {"Salir","Quit",16011,true}}},
         {"Configuración","Config",{
             {"Administrar configuraciones...","Manage Configurations...",200,true},
-            {"Configuración I-O...","I-O Config...",201,true},
-            {"Configuración de medición...","Measurement Config...",202,true},
+            {"Configuración de Audio I-O...","Audio I-O Configuration...",201,true},
+            {"Medición y Micrófonos...","Measurement and Microphones...",202,true},
             {"Configuración SPL...","SPL Config...",290,true},
             {"Configuración de barra de comandos...","Command Bar Config..."},
             {"Nuevo espectro...","New Spectrum...",420,true},
@@ -91,6 +91,7 @@ inline const std::vector<Menu>& dsp(){
             {"Importar carpetas","Import Folders"},
             {"Exportar informe PDF","Export PDF Report"},
             {"Preferencias...","Preferences...",0,true,{{"Configuración Ambiental (Temperatura / Humedad)","Environmental Setup (Temperature / Humidity)",16050,true}}}}},
+        {"Configuración","Config",{{"Matriz de ruteo DSP","DSP Routing Matrix"},{"Ajustes ambientales","Environmental Setup",16050,true},{"Preferencias del simulador","Simulator Preferences"}}},
         {"Dispositivos","Devices",{{"Configuración de dispositivo de audio...","Audio Device Setup..."}}},
         {"Medición","Measurement",{
             {"Generador","Generator"},

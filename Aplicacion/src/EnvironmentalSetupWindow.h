@@ -40,10 +40,10 @@ public:
     }
     void updateComponentLanguage(bool useSpanish){
         spanish=useSpanish;
-        title.setText(spanish?"Configuración ambiental":"Environmental setup",juce::dontSendNotification);
+        title.setText(spanish?"Configuración ambiental":"Environmental Setup",juce::dontSendNotification);
         temperatureLabel.setText(spanish?"Temperatura (°C)":"Temperature (°C)",juce::dontSendNotification);
-        humidityLabel.setText(spanish?"Humedad (%)":"Humidity (%)",juce::dontSendNotification);
-        note.setText(spanish?"Vista previa · estos valores aún no modifican el cálculo acústico":"Preview · these values do not yet affect acoustic calculations",juce::dontSendNotification);
+        humidityLabel.setText(spanish?"Humedad relativa (%)":"Relative humidity (%)",juce::dontSendNotification);
+        note.setText(spanish?"Vista previa: los valores aún no modifican el cálculo acústico.":"Preview: these values do not yet affect acoustic calculations.",juce::dontSendNotification);
         close.setButtonText(spanish?"Cerrar":"Close");
         repaint();
     }
@@ -73,7 +73,7 @@ public:
 class EnvironmentalSetupWindow : public juce::DocumentWindow {
     EnvironmentalSetupPanel* panel=nullptr;
 public:
-    explicit EnvironmentalSetupWindow(bool spanish):juce::DocumentWindow(spanish?"Configuración ambiental":"Environmental setup",juce::Colour(0xff11191f),juce::DocumentWindow::closeButton){
+    explicit EnvironmentalSetupWindow(bool spanish):juce::DocumentWindow(spanish?"Configuración ambiental":"Environmental Setup",juce::Colour(0xff11191f),juce::DocumentWindow::closeButton){
         setUsingNativeTitleBar(true);
         panel=new EnvironmentalSetupPanel(spanish);
         panel->onClose=[this]{setVisible(false);};
@@ -82,7 +82,7 @@ public:
         centreWithSize(440,280);
     }
     void updateComponentLanguage(bool spanish){
-        setName(spanish?"Configuración ambiental":"Environmental setup");
+        setName(spanish?"Configuración ambiental":"Environmental Setup");
         if(panel)panel->updateComponentLanguage(spanish);
     }
     void closeButtonPressed() override{setVisible(false);}
