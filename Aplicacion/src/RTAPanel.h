@@ -6,7 +6,7 @@
 
 class RTAPanel : public juce::Component, private juce::Timer {
 public:
- struct Trace { int id=-1; juce::Colour colour; bool selected = false; double nyquistHz=20000.; std::vector<float> dbfs; };
+ struct Trace { int id=-1; juce::String name; juce::Colour colour; bool selected = false; double nyquistHz=20000.; std::vector<float> dbfs; };
  using DataProvider = std::function<std::vector<Trace>()>;
  explicit RTAPanel(DataProvider provider);
  void setActive(bool active);
@@ -17,7 +17,11 @@ public:
  void resized() override;
  void mouseMove(const juce::MouseEvent& event) override;
  void mouseExit(const juce::MouseEvent&) override;
+ void mouseDown(const juce::MouseEvent& event) override;
+ void mouseDrag(const juce::MouseEvent& event) override;
+ void mouseUp(const juce::MouseEvent&) override;
  std::function<void(bool)> onResolutionChanged;
+ std::function<void(int)> onSmoothingChanged;
  int smoothingChoice() const { return smoothingMode; }
  bool multiWindow() const { return multiWindowMode; }
  void setDisplayOptions(bool multi, int smooth);
@@ -34,13 +38,22 @@ private:
  void updateCursor(const Trace& trace,juce::Rectangle<int> area,double index);
  int peakIndex(const Trace& trace) const;
  void publishCursor();
+ void refreshMicrophoneChoices();
+ void updateSpectrogramImage();
+ void dragLimitTo(float y);
  DataProvider dataProvider;
  std::vector<Trace> traces;
  std::map<int,std::vector<float>> history;
  juce::ComboBox speed;
  juce::ComboBox windowCount;
  juce::ComboBox bandedStyle;
- juce::Slider upperLimit,lowerLimit;
+ juce::ComboBox smoothingChoiceBox,microphoneChoice;
+ juce::String microphoneSignature;
+ double upperLimit=-10.,lowerLimit=-90.;
+ enum class DragLimit { None, Upper, Lower };
+ DragLimit draggedLimit=DragLimit::None;
+ juce::Image spectrogramImage;
+ bool spectrogramDirty=true;
  juce::ToggleButton peakTracker{"Peak Tracker"};
  std::vector<std::vector<float>> spectrogramHistory;
  size_t spectrogramHead=0;
