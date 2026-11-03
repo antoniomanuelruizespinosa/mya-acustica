@@ -33,6 +33,7 @@
 #include "AnchoredAudioOptions.h"
 #include "PrincipalMeter.h"
 #include "Branding.h"
+#include "EnvironmentalSetupWindow.h"
 #include "NativeTitleBranding.h"
 #include "UpdateCheck.h"
 #include "AppDataLocation.h"
@@ -274,6 +275,7 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
  std::function<void(int)> onModeTitleChanged;
  AudioDeviceWatcher deviceWatcher;
  std::unique_ptr<SettingsDrawer> settingsDrawer;
+ std::unique_ptr<EnvironmentalSetupWindow> environmentalWindow;
  String drawerKey;
  std::vector<std::unique_ptr<TextButton>> buttons;
  TextButton *measure,*dsp,*vision,*lab,*invert,*bypass;
@@ -898,6 +900,8 @@ public:
    case 16012:info("Acerca de Mya DSP","Mya DSP: simulación en frío con impulsos locales y ocho vías independientes.");return;
    case 16013:libraryPanel.importSelectedTrace();return;
    case 16050:showEnvironmentalSetup();return;
+   case 16060:if(dspConsole.onSum)dspConsole.onSum();return;
+   case 16061:if(dspConsole.onAverage)dspConsole.onAverage();return;
    case 16020:case 16021:commands.invoke(420);if(mainTabs)mainTabs->rtaPanel().setWindowCount(id==16020?1:2);menuItemsChanged();return;
    case 16030:leftVisible=true;resized();repaint();menuItemsChanged();return;
    case 16040:dspShowIR=!dspShowIR;resized();menuItemsChanged();return;

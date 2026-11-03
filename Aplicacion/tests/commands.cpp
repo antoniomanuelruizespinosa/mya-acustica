@@ -7,16 +7,16 @@ using namespace MyaCommands;
 int main(int argc,char**){
  const auto& analyzerMenus=WorkstationModeMenus::analyzer();
  const auto& dspMenus=WorkstationModeMenus::dsp();
- assert(analyzerMenus.size()==2&&dspMenus.size()==2);
- assert(analyzerMenus[0].es=="Archivo"&&analyzerMenus[1].es=="Configuración");
- assert(dspMenus[0].es=="Archivo"&&dspMenus[1].es=="Configuración");
+ assert(analyzerMenus.size()==5&&dspMenus.size()==7);
+ assert(analyzerMenus[0].en=="File"&&analyzerMenus[1].en=="Config"&&analyzerMenus[2].en=="Options"&&analyzerMenus[3].en=="View"&&analyzerMenus[4].en=="Command");
+ assert(dspMenus[0].en=="RiTA"&&dspMenus[1].en=="File"&&dspMenus[2].en=="Devices"&&dspMenus[3].en=="Measurement"&&dspMenus[4].en=="DSP"&&dspMenus[5].en=="Tools"&&dspMenus[6].en=="Window");
  assert(WorkstationModeMenus::forMode(0).data()==analyzerMenus.data());
  assert(WorkstationModeMenus::forMode(1).data()==dspMenus.data());
  auto hasId=[](const auto& menus,int id){for(const auto& menu:menus)for(const auto& item:menu.items){if(item.id==id)return true;for(const auto& child:item.children)if(child.id==id)return true;}return false;};
  assert(hasId(analyzerMenus,16013)&&!hasId(dspMenus,16013));
  assert(hasId(analyzerMenus,16050)&&hasId(dspMenus,16050));
- assert(!analyzerMenus[0].items[0].available&&!dspMenus[0].items[0].available);
- assert(!dspMenus[1].items[0].available&&!dspMenus[1].items[2].available);
+ assert(!analyzerMenus[0].items[1].children[1].available);
+ assert(!dspMenus[1].items[0].available&&!dspMenus[4].items[0].available);
  for(const auto& menus:{analyzerMenus,dspMenus})for(const auto& menu:menus){assert(!menu.es.empty()&&!menu.en.empty());for(const auto& item:menu.items){assert(!item.es.empty()&&!item.en.empty());if(!item.available)assert(item.id==0);}}
  Context x;std::set<int> ids;std::set<std::string> keys;int dispatched=0,pending=0;
  for(const auto& c:catalog()){
