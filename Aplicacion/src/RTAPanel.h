@@ -23,7 +23,8 @@ public:
  std::function<void(bool)> onResolutionChanged;
  std::function<void(int)> onSmoothingChanged;
  std::function<void(int)> onTemporalModeChanged;
- int temporalModeChoice() const { return speed.getSelectedId(); }
+ int temporalModeChoice() const { return temporalMode; }
+ void setTemporalModeChoice(int choice);
  int smoothingChoice() const { return smoothingMode; }
  bool multiWindow() const { return multiWindowMode; }
  void setDisplayOptions(bool multi, int smooth);
@@ -45,7 +46,6 @@ private:
  void dragLimitTo(float y);
  DataProvider dataProvider;
  std::vector<Trace> traces;
- juce::ComboBox speed;
  juce::ComboBox windowCount;
  juce::ComboBox bandedStyle;
  juce::ComboBox smoothingChoiceBox,microphoneChoice;
@@ -64,6 +64,7 @@ private:
  juce::String cursorReading;
  bool multiWindowMode=true;
  int smoothingMode=2;
+ int temporalMode=2;
  double lastUpdateMs=0;
  float lineThickness=2.f;
  bool spanishLanguage=true;
