@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <cstdint>
 
-// Base pink sample is limited to -40 dBFS peak; engine trim caps it at -20 dBFS peak.
+// Base pink sample is limited to -40 dBFS peak; 0 dB trim caps output at 0 dBFS peak.
 // No input signal is ever returned to the output.
 class LoopPink {
  std::uint32_t seed=0x7182ac41u;

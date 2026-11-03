@@ -66,9 +66,12 @@ void TransferFunctionPanel::setDisplayOptions(bool multi,int smooth){if(multiWin
 TransferFunctionPanel::~TransferFunctionPanel(){stopTimer();}
 
 void TransferFunctionPanel::clearTraces(){traces.clear();history.clear();lastUpdateMs=0;phasePane->repaint();magnitudePane->repaint();}
-void TransferFunctionPanel::refreshNow(){timerCallback();}
+void TransferFunctionPanel::refreshNow(){if(!frozen)timerCallback();}
+void TransferFunctionPanel::setFrozen(bool shouldFreeze){frozen=shouldFreeze;if(frozen)stopTimer();else{suppressedTraces.clear();if(active&&isShowing()){timerCallback();startTimerHz(30);}}}
+void TransferFunctionPanel::setTraceEnabled(int traceId,bool enabled){if(enabled)suppressedTraces.erase(traceId);else suppressedTraces.insert(traceId);phasePane->repaint();magnitudePane->repaint();}
 
 void TransferFunctionPanel::setActive(bool shouldBeActive){
+ if(frozen){active=shouldBeActive;stopTimer();return;}
  if(active==shouldBeActive){if(!active&&isShowing())timerCallback();return;}
  active=shouldBeActive;
  if(active&&isShowing()){timerCallback();startTimerHz(30);}
@@ -77,13 +80,14 @@ void TransferFunctionPanel::setActive(bool shouldBeActive){
 
 void TransferFunctionPanel::visibilityChanged(){
  if(!isShowing())stopTimer();
+ else if(frozen)stopTimer();
  else if(active){timerCallback();startTimerHz(30);}
  else timerCallback();
 }
 
 void TransferFunctionPanel::timerCallback(){
+ if(frozen)return;
  auto incoming=dataProvider?dataProvider():std::vector<Trace>{};
- if(incoming.empty()&&active)return;
  double now=juce::Time::getMillisecondCounterHiRes(),dt=lastUpdateMs>0?juce::jlimit(0.0,1.0,(now-lastUpdateMs)/1000.):0.;lastUpdateMs=now;
  double tau=1.;
  double alpha=dt>0?1.-std::exp(-dt/tau):1.;
@@ -91,6 +95,25 @@ void TransferFunctionPanel::timerCallback(){
  for(auto& trace:incoming){auto old=history.find(trace.id);if(!trace.frozen&&old!=history.end()&&old->second.samples.size()==trace.samples.size())for(size_t i=0;i<trace.samples.size();++i){auto& current=trace.samples[i];const auto& previous=old->second.samples[i];if(!current.valid||!previous.valid)continue;current.magnitudeDb=previous.magnitudeDb+alpha*(current.magnitudeDb-previous.magnitudeDb);current.phaseDegrees=previous.phaseDegrees+alpha*std::remainder(current.phaseDegrees-previous.phaseDegrees,360.);current.phaseDegrees=std::remainder(current.phaseDegrees,360.);current.coherence=previous.coherence+alpha*(current.coherence-previous.coherence);}next[trace.id]=trace;}
  history=std::move(next);traces=std::move(incoming);
  phasePane->repaint();magnitudePane->repaint();
+}
+
+void TransferFunctionPanel::setLineThickness(float pixels){lineThickness=juce::jlimit(1.f,4.f,pixels);phasePane->repaint();magnitudePane->repaint();}
+
+std::optional<TransferFunctionPanel::Sample> TransferFunctionPanel::sampleAt(int traceId,double hz,bool phase) const{
+ if(!std::isfinite(hz))return {};
+ for(const auto& trace:traces){
+  if(trace.id!=traceId||suppressedTraces.count(traceId)||(phase?!trace.showPhase:!trace.showMagnitude))continue;
+  const auto& samples=trace.samples;
+  auto valid=[this,phase](const Sample& s){return s.valid&&(phase?s.validPhase:s.validMagnitude)&&std::isfinite(phase?s.phaseDegrees:s.magnitudeDb)&&(s.bypassBlanking||(std::isfinite(s.coherence)&&CoherenceBlanking::passes(s.coherence,coherenceThresholdPercent,coherenceSquared)));};
+  auto upper=std::lower_bound(samples.begin(),samples.end(),hz,[](const Sample& s,double value){return s.frequencyHz<value;});
+  if(upper!=samples.end()&&upper->frequencyHz==hz)return valid(*upper)?std::optional<Sample>(*upper):std::nullopt;
+  if(upper==samples.begin()||upper==samples.end())return {};
+  const auto& lo=*(upper-1);const auto& hi=*upper;
+  if(!valid(lo)||!valid(hi)||hi.frequencyHz<=lo.frequencyHz)return {};
+  double t=(hz-lo.frequencyHz)/(hi.frequencyHz-lo.frequencyHz);
+  Sample result=lo;result.frequencyHz=hz;result.magnitudeDb=lo.magnitudeDb+t*(hi.magnitudeDb-lo.magnitudeDb);result.coherence=lo.coherence+t*(hi.coherence-lo.coherence);result.phaseDegrees=std::remainder(lo.phaseDegrees+t*std::remainder(hi.phaseDegrees-lo.phaseDegrees,360.),360.);return result;
+ }
+ return {};
 }
 
 void TransferFunctionPanel::resized(){}
@@ -182,6 +205,7 @@ void TransferFunctionPanel::drawGrid(juce::Graphics& g,juce::Rectangle<float> ar
 
 void TransferFunctionPanel::drawTraces(juce::Graphics& g,juce::Rectangle<float> area,bool phase)const{
  for(int layer=0;layer<2;++layer)for(const auto& trace:traces){
+  if(suppressedTraces.count(trace.id))continue;
   if(trace.selected!=(layer==1))continue;
   if(phase?!trace.showPhase:!trace.showMagnitude)continue;
   juce::Path path;bool started=false;double previousPhase=0.0;
@@ -194,13 +218,14 @@ void TransferFunctionPanel::drawTraces(juce::Graphics& g,juce::Rectangle<float> 
    else path.lineTo(*x,y);
    started=true;previousPhase=value;
   }
-  g.setColour(trace.colour);g.strokePath(path,juce::PathStrokeType(trace.selected?2.2f:1.3f));
+  g.setColour(trace.colour);g.strokePath(path,juce::PathStrokeType(lineThickness));
  }
 }
 
 void TransferFunctionPanel::drawCoherence(juce::Graphics& g,juce::Rectangle<float> area)const{
  if(!coherenceVisible)return;
  for(int layer=0;layer<2;++layer)for(const auto& trace:traces){
+  if(suppressedTraces.count(trace.id))continue;
   if(trace.selected!=(layer==1))continue;
   if(!trace.showMagnitude)continue;
   juce::Path path;bool started=false;
@@ -211,7 +236,7 @@ void TransferFunctionPanel::drawCoherence(juce::Graphics& g,juce::Rectangle<floa
    if(!started)path.startNewSubPath(*x,y);else path.lineTo(*x,y);
    started=true;
   }
-  g.setColour(juce::Colour(0xffff3030));g.strokePath(path,juce::PathStrokeType(trace.selected?1.8f:1.2f));
+  g.setColour(juce::Colour(0xffff3030));g.strokePath(path,juce::PathStrokeType(lineThickness));
  }
 }
 

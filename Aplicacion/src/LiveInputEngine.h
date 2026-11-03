@@ -99,7 +99,7 @@ private:
     int micChannel=captureMics[route],refChannel=captureRefs[route];if(micChannel<=0)continue;
     int mi=-1,ri=-1;
     for(int ch=0;ch<count;++ch){if(physical[(size_t)ch]==micChannel-1)mi=ch;if(physical[(size_t)ch]==refChannel-1)ri=ch;}
-    if(mi>=0&&input[mi]&&(virtualReference?(signal!=Signal::None&&outputs>=1&&output&&output[0]):(ri>=0&&input[ri])))for(int offset=0;offset<samples;){
+    if(mi>=0&&input[mi]&&(virtualReference?(signal!=Signal::None&&outputs>=1&&output&&output[0]):(refChannel<=0||ri>=0&&input[ri])))for(int offset=0;offset<samples;){
      TransferFunctionCore::RawBlock block;block.sequence=rawSequences[route].fetch_add(1,std::memory_order_acq_rel)+1;block.sampleRate=sampleRate;
      block.count=std::min(TransferFunctionCore::blockCapacity,samples-offset);
      std::copy_n(input[mi]+offset,block.count,block.mic.begin());
@@ -143,7 +143,7 @@ public:
  const juce::String& summary()const{return runningFlag?description:error;}
  juce::String details()const{auto text=description;if(runningFlag)for(const auto& s:sessions)text+="\n"+diagnostic(*s,clock());return text;}
  unsigned drops()const{unsigned n=0;for(const auto& s:sessions)n+=s->dropped.load(std::memory_order_relaxed);return n;}
- void setPinkLevelDb(double db){if(!std::isfinite(db))return;db=juce::jlimit(-60.,-20.,db);pinkLevelDb=db;float scale=(float)std::pow(10.,(db+40.)/20.);for(auto& s:sessions)if(s->signal==Signal::Pink)s->pinkScale.store(scale,std::memory_order_release);}
+ void setPinkLevelDb(double db){if(!std::isfinite(db))return;db=juce::jlimit(-96.,0.,db);pinkLevelDb=db;float scale=(float)std::pow(10.,(db+40.)/20.);for(auto& s:sessions)if(s->signal==Signal::Pink)s->pinkScale.store(scale,std::memory_order_release);}
  double pinkLevel()const{return pinkLevelDb;}
  void setSweepLevelDb(double db){if(!std::isfinite(db))return;db=juce::jlimit(-60.,-20.,db);sweepLevelDb=db;for(auto& s:sessions)if(s->signal==Signal::Sweep)s->sweepScale.store((float)std::pow(10.,(db+40.)/20.),std::memory_order_release);}
  double sweepLevel()const{return sweepLevelDb;}
@@ -196,6 +196,7 @@ public:
   activePlan=plan;runningFlag=true;return true;
  }
  void stop(){++generationValue;runningFlag=false;sessions.clear();activePlan={};}
+ void pause(){if(!runningFlag)return;++generationValue;runningFlag=false;for(auto& session:sessions)if(session->device)session->device->stop();}
  // Called by the UI thread. Blocks already issued by the callback are excluded,
  // including one still being copied while the queue is drained.
  void discardPendingTF(){for(auto& s:sessions)for(size_t i=0;i<s->rawQueues.size();++i){s->minimumRawSequences[i]=s->rawSequences[i].load(std::memory_order_acquire);TransferFunctionCore::RawBlock block;while(s->rawQueues[i].pop(block)){};}}
@@ -243,6 +244,7 @@ public:
  std::optional<double> rms(const std::string& key,int ch)const{if(!channel(key,ch).valid)return {};for(const auto& s:sessions)if(s->key.toStdString()==key)return s->rms[(size_t)ch-1].level;return {};}
  bool rmsClip(const std::string& key,int ch)const{if(ch<1||ch>InputLevels::maxChannels)return false;for(const auto& s:sessions)if(s->key.toStdString()==key)return s->rms[(size_t)ch-1].hasClip();return false;}
  InputLevels::Peak channel(const std::string& key,int channel)const{if(!runningFlag||channel<1||channel>InputLevels::maxChannels)return {};double now=clock();for(const auto& s:sessions)if(s->key.toStdString()==key){if(!s->latest.any||s->latest.gap||now-s->receivedAt>250)return {};return s->latest.channels[(size_t)channel-1];}return {};}
+ InputLevels::Peak displayChannel(const std::string& key,int channel)const{if(!runningFlag||channel<1||channel>InputLevels::maxChannels)return {};double now=clock();for(const auto& s:sessions)if(s->key.toStdString()==key){if(!s->latest.any||now-s->receivedAt>500)return {};return s->latest.channels[(size_t)channel-1];}return {};}
  #if defined(MYA_INPUT_ENGINE_TEST)
  // Drive the ACTUAL callback/queue/poll path with a clock, no device creation/open.
  void fixtureStart(juce::String key,double rate,const std::vector<int>& channels,bool pinkOutput=false,int tfMic=0,int tfRef=0,bool internalReference=false){fixtureSignal(key,rate,channels,pinkOutput?Signal::Pink:Signal::None,tfMic,tfRef,internalReference);}

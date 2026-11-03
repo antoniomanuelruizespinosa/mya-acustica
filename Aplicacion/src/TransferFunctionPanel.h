@@ -7,6 +7,7 @@
 #include <memory>
 #include <map>
 #include <optional>
+#include <set>
 #include <vector>
 
 class TransferFunctionPanel : public juce::Component, private juce::Timer {
@@ -34,6 +35,8 @@ public:
  explicit TransferFunctionPanel(DataProvider provider);
  ~TransferFunctionPanel() override;
  void setActive(bool active);
+ void setFrozen(bool shouldFreeze);
+ void setTraceEnabled(int traceId,bool enabled);
  void clearTraces();
  void refreshNow();
  void visibilityChanged() override;
@@ -48,6 +51,8 @@ public:
                         const std::array<double,3>& zoomX,const std::array<double,3>& zoomY);
  void setSelectedPlot(int plot);
  void setCoherenceDisplay(double thresholdPercent,bool squared,bool visible,double height);
+ void setLineThickness(float pixels);
+ std::optional<Sample> sampleAt(int traceId,double frequencyHz,bool phase) const;
  std::function<void(double)> onCoherenceThresholdChanged;
  std::function<void()> onCoherenceThresholdCommitted;
 
@@ -68,6 +73,7 @@ private:
  DataProvider dataProvider;
  std::vector<Trace> traces;
  std::map<int,Trace> history;
+ std::set<int> suppressedTraces;
  std::unique_ptr<PlotPane> phasePane,magnitudePane;
  std::unique_ptr<CoherenceHandle> coherenceHandle;
  std::array<double,3> panX{},panY{};
@@ -77,7 +83,9 @@ private:
  int selectedPlot=1;
  double lastUpdateMs=0;
  bool active=false;
+ bool frozen=false;
  double coherenceThresholdPercent=0.;
  double coherenceHeight=.25;
  bool coherenceSquared=true,coherenceVisible=true;
+ float lineThickness=2.f;
 };

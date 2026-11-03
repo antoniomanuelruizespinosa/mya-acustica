@@ -41,6 +41,7 @@ int main(int argc,char** argv){
   engine.fixtureSignal(juce::String(key),48000,{1},LiveInputEngine::Signal::Pink);engine.fixtureOutputCallback(input,1,out.data(),480);auto pinkAtMinus40=out;
   engine.fixtureSignal(juce::String(key),48000,{1},LiveInputEngine::Signal::Pink);engine.setSweepLevelDb(-20);engine.fixtureOutputCallback(input,1,out.data(),480);assert(out==pinkAtMinus40);engine.setSweepLevelDb(-40);engine.stop();
   engine.setPinkLevelDb(-20);engine.fixtureSignal(juce::String(key),48000,{1},LiveInputEngine::Signal::Pink);engine.fixtureOutputCallback(input,1,out.data(),480);for(float sample:out)assert(std::isfinite(sample)&&std::abs(sample)<=0.1f);engine.stop();engine.setPinkLevelDb(-40);
+  engine.setPinkLevelDb(0);engine.fixtureSignal(juce::String(key),48000,{1},LiveInputEngine::Signal::Pink);engine.fixtureOutputCallback(input,1,out.data(),480);for(float sample:out)assert(std::isfinite(sample)&&std::abs(sample)<=1.f);engine.stop();engine.setPinkLevelDb(-96);assert(engine.pinkLevel()==-96);engine.setPinkLevelDb(-40);
   engine.setSweepLevelDb(-20);engine.fixtureSignal(juce::String(key),48000,{1},LiveInputEngine::Signal::Sweep);engine.fixtureOutputCallback(input,1,out.data(),480);for(float sample:out)assert(std::isfinite(sample)&&std::abs(sample)<=0.1f);engine.stop();engine.setSweepLevelDb(-40);
  }
  // Single physical Input1: actual IO callback -> SPSC -> peak/RMS poll, no backend open.
@@ -83,6 +84,7 @@ int main(int argc,char** argv){
  assert(captured);
  // No se envía una FT si falta la entrada física de referencia.
  engine.fixtureStart(juce::String(key),48000,{1},false,1,5);nowMs+=10;engine.fixtureCallback(input,1,480);int missingReference=0;assert(engine.poll({},[&](const std::string&,const TransferFunctionCore::RawBlock&){++missingReference;}));assert(missingReference==0);
+ engine.fixtureStart(juce::String(key),48000,{1});engine.fixtureRoutes({InputLevels::Route{key,1,0}},{true});nowMs+=10;engine.fixtureCallback(input,1,480);int rtaOnly=0;assert(engine.poll({}, {},[&](int route,const TransferFunctionCore::RawBlock& block){assert(route==0&&block.mic[0]==x[0]&&block.ref[0]==0.f);++rtaOnly;}));assert(rtaOnly==1);
  // More than four independent TF routes retain their own queue and physical microphone channel.
  engine.fixtureStart(juce::String(key),48000,{1,2,3,4,5});std::vector<InputLevels::Route> many(5);for(int i=0;i<5;++i)many[(size_t)i]={key,(i%4)+1,5};engine.fixtureRoutes(many,{true,true,true,true,true});nowMs+=10;engine.fixtureCallback(five,5,480);std::array<bool,5> seen{};assert(engine.poll({}, {},[&](int route,const TransferFunctionCore::RawBlock& b){assert(route>=0&&route<5&&b.mic[1]==channels[(size_t)(route%4)][1]&&b.ref[1]==channels[4][1]);seen[(size_t)route]=true;}));for(bool value:seen)assert(value);
  engine.fixtureStart(juce::String(key),48000,{1,2,3,4,5},false,1,5);
@@ -138,7 +140,7 @@ int main(int argc,char** argv){
  assert(capture.start(key,1,48000,94,engine.cursor(key)));
  for(int i=0;i<470;++i){actualCallback();assert(engine.poll([&](const auto& k,const auto& f,double rate){capture.feed(k,f,rate);}));}
  assert(capture.confirmable()&&capture.samples==240640&&std::abs(*capture.measured+43.01029995664)<.001);
- engine.stop();assert(!engine.running()&&!engine.rms(key,1));
+ auto frozenCursor=engine.cursor(key);engine.pause();assert(!engine.running()&&engine.cursor(key)==frozenCursor&&engine.rate(key)==48000.&&engine.rms(key,1)==std::nullopt);engine.stop();assert(!engine.running()&&!engine.rms(key,1)&&engine.rate(key)==0.);
  // Concurrent producer/UI polling with the real monotonic clock, still no device.
  {LiveInputEngine live;live.fixtureStart("Core / concurrent fixture",48000,{1});std::atomic<bool> done{false};std::thread producer([&]{for(int i=0;i<2000;++i)live.fixtureCallback(input,1,480);done.store(true,std::memory_order_release);});
   while(!done.load(std::memory_order_acquire)){assert(live.poll());std::this_thread::yield();}producer.join();assert(live.poll()&&live.running()&&live.lastError().isEmpty());live.fixtureCallback(input,1,480);assert(live.poll());live.fixtureCallback(input,1,480);assert(live.poll()&&live.channel("Core / concurrent fixture",1).valid);live.stop();}
