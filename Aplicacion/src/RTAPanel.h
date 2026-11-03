@@ -21,6 +21,8 @@ public:
  int smoothingChoice() const { return smoothingMode; }
  bool multiWindow() const { return multiWindowMode; }
  void setDisplayOptions(bool multi, int smooth);
+ void setWindowCount(int count);
+ int windowCountChoice() const { return windowCount.getSelectedId(); }
  void setLineThickness(float pixels);
  std::function<void(juce::String)> onCursorReadout;
 private:

@@ -15,6 +15,7 @@
 #include "RTAEstimator.h"
 #include "TransferFunctionPanel.h"
 #include "VirtualDSPPanel.h"
+#include "WorkstationModeMenus.h"
 #include "OfflineDSPPlot.h"
 #include "MainTabsComponent.h"
 #include "SweepMeasurementCore.h"
@@ -269,6 +270,7 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
  MyaLook look;
  std::unique_ptr<MyaUpdate::Checker> updateChecker;
  PaintSurface navigationOverlay;TextButton navigationTab{"v"},navigationMenus{"Todos los menus..."};
+ TextButton languageES{"ES"},languageEN{"EN"};
  AudioDeviceWatcher deviceWatcher;
  std::unique_ptr<SettingsDrawer> settingsDrawer;
  String drawerKey;
@@ -338,6 +340,7 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
  OfflineDSPPlot offlineDSPPlot;
  OfflineDSPPlot offlineDSPPhasePlot;
  OfflineDSPPlot offlineDSPMagnitudePlot;
+ bool dspShowIR=true,dspShowFrequency=true,dspGraphicEQ=false;
  VirtualDSPSidebar dspSidebar;
  void refreshDspInputs(){const auto* endpoint=findEndpoint(audioEndpoints,deviceKeys.empty()?String():deviceKeys.front());if(!endpoint&&!audioEndpoints.empty())endpoint=&audioEndpoints.front();dspSidebar.setInputChannels(endpoint?endpoint->inputs:StringArray{});}
  int cursorPlot=-1;double cursorU=.5,cursorY=.5;
@@ -829,7 +832,7 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
   }
  }
  void setup(Slider& s,Label& l,String name,double lo,double hi,double step,double value){s.setRange(lo,hi,step);s.setValue(value);s.setSliderStyle(Slider::LinearHorizontal);s.setTextBoxStyle(Slider::TextBoxRight,false,72,25);s.onValueChange=[this]{repaint();};l.setText(name,dontSendNotification);addAndMakeVisible(s);addAndMakeVisible(l);}
- void select(int n){navigationOverlay.setVisible(false);navigationTab.setButtonText("v");if(anchoredOptions)anchoredOptions->setVisible(false);closeCalibration();if(settingsDrawer)settingsDrawer->setVisible(false);mode=n;if(n==1)refreshDspInputs();measure->setToggleState(n==0,dontSendNotification);dsp->setToggleState(n==1,dontSendNotification);vision->setToggleState(n==2,dontSendNotification);lab->setToggleState(n==3,dontSendNotification);resized();repaint();}
+ void select(int n){navigationOverlay.setVisible(false);navigationTab.setButtonText("v");if(anchoredOptions)anchoredOptions->setVisible(false);closeCalibration();if(settingsDrawer)settingsDrawer->setVisible(false);mode=n;if(n==1)refreshDspInputs();measure->setToggleState(n==0,dontSendNotification);dsp->setToggleState(n==1,dontSendNotification);vision->setToggleState(n==2,dontSendNotification);lab->setToggleState(n==3,dontSendNotification);refreshModeMenus();resized();repaint();}
  void save(){commitAverage();DynamicObject::Ptr o=new DynamicObject();o->setProperty("schema",1);o->setProperty("synthetic",true);DynamicObject::Ptr lib=new DynamicObject();lib->setProperty("libraryId",captureLibrary.state().id);lib->setProperty("manifest","Biblioteca/biblioteca.json");lib->setProperty("bindings",libraryDSPBindings);o->setProperty("captureLibrary",var(lib.get()));o->setProperty("gainDB",gain.getValue());o->setProperty("delayMs",delay.getValue());o->setProperty("polarity",polarity);o->setProperty("stacks",stacks.getValue());o->setProperty("boxesPerStack",boxes.getValue());o->setProperty("spacingM",spacing.getValue());o->setProperty("linked",adjustmentLinked);Array<var> micros;for(size_t i=0;i<micNames.size();++i){DynamicObject::Ptr m=new DynamicObject();m->setProperty("name",micNames[i].getText());m->setProperty("present",bool(tfPresent[i]));m->setProperty("deviceKey",deviceKeys[i]);m->setProperty("micInput",micInputs[i]);m->setProperty("refInput",refInputs[i]);m->setProperty("visible",traceSwitch[i].getToggleState());m->setProperty("colour",traceSwitch[i].colour.toString());m->setProperty("measurementDelayMs",micDelay[i].getValue());m->setProperty("averageDepth",tfAverageDepth[i]);micros.add(var(m.get()));}o->setProperty("micros",micros);DynamicObject::Ptr avg=new DynamicObject();avg->setProperty("configured",avgConfigured);avg->setProperty("active",avgActive);avg->setProperty("name",avgName);Array<var> members;for(bool selected:avgMembers)members.add(var(selected));avg->setProperty("members",members);o->setProperty("averageTF",var(avg.get()));Array<var> averages;for(const auto& entry:averageEntries){auto* item=new DynamicObject();item->setProperty("id",entry.id);item->setProperty("name",entry.name);item->setProperty("colour",entry.colour.toString());item->setProperty("active",entry.active);Array<var> members;for(bool on:entry.members)members.add(on);item->setProperty("members",members);averages.add(var(item));}o->setProperty("averageTFs",averages);
  DynamicObject::Ptr view=new DynamicObject();
  view->setProperty("leftVisible",leftVisible);view->setProperty("rightVisible",rightVisible);
@@ -841,7 +844,7 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
  irScale=jlimit(0,2,int(view["irScale"]));impulseScale.setSelectedId(irScale+1,dontSendNotification);
  leftVisible=bool(view["leftVisible"]);rightVisible=bool(view["rightVisible"]);
  irFraction=jlimit(.1,.6,double(view["irFraction"]));phaseFraction=jlimit(.15,.85,double(view["phaseFraction"]));
- if(view.hasProperty("commandLanguage"))commands.language=view["commandLanguage"].toString()=="en"?MyaCommands::Language::EN:MyaCommands::Language::ES;
+ if(view.hasProperty("commandLanguage")){commands.language=view["commandLanguage"].toString()=="en"?MyaCommands::Language::EN:MyaCommands::Language::ES;refreshModeMenus();}
  measurementView=jlimit(0,2,int(view["measurementView"]));activePlot=measurementView==1?0:measurementView==2?2:1;plotChoice.setSelectedId(jlimit(1,2,int(view["plotChoice"])),dontSendNotification);source.setSelectedId(jlimit(1,(int)micNames.size()+1,int(view["selectedTF"])),dontSendNotification);
  linkSmooth.setToggleState(false,dontSendNotification);showCoherence.setToggleState(bool(view["coherence"]),dontSendNotification);coherenceThreshold.setValue(jlimit(0.,100.,double(view["coherenceThreshold"])),dontSendNotification);
  if(auto* plots=view["plots"].getArray())for(int i=0;i<jmin(3,plots->size());++i){auto item=plots->getReference(i);if(!item.isObject())continue;auto k=(size_t)i;if(i>0){plotTypes[k-1]=item.hasProperty("displayType")?jlimit(1,2,int(item["displayType"])):i;plotTypeChoice[k-1].setSelectedId(plotTypes[k-1],dontSendNotification);}int chosen=jlimit(1,7,int(item["trace"]));auto capture=item["captureId"].toString();if(i>0&&capture.isNotEmpty()){auto it=std::find(capturedChoices.begin(),capturedChoices.end(),capture);chosen=it==capturedChoices.end()?6:1000+(int)std::distance(capturedChoices.begin(),it);}plotMic[k].setSelectedId(chosen,dontSendNotification);plotPanX[k]=jlimit(-2.,2.,double(item["panX"]));plotPanY[k]=jlimit(-10.,10.,double(item["panY"]));plotZoomX[k]=jlimit(i==0?.25:1.,64.,double(item.hasProperty("zoomX")?item["zoomX"]:item["zoom"]));plotZoomY[k]=jlimit(.25,16.,double(item.hasProperty("zoomY")?item["zoomY"]:item["zoom"]));if(i>0)plotSmooth[k-1].setSelectedId(item.hasProperty("smoothingOverride")?jlimit(1,8,int(item["smoothing"])):8,dontSendNotification);}
@@ -856,9 +859,48 @@ public:
   }
   if(!updateChecker->check(MyaIdentity::version(),manual)&&manual)info("Buscar actualizaciones","Ya hay una consulta en curso.");
  }
- StringArray getMenuBarNames() override{return commands.menuNames();}
- PopupMenu getMenuForIndex(int index,const String&) override{auto menu=commands.menu(index);if(index==3&&mode==0){PopupMenu widths;for(int px=1;px<=4;++px)widths.addItem(15000+px,String(px)+"px",true,analyzerLineThickness==px);menu.addSeparator();menu.addSubMenu("Grosor de Traza",widths);}return menu;}
- void menuItemSelected(int id,int) override{if(id>=15001&&id<=15004){analyzerLineThickness=id-15000;if(tfPanel)tfPanel->setLineThickness((float)analyzerLineThickness);if(mainTabs)mainTabs->rtaPanel().setLineThickness((float)analyzerLineThickness);repaint();menuItemsChanged();return;}commands.invoke(id);}
+ StringArray getMenuBarNames() override{
+  if(mode!=0&&mode!=1)return commands.menuNames();
+  StringArray names;for(const auto& menu:WorkstationModeMenus::forMode(mode))
+   names.add(String::fromUTF8((commands.language==MyaCommands::Language::ES?menu.es:menu.en).c_str()));
+  return names;
+ }
+ PopupMenu getMenuForIndex(int index,const String&) override{
+  if(mode!=0&&mode!=1)return commands.menu(index);
+  const auto& menus=WorkstationModeMenus::forMode(mode);
+  if(index<0||(size_t)index>=menus.size())return {};
+  std::function<PopupMenu(const std::vector<WorkstationModeMenus::Item>&)> build;
+  build=[this,&build](const auto& items){PopupMenu result;for(const auto& item:items){
+   const String label=String::fromUTF8((commands.language==MyaCommands::Language::ES?item.es:item.en).c_str());
+   if(!item.children.empty()){result.addSubMenu(label,build(item.children),item.available);continue;}
+   bool enabled=item.available;bool checked=false;
+   if(auto* command=MyaCommands::find(item.id)){auto state=MyaCommands::state(*command,commands.current());enabled=enabled&&state.enabled;checked=state.checked;}
+   if(item.id>=15001&&item.id<=15004)checked=analyzerLineThickness==item.id-15000;
+   if(item.id==16020||item.id==16021)checked=mainTabs&&mainTabs->rtaPanel().windowCountChoice()==(item.id==16020?1:2);
+   if(item.id==16040)checked=dspShowIR;if(item.id==16041)checked=dspShowFrequency;if(item.id==16042)checked=dspGraphicEQ;
+   result.addItem(item.id,label,enabled,checked);
+  }return result;};
+  return build(menus[(size_t)index].items);
+ }
+ void menuItemSelected(int id,int) override{
+  if(mode==0||mode==1){
+   std::function<bool(const std::vector<WorkstationModeMenus::Item>&)> allowed;
+   allowed=[&](const auto& items){for(const auto& item:items){if(item.id==id&&item.available)return true;if(allowed(item.children))return true;}return false;};
+   bool found=false;for(const auto& group:WorkstationModeMenus::forMode(mode))found=found||allowed(group.items);
+   if(!found)return;
+  }
+  if(id>=15001&&id<=15004){analyzerLineThickness=id-15000;if(tfPanel)tfPanel->setLineThickness((float)analyzerLineThickness);if(mainTabs)mainTabs->rtaPanel().setLineThickness((float)analyzerLineThickness);repaint();menuItemsChanged();return;}
+  switch(id){
+   case 16011:JUCEApplication::getInstance()->systemRequestedQuit();return;
+   case 16012:info("Acerca de Mya DSP","Mya DSP: simulación en frío con impulsos locales y ocho vías independientes.");return;
+   case 16020:case 16021:commands.invoke(420);if(mainTabs)mainTabs->rtaPanel().setWindowCount(id==16020?1:2);menuItemsChanged();return;
+   case 16030:leftVisible=true;resized();repaint();menuItemsChanged();return;
+   case 16040:dspShowIR=!dspShowIR;resized();menuItemsChanged();return;
+   case 16041:dspShowFrequency=!dspShowFrequency;resized();menuItemsChanged();return;
+   case 16042:dspGraphicEQ=!dspGraphicEQ;offlineDSPMagnitudePlot.setGraphicEQ(dspGraphicEQ);menuItemsChanged();return;
+   default:commands.invoke(id);return;
+  }
+ }
  #if defined(MYA_OFFSCREEN_RENDER)
  String previewCaptureId;
  bool previewOrigins(int stage){if(stage==0){auto* data=new DynamicObject();data->setProperty("schema",1);data->setProperty("synthetic",true);data->setProperty("name","ORIGEN GUARDADO DEMO");data->setProperty("colour","ff54ee22");data->setProperty("acquisitionMethod","synthetic-demo");Array<var> points;for(double f:{20.,20000.}){auto* point=new DynamicObject();point->setProperty("frequencyHz",f);point->setProperty("real",2.);point->setProperty("imaginary",0.);points.add(var(point));}data->setProperty("samples",points);previewCaptureId=captureLibrary.capture(var(data),"ORIGEN GUARDADO DEMO","ff54ee22");if(previewCaptureId.isEmpty())return false;for(auto& trace:traceSwitch)trace.setToggleState(false,dontSendNotification);tfSettings.coherenceThreshold=0;refreshLibrary();for(int panel:{1,2})plotMic[(size_t)panel].setSelectedId(1,dontSendNotification);previewCursor(2,.5);return panelValue(.5,1)&&panelValue(.5,2)&&captureLegend(1).contains("ORIGEN GUARDADO DEMO")&&!panelCoherence(.5,2)&&frontTrace(0)<0;}
@@ -918,7 +960,9 @@ public:
 
  #endif
  explicit Workstation(File savedProject=defaultProjectFile()):projectFile(std::move(savedProject)){setLookAndFeel(&look);
- navigationOverlay.draw=[this](Graphics& g){g.setColour(Palette::panel.withAlpha(.98f));g.fillRoundedRectangle(navigationOverlay.getLocalBounds().toFloat(),5);g.setColour(Palette::line);g.drawRoundedRectangle(navigationOverlay.getLocalBounds().toFloat().reduced(.5f),5,1);};addChildComponent(navigationOverlay);addAndMakeVisible(navigationTab);navigationTab.getProperties().set("commandGlyph",true);navigationTab.onClick=[this]{navigationOverlay.setVisible(!navigationOverlay.isVisible());if(navigationOverlay.isVisible()){navigationOverlay.toFront(false);commands.refresh();}navigationTab.setButtonText(navigationOverlay.isVisible()?"^":"v");};navigationMenus.onClick=[this]{PopupMenu menu;auto names=commands.menuNames();for(int i=0;i<names.size();++i)menu.addSubMenu(names[i],getMenuForIndex(i,{}));Component::SafePointer<Workstation> safe(this);menu.showMenuAsync(PopupMenu::Options().withTargetComponent(&navigationMenus),[safe](int id){if(safe&&id){safe->menuItemSelected(id,0);safe->navigationOverlay.setVisible(false);safe->navigationTab.setButtonText("v");}});};navigationOverlay.addAndMakeVisible(navigationMenus);
+ navigationOverlay.draw=[this](Graphics& g){g.setColour(Palette::panel.withAlpha(.98f));g.fillRoundedRectangle(navigationOverlay.getLocalBounds().toFloat(),5);g.setColour(Palette::line);g.drawRoundedRectangle(navigationOverlay.getLocalBounds().toFloat().reduced(.5f),5,1);};addChildComponent(navigationOverlay);addAndMakeVisible(navigationTab);navigationTab.getProperties().set("commandGlyph",true);navigationTab.onClick=[this]{navigationOverlay.setVisible(!navigationOverlay.isVisible());if(navigationOverlay.isVisible()){navigationOverlay.toFront(false);commands.refresh();}navigationTab.setButtonText(navigationOverlay.isVisible()?"^":"v");};navigationMenus.onClick=[this]{PopupMenu menu;auto names=getMenuBarNames();for(int i=0;i<names.size();++i)menu.addSubMenu(names[i],getMenuForIndex(i,{}));Component::SafePointer<Workstation> safe(this);menu.showMenuAsync(PopupMenu::Options().withTargetComponent(&navigationMenus),[safe](int id){if(safe&&id){safe->menuItemSelected(id,0);safe->navigationOverlay.setVisible(false);safe->navigationTab.setButtonText("v");}});};navigationOverlay.addAndMakeVisible(navigationMenus);
+ languageES.onClick=[this]{commands.invoke(380);};languageEN.onClick=[this]{commands.invoke(381);};
+ addAndMakeVisible(languageES);addAndMakeVisible(languageEN);refreshModeMenus();
  coherenceThreshold.setRange(0,100,.01);coherenceThreshold.setValue(0);coherenceThreshold.setSliderStyle(Slider::LinearVertical);coherenceThreshold.setTextBoxStyle(Slider::NoTextBox,false,0,0);coherenceThreshold.setTitle("Coherence Threshold (%)");coherenceThreshold.setTooltip("Umbral de coherencia: oculta muestras por debajo del porcentaje.");coherenceThreshold.onValueChange=[this]{tfSettings.coherenceThreshold=coherenceThreshold.getValue();if(tfPanel)tfPanel->setCoherenceDisplay(tfSettings.coherenceThreshold,tfSettings.coherenceSquared,showCoherence.getToggleState(),tfSettings.coherenceHeight);persistTF();status="Coherence Threshold: "+String(coherenceThreshold.getValue(),2).trimCharactersAtEnd("0").trimCharactersAtEnd(".")+"%";repaint();};addAndMakeVisible(coherenceThreshold);
  showCoherence.setToggleState(true,dontSendNotification);showCoherence.onClick=[this]{if(tfPanel)tfPanel->setCoherenceDisplay(tfSettings.coherenceThreshold,tfSettings.coherenceSquared,showCoherence.getToggleState(),tfSettings.coherenceHeight);persistTF();};addAndMakeVisible(showCoherence);
 
@@ -1007,7 +1051,7 @@ public:
  offlineDSPMagnitudePlot.onBandDragged=[this](int engine,int band,OfflineDSPCore::EQBand value){dspConsole.setBand(engine,band,value);};
  addAndMakeVisible(offlineDSPMagnitudePlot);
  offlineDSPMagnitudePlot.setVisible(false);
- dspConsole.onGraphicEQChanged=[this](bool enabled){if(mode==1)offlineDSPMagnitudePlot.setGraphicEQ(enabled);};
+ dspConsole.onGraphicEQChanged=[this](bool enabled){if(mode==1){dspGraphicEQ=enabled;offlineDSPMagnitudePlot.setGraphicEQ(enabled);menuItemsChanged();}};
  dspConsole.onPredictionChanged=[this](int engine){
   if(mode!=1||engine!=dspConsole.selectedEngineIndex())return;
   offlineDSPPhasePlot.setEngine(engine);
@@ -1223,6 +1267,9 @@ public:
  closeLeft.setVisible(leftVisible);closeLeft.setBounds(leftWidth+4,83,18,22);closeLeft.setButtonText("<");closeRight.setVisible(rightVisible);closeRight.setBounds(getWidth()-rightWidth-24,83,18,22);closeRight.setButtonText(">");restoreRight.setVisible(!rightVisible);restoreRight.setBounds(getWidth()-18,92,18,24);restoreRight.setButtonText("<");leftDivider.setVisible(leftVisible);leftDivider.setBounds(leftWidth+8,112,6,getHeight()-150);rightDivider.setVisible(rightVisible);rightDivider.setBounds(getWidth()-rightWidth-16,112,6,getHeight()-150);
  for(size_t i=0;i<aiButtons.size();++i){aiButtons[i].setVisible(leftVisible);int row=(int)i/2;aiButtons[i].setBounds(12+(int(i)%2)*((lw+2)/2),getHeight()-162+row*28,i==6?lw:(lw-2)/2,24);}sumButton.setVisible(mode==0);sumButton.setBounds(centerX()+centerWidth()/2-41,getHeight()-61,82,22);
  int navWidth=jmin(660,getWidth()-24),navCell=(navWidth-30)/4;navigationOverlay.setBounds((getWidth()-navWidth)/2,82,navWidth,113);navigationTab.setBounds(getWidth()/2-17,66,34,14);navigationTab.setTitle(String("Navegacion / ")+String(mode==0?"Mya Analyzer":mode==1?"Mya DSP":mode==2?"Mya Vision 3D":"Laboratorio"));navigationTab.setTooltip(navigationTab.getTitle()+" / clic para abrir o cerrar accesos");for(int i=0;i<8;++i)buttons[(size_t)i]->setBounds(6+(i%4)*(navCell+6),6+(i/4)*34,navCell,28);navigationMenus.setBounds(navWidth-216,78,210,26);navigationTab.toFront(false);if(navigationOverlay.isVisible())navigationOverlay.toFront(false);int left=14;for(int i=8;i<12;++i)buttons[(size_t)i]->setBounds(left+(i-8)%2*83,getHeight()-170+(i-8)/2*36,78,30);
+ languageES.setVisible(mode==0||mode==1);languageEN.setVisible(mode==0||mode==1);
+ languageES.setBounds(getWidth()-83,66,34,14);languageEN.setBounds(getWidth()-45,66,34,14);
+ if(mode==0||mode==1){languageES.toFront(false);languageEN.toFront(false);}
  int right=getWidth()-rightWidth;gainLabel.setBounds(right,105,200,22);gain.setBounds(right,128,200,30);delayLabel.setBounds(right,169,200,22);delay.setBounds(right,192,200,30);
  buttons[12]->setBounds(right,234,98,30);buttons[13]->setBounds(right+103,234,97,30);buttons[14]->setBounds(right,276,200,30);buttons[15]->setBounds(right,312,200,30);buttons[16]->setBounds(right,348,200,30);buttons[17]->setBounds(right,384,200,30);buttons[18]->setBounds(right,420,200,30);
  for(int i=8;i<12;++i)buttons[(size_t)i]->setVisible(false);
@@ -1231,9 +1278,9 @@ public:
  gain.setVisible(rightVisible&&mode!=1);gainLabel.setVisible(rightVisible&&mode!=1);delay.setVisible(rightVisible&&mode!=1);delayLabel.setVisible(rightVisible&&mode!=1);
  source.setBounds(centerX()+8,91,jmax(120,centerWidth()-250),28);source.setVisible(mode==2||mode==3);cursorReadout.setVisible(mode==0);cursorReadout.setBounds(centerX()+8,87,jmax(120,centerWidth()-16),24);
  dspConsole.setVisible(mode==1);dspConsole.setBounds(centerX()+8,getHeight()-190,centerWidth()-16,155);if(mode==1)dspConsole.toFront(false);
- offlineDSPPlot.setBounds(plotBounds(0));offlineDSPPlot.setVisible(mode==1);if(mode==1)offlineDSPPlot.toFront(false);
- offlineDSPPhasePlot.setBounds(plotBounds(1));offlineDSPPhasePlot.setVisible(mode==1);if(mode==1)offlineDSPPhasePlot.toFront(false);
- offlineDSPMagnitudePlot.setBounds(plotBounds(2));offlineDSPMagnitudePlot.setVisible(mode==1);if(mode==1)offlineDSPMagnitudePlot.toFront(false);
+ offlineDSPPlot.setBounds(plotBounds(0));offlineDSPPlot.setVisible(mode==1&&dspShowIR);if(mode==1&&dspShowIR)offlineDSPPlot.toFront(false);
+ offlineDSPPhasePlot.setBounds(plotBounds(1));offlineDSPPhasePlot.setVisible(mode==1&&dspShowFrequency);if(mode==1&&dspShowFrequency)offlineDSPPhasePlot.toFront(false);
+ offlineDSPMagnitudePlot.setBounds(plotBounds(2));offlineDSPMagnitudePlot.setVisible(mode==1&&dspShowFrequency);if(mode==1&&dspShowFrequency)offlineDSPMagnitudePlot.toFront(false);
  dspSidebar.setVisible(mode==1&&rightVisible);dspSidebar.setBounds(getWidth()-rightWidth-8,82,rightWidth,getHeight()-115);if(mode==1&&rightVisible)dspSidebar.toFront(false);
  linkSmooth.setVisible(false);
  for(int i=0;i<2;++i){auto r=plotBounds(i);plotDividers[(size_t)i].setVisible(mode==0&&measurementView==0&&(i!=0||plotChoice.getSelectedId()!=2));plotDividers[(size_t)i].setBounds(r.getX(),r.getBottom(),r.getWidth(),8);}
