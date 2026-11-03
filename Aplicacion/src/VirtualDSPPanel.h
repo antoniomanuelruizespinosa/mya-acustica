@@ -2,6 +2,7 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "OfflineDSPCore.h"
+#include "OfflineEQWindow.h"
 #include <array>
 #include <functional>
 #include <memory>
@@ -27,7 +28,10 @@ public:
     OfflineDSPCore::State engineState(int index) const { return offlineCore.state(index); }
     std::vector<float> sourceImpulse(int index) const { return offlineCore.source(index); }
     std::vector<float> processedImpulse(int index) const { return offlineCore.render(index); }
+    const OfflineDSPCore& core() const { return offlineCore; }
+    bool setBand(int engine,int band,OfflineDSPCore::EQBand value);
     std::function<void(int)> onPredictionChanged;
+    std::function<void(bool)> onGraphicEQChanged;
     std::function<void(int)> onFind;
     std::function<void()> onSum, onAverage;
     void resized() override;
@@ -41,6 +45,8 @@ private:
     std::array<juce::TextButton,8> globalButtons;
     int selectedEngine = 0;
     OfflineDSPCore offlineCore;
+    std::array<std::unique_ptr<OfflineEQWindow>,8> eqWindows;
+    void openEqualizer(int index);
     static constexpr int rowHeight = 29;
     static constexpr int headerHeight = 30;
     static constexpr int actionsWidth = 0;

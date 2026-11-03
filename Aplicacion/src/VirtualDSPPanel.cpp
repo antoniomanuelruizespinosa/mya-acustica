@@ -15,6 +15,8 @@ struct VirtualDSPPanel::EngineRow : Component {
     std::function<void(int)> selected;
     std::function<void(int,double)> gainChanged, delayChanged;
     std::function<void(int,bool)> polarityChanged;
+    std::function<void(int,bool,OfflineDSPCore::Crossover)> crossoverChanged;
+    std::function<void(int)> equalizerRequested;
     bool isSelected = false;
 
     EngineRow(int number, const Engine& engine) : index(number), colour(engine.colour) {
@@ -45,11 +47,23 @@ struct VirtualDSPPanel::EngineRow : Component {
         delay.onValueChange = [this] { if (delayChanged) delayChanged(index, delay.getValue()); };
         for (auto* choice : {&hpf, &lpf}) {
             choice->addItem("Ninguno", 1);
+            for(int order=1;order<=8;++order)choice->addItem("Butter "+String(order),order+1);
+            for(int order=2;order<=8;order+=2)choice->addItem("LR "+String(order),9+order/2);
+            for(int order=1;order<=8;++order)choice->addItem("Bessel "+String(order),13+order);
             choice->setSelectedId(1, dontSendNotification);
             choice->setEnabled(false);
-            choice->setTooltip("Filtro pendiente del motor DSP");
             addAndMakeVisible(*choice);
         }
+        auto choiceChanged=[this](bool high){
+            auto& box=high?hpf:lpf;const int id=box.getSelectedId();
+            OfflineDSPCore::Crossover c;
+            if(id>=2&&id<=9){c.family=OfflineDSPFilters::Family::Butterworth;c.order=id-1;}
+            else if(id>=10&&id<=13){c.family=OfflineDSPFilters::Family::LinkwitzRiley;c.order=(id-9)*2;}
+            else if(id>=14&&id<=21){c.family=OfflineDSPFilters::Family::Bessel;c.order=id-13;}
+            c.frequency=filterFields[(size_t)(high?0:3)].getText().getDoubleValue();
+            if(crossoverChanged)crossoverChanged(index,high,c);
+        };
+        hpf.onChange=[choiceChanged]{choiceChanged(true);};lpf.onChange=[choiceChanged]{choiceChanged(false);};
         for (size_t i = 0; i < filterFields.size(); ++i) {
             auto& field = filterFields[i];
             field.setText(i % 3 == 0 ? "1000" : i % 3 == 1 ? "1" : "1.0", dontSendNotification);
@@ -60,6 +74,8 @@ struct VirtualDSPPanel::EngineRow : Component {
             field.setJustificationType(Justification::centred);
             addAndMakeVisible(field);
         }
+        for(int base:{0,3}){filterFields[(size_t)base].setEditable(true,false,false);
+            filterFields[(size_t)base].onTextChange=[choiceChanged,base]{choiceChanged(base==0);};}
         for (auto* button : {&polarity, &equalizer, &find, &clear}) addAndMakeVisible(*button);
         polarity.setEnabled(false);
         equalizer.setEnabled(false);
@@ -69,12 +85,14 @@ struct VirtualDSPPanel::EngineRow : Component {
         polarity.onClick = [this] { if (polarityChanged) polarityChanged(index, polarity.getToggleState()); };
         for (auto* button : {&equalizer, &clear}) button->setTooltip("Pendiente de procesamiento DSP por motor");
         find.onClick = [this] { if (findRequested) findRequested(index); };
+        equalizer.onClick=[this]{if(equalizerRequested)equalizerRequested(index);};
     }
 
     void setOfflineState(const OfflineDSPCore::State& state) {
         gain.setEnabled(state.loaded);
         delay.setEnabled(state.loaded);
         polarity.setEnabled(state.loaded);
+        hpf.setEnabled(state.loaded);lpf.setEnabled(state.loaded);equalizer.setEnabled(state.loaded);
         gain.setValue(state.gainDb, dontSendNotification);
         polarity.setToggleState(state.inverted, dontSendNotification);
         if (state.loaded) {
@@ -82,6 +100,19 @@ struct VirtualDSPPanel::EngineRow : Component {
             delay.setRange(0.0, static_cast<double>(state.capacity - 1) * step, step);
         }
         delay.setValue(state.delayMs, dontSendNotification);
+    }
+    void setCrossoverState(const OfflineDSPCore::Crossover& high,const OfflineDSPCore::Crossover& low){
+        auto display=[this](ComboBox& choice,int base,const OfflineDSPCore::Crossover& c){
+            int id=1;
+            if(c.family==OfflineDSPFilters::Family::Butterworth)id=c.order+1;
+            else if(c.family==OfflineDSPFilters::Family::LinkwitzRiley)id=9+c.order/2;
+            else if(c.family==OfflineDSPFilters::Family::Bessel)id=13+c.order;
+            choice.setSelectedId(id,dontSendNotification);
+            filterFields[(size_t)base].setText(String(c.frequency,0),dontSendNotification);
+            filterFields[(size_t)base+1].setText(c.family==OfflineDSPFilters::Family::None?"--":String(c.order),dontSendNotification);
+            filterFields[(size_t)base].setEnabled(true);
+        };
+        display(hpf,0,high);display(lpf,3,low);
     }
 
     void resized() override {
@@ -155,7 +186,14 @@ void VirtualDSPPanel::setEngines(const std::vector<Engine>& entries) {
         row->polarityChanged = [this](int index, bool value) {
             if (offlineCore.setPolarity(index, value) && onPredictionChanged) onPredictionChanged(index);
         };
+        row->crossoverChanged=[this](int index,bool high,OfflineDSPCore::Crossover value){
+            offlineCore.setCrossover(index,high,value);
+            engines[(size_t)index]->setCrossoverState(offlineCore.crossover(index,true),offlineCore.crossover(index,false));
+            if(onPredictionChanged)onPredictionChanged(index);
+        };
+        row->equalizerRequested=[this](int index){openEqualizer(index);};
         row->setOfflineState(offlineCore.state(i));
+        row->setCrossoverState(offlineCore.crossover(i,true),offlineCore.crossover(i,false));
         row->isSelected = i == selectedEngine;
         rows.addAndMakeVisible(*row);
         engines.push_back(std::move(row));
@@ -175,7 +213,7 @@ void VirtualDSPPanel::setSelectedEngine(int index) {
 
 bool VirtualDSPPanel::loadImpulse(int index, std::vector<float> impulse, double sampleRate, std::size_t capacity) {
     if (!offlineCore.load(index, std::move(impulse), sampleRate, capacity)) return false;
-    if ((size_t)index < engines.size()) engines[(size_t)index]->setOfflineState(offlineCore.state(index));
+    if ((size_t)index < engines.size()){engines[(size_t)index]->setOfflineState(offlineCore.state(index));engines[(size_t)index]->setCrossoverState(offlineCore.crossover(index,true),offlineCore.crossover(index,false));}
     if (onPredictionChanged) onPredictionChanged(index);
     return true;
 }
@@ -184,6 +222,23 @@ void VirtualDSPPanel::unloadImpulse(int index) {
     offlineCore.unload(index);
     if (index >= 0 && (size_t)index < engines.size()) engines[(size_t)index]->setOfflineState(offlineCore.state(index));
     if (onPredictionChanged) onPredictionChanged(index);
+}
+
+bool VirtualDSPPanel::setBand(int engine,int band,OfflineDSPCore::EQBand value){
+    if(!offlineCore.setBand(engine,band,value))return false;
+    if(eqWindows[(size_t)engine])eqWindows[(size_t)engine]->refresh();
+    if(onPredictionChanged)onPredictionChanged(engine);
+    return true;
+}
+
+void VirtualDSPPanel::openEqualizer(int index){
+    if(index<0||index>=OfflineDSPCore::channelCount||!offlineCore.state(index).loaded)return;
+    setSelectedEngine(index);
+    auto& window=eqWindows[(size_t)index];
+    if(!window)window=std::make_unique<OfflineEQWindow>(index,offlineCore,
+        [this](int channel){if(onPredictionChanged)onPredictionChanged(channel);},
+        [this](bool enabled){if(onGraphicEQChanged)onGraphicEQChanged(enabled);});
+    window->refresh();window->setVisible(true);window->toFront(true);
 }
 
 void VirtualDSPPanel::resized() {

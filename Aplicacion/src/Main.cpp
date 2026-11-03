@@ -336,6 +336,8 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
  ReticleOverlay reticleOverlay;
  VirtualDSPPanel dspConsole;
  OfflineDSPPlot offlineDSPPlot;
+ OfflineDSPPlot offlineDSPPhasePlot;
+ OfflineDSPPlot offlineDSPMagnitudePlot;
  VirtualDSPSidebar dspSidebar;
  void refreshDspInputs(){const auto* endpoint=findEndpoint(audioEndpoints,deviceKeys.empty()?String():deviceKeys.front());if(!endpoint&&!audioEndpoints.empty())endpoint=&audioEndpoints.front();dspSidebar.setInputChannels(endpoint?endpoint->inputs:StringArray{});}
  int cursorPlot=-1;double cursorU=.5,cursorY=.5;
@@ -991,13 +993,27 @@ public:
 
  for(int i=0;i<4;++i)initializeTFRow(i);
  dspConsole.setEngines({{"Engine 1",Palette::blue},{"Engine 2",Palette::green},{"Engine 3",Palette::orange},{"Engine 4",Palette::cyan}});
- dspConsole.onSum=[this]{sumSelectedTraces();};
+ dspConsole.onSum=[this]{if(mode==1){const bool enabled=!offlineDSPMagnitudePlot.isSumEnabled();offlineDSPMagnitudePlot.setSumEnabled(enabled);offlineDSPPhasePlot.setSumEnabled(enabled);}else sumSelectedTraces();};
  dspConsole.onAverage=[this]{auto ids=libraryPanel.selected();if(libraryPanel.onAverage)libraryPanel.onAverage(ids);};
  addAndMakeVisible(dspConsole);
  addAndMakeVisible(offlineDSPPlot);
  offlineDSPPlot.setVisible(false);
+ offlineDSPPhasePlot.setCore(&dspConsole.core());
+ offlineDSPPhasePlot.setPhaseView(true);
+ addAndMakeVisible(offlineDSPPhasePlot);
+ offlineDSPPhasePlot.setVisible(false);
+ offlineDSPMagnitudePlot.setCore(&dspConsole.core());
+ offlineDSPMagnitudePlot.setFrequencyView(true);
+ offlineDSPMagnitudePlot.onBandDragged=[this](int engine,int band,OfflineDSPCore::EQBand value){dspConsole.setBand(engine,band,value);};
+ addAndMakeVisible(offlineDSPMagnitudePlot);
+ offlineDSPMagnitudePlot.setVisible(false);
+ dspConsole.onGraphicEQChanged=[this](bool enabled){if(mode==1)offlineDSPMagnitudePlot.setGraphicEQ(enabled);};
  dspConsole.onPredictionChanged=[this](int engine){
   if(mode!=1||engine!=dspConsole.selectedEngineIndex())return;
+  offlineDSPPhasePlot.setEngine(engine);
+  offlineDSPPhasePlot.repaint();
+  offlineDSPMagnitudePlot.setEngine(engine);
+  offlineDSPMagnitudePlot.repaint();
   const auto state=dspConsole.engineState(engine);
   if(!state.loaded){offlineDSPPlot.clear();return;}
   offlineDSPPlot.setPrediction(dspConsole.sourceImpulse(engine),dspConsole.processedImpulse(engine),state.sampleRate);
@@ -1216,6 +1232,8 @@ public:
  source.setBounds(centerX()+8,91,jmax(120,centerWidth()-250),28);source.setVisible(mode==2||mode==3);cursorReadout.setVisible(mode==0);cursorReadout.setBounds(centerX()+8,87,jmax(120,centerWidth()-16),24);
  dspConsole.setVisible(mode==1);dspConsole.setBounds(centerX()+8,getHeight()-190,centerWidth()-16,155);if(mode==1)dspConsole.toFront(false);
  offlineDSPPlot.setBounds(plotBounds(0));offlineDSPPlot.setVisible(mode==1);if(mode==1)offlineDSPPlot.toFront(false);
+ offlineDSPPhasePlot.setBounds(plotBounds(1));offlineDSPPhasePlot.setVisible(mode==1);if(mode==1)offlineDSPPhasePlot.toFront(false);
+ offlineDSPMagnitudePlot.setBounds(plotBounds(2));offlineDSPMagnitudePlot.setVisible(mode==1);if(mode==1)offlineDSPMagnitudePlot.toFront(false);
  dspSidebar.setVisible(mode==1&&rightVisible);dspSidebar.setBounds(getWidth()-rightWidth-8,82,rightWidth,getHeight()-115);if(mode==1&&rightVisible)dspSidebar.toFront(false);
  linkSmooth.setVisible(false);
  for(int i=0;i<2;++i){auto r=plotBounds(i);plotDividers[(size_t)i].setVisible(mode==0&&measurementView==0&&(i!=0||plotChoice.getSelectedId()!=2));plotDividers[(size_t)i].setBounds(r.getX(),r.getBottom(),r.getWidth(),8);}
