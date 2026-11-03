@@ -85,7 +85,7 @@ void OfflineDSPPlot::paint(juce::Graphics& g) {
             trace(Colours::white,3.0f,[&](double f){return core->vectorSum(active,f);});}
         if(graphicEQ&&!phaseView){g.setFont(10.f);for(int i=0;i<20;++i){auto b=core->band(engine,i);if(!b.enabled||b.frequency>maximum)continue;
             const float x=xFor(b.frequency,r,maximum),y=yFor(b.gainDb,r);g.setColour(Colour(0xff60e4ff));g.fillEllipse(x-9,y-9,18,18);g.setColour(Colours::black);g.drawText(String(i+1),roundToInt(x)-9,roundToInt(y)-8,18,16,Justification::centred);}}
-        g.setColour(Colours::white);g.setFont(11.f);g.drawText(spanishLanguage?(phaseView?"FASE DSP · EQ azul / vía verde / suma blanca":"MAGNITUD DSP · EQ azul / vía verde / suma blanca"):(phaseView?"DSP PHASE · blue EQ / green channel / white sum":"DSP MAGNITUDE · blue EQ / green channel / white sum"),40,2,getWidth()-80,18,Justification::centredLeft);
+        g.setColour(Colours::white);g.setFont(11.f);g.drawText(spanishLanguage?(phaseView?juce::String::fromUTF8("FASE DSP · EQ azul / vía verde / suma blanca"):juce::String::fromUTF8("MAGNITUD DSP · EQ azul / vía verde / suma blanca")):(phaseView?juce::String::fromUTF8("DSP PHASE · blue EQ / green channel / white sum"):juce::String::fromUTF8("DSP MAGNITUDE · blue EQ / green channel / white sum")),40,2,getWidth()-80,18,Justification::centredLeft);
         return;
     }
     auto plot = getLocalBounds().reduced(30, 18).toFloat();
@@ -102,7 +102,7 @@ void OfflineDSPPlot::paint(juce::Graphics& g) {
     g.setColour(Colour(0xffdcebf0));
     g.setFont(12.0f);
     if (prediction.empty() || rate <= 0.0) {
-        g.drawText(spanishLanguage?"IR - SIN MEDICIÓN":"IR - NO MEASUREMENT", plot.toNearestInt(), Justification::centred);
+        g.drawText(spanishLanguage?juce::String::fromUTF8("IR - SIN MEDICIÓN"):"IR - NO MEASUREMENT", plot.toNearestInt(), Justification::centred);
         return;
     }
     const auto count = prediction.size();
@@ -123,5 +123,5 @@ void OfflineDSPPlot::paint(juce::Graphics& g) {
     draw(original, Colour(0xff19d7ea));
     draw(prediction, Colour(0xff6df23d));
     g.setColour(Colour(0xffdcebf0));
-    g.drawText((spanishLanguage?"IR en frío · ":"Offline IR · ") + String((double)count * 1000.0 / rate, 2) + " ms", 34, 1, getWidth() - 68, 16, Justification::centredLeft);
+    g.drawText((spanishLanguage?juce::String::fromUTF8("IR en frío · "):juce::String::fromUTF8("Offline IR · ")) + String((double)count * 1000.0 / rate, 2) + " ms", 34, 1, getWidth() - 68, 16, Justification::centredLeft);
 }

@@ -44,9 +44,9 @@ class IOConfigWindow : public juce::DocumentWindow {
   juce::Component inputPage,outputPage;
   Table inputDevices{{"Activar","Controlador y dispositivo","Nombre","Estado"},{66,290,240,95}};
   Table outputDevices{{"Activar","Controlador y dispositivo","Nombre","Estado"},{66,290,240,95}};
-  Table inputChannels{{"Activar","Canal","Entrada","Nombre","Cal. SPL","Corrección micro","Nivel"},{66,50,130,130,80,120,110}};
+  Table inputChannels{{"Activar","Canal","Entrada","Nombre","Cal. SPL",juce::String::fromUTF8("Corrección micro"),"Nivel"},{66,50,130,130,80,120,110}};
   Table outputChannels{{"Activar","Canal","Salida","Nombre","Ajuste"},{66,50,127,127,62}};
-  Table presetSlots{{"N.º","Nombre"},{50,170}};
+  Table presetSlots{{juce::String::fromUTF8("N.º"),"Nombre"},{50,170}};
   juce::Label inputDeviceTitle,outputDeviceTitle,routeTitle,outputTitle,presetTitle,status;
   juce::TextButton calibrate{"Calibrar SPL RMS"},close{"Cerrar"};
   juce::TextButton clearInput{"Borrar ajustes"},clearOutput{"Borrar ajustes"},resetTrims{"Restablecer ajustes"},storePreset{"Guardar"},activatePreset{"Activar"},deletePreset{"Eliminar"};
@@ -114,9 +114,9 @@ class IOConfigWindow : public juce::DocumentWindow {
  };
  Body* body;
 public:
- IOConfigWindow(std::vector<AudioEndpoint> catalog,const std::array<juce::String,4>& names,const std::vector<juce::String>& keys,const std::vector<int>& mic,const std::vector<int>& ref,const std::vector<InputLevels::Source>& monitor,const std::map<std::string,std::string>& labels,juce::String outKey,int outChannel,std::function<void(int,juce::String,int,int)> change,std::function<void(juce::String,int,bool)> useChange,std::function<void(juce::String,int,juce::String)> rename,std::function<std::optional<double>(juce::String,int)> level,std::function<void(juce::String,int)> outChange,std::function<void(juce::String,int)> calibration,juce::File presetFile,bool loopEnabled,std::function<void(bool)> loopChanged,bool spanish):DocumentWindow(spanish?"Configuración de entradas y salidas":"Input and Output Configuration",juce::Colour(0xff20272c),closeButton){setUsingNativeTitleBar(true);body=new Body(std::move(catalog),names,keys,mic,ref,monitor,labels,std::move(outKey),outChannel,std::move(change),std::move(useChange),std::move(rename),std::move(level),std::move(outChange),std::move(calibration),std::move(presetFile),loopEnabled,std::move(loopChanged),[this]{setVisible(false);});setContentOwned(body,true);updateComponentLanguage(spanish);setResizable(true,false);setResizeLimits(720,540,1100,850);centreWithSize(760,570);}
+ IOConfigWindow(std::vector<AudioEndpoint> catalog,const std::array<juce::String,4>& names,const std::vector<juce::String>& keys,const std::vector<int>& mic,const std::vector<int>& ref,const std::vector<InputLevels::Source>& monitor,const std::map<std::string,std::string>& labels,juce::String outKey,int outChannel,std::function<void(int,juce::String,int,int)> change,std::function<void(juce::String,int,bool)> useChange,std::function<void(juce::String,int,juce::String)> rename,std::function<std::optional<double>(juce::String,int)> level,std::function<void(juce::String,int)> outChange,std::function<void(juce::String,int)> calibration,juce::File presetFile,bool loopEnabled,std::function<void(bool)> loopChanged,bool spanish):DocumentWindow(spanish?juce::String::fromUTF8("Configuración de entradas y salidas"):"Input and Output Configuration",juce::Colour(0xff20272c),closeButton){setUsingNativeTitleBar(true);body=new Body(std::move(catalog),names,keys,mic,ref,monitor,labels,std::move(outKey),outChannel,std::move(change),std::move(useChange),std::move(rename),std::move(level),std::move(outChange),std::move(calibration),std::move(presetFile),loopEnabled,std::move(loopChanged),[this]{setVisible(false);});setContentOwned(body,true);updateComponentLanguage(spanish);setResizable(true,false);setResizeLimits(720,540,1100,850);centreWithSize(760,570);}
  void setAcquisitionState(bool active,bool waiting=false,const juce::String& details={}){body->setAcquisitionState(active,waiting,details);}
- void updateComponentLanguage(bool spanish){setName(spanish?"Configuración de entradas y salidas":"Input and Output Configuration");body->updateComponentLanguage(spanish);}
+ void updateComponentLanguage(bool spanish){setName(spanish?juce::String::fromUTF8("Configuración de entradas y salidas"):"Input and Output Configuration");body->updateComponentLanguage(spanish);}
  void setLoopbackState(bool enabled){body->setLoopbackState(enabled);}
  int selectedTab()const{return body->selectedTab();}
  void selectTab(int index){body->selectTab(index);}

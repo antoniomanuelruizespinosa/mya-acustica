@@ -34,7 +34,7 @@ struct VirtualDSPPanel::EngineRow : Component {
             addAndMakeVisible(*label);
         }
         name.setInterceptsMouseClicks(false, false);
-        name.setTooltip("Seleccionar esta vía DSP para cargar una captura");
+        name.setTooltip(juce::String::fromUTF8("Seleccionar esta vía DSP para cargar una captura"));
         for (auto* slider : {&gain, &delay}) {
             slider->setSliderStyle(Slider::IncDecButtons);
             slider->setTextBoxStyle(Slider::TextBoxLeft, false, 48, 22);
@@ -288,7 +288,7 @@ struct VirtualDSPSidebar::EngineCard : Component {
     std::function<void(int,int)> routeChanged;
     EngineCard(int index, Colour engineColour) : number(index + 1), colour(engineColour) {
         for (auto* choice : {&measurement, &reference}) {
-            choice->setTooltip("Entrada física asignada a este motor DSP; no modifica Mya Analyzer");
+            choice->setTooltip(juce::String::fromUTF8("Entrada física asignada a este motor DSP; no modifica Mya Analyzer"));
             addAndMakeVisible(*choice);
         }
         measurement.onChange = [this] { if (routeChanged) routeChanged(measurement.getSelectedId(), reference.getSelectedId()); };
