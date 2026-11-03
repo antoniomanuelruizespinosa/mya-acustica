@@ -22,7 +22,7 @@ inline const std::vector<Menu>& analyzer(){
         {"Configuración","Config",{
             {"Configuración de Audio I-O","Audio I-O Configuration",201,true},
             {"Medición y Micrófonos","Measurement and Microphones",290,true},
-            {"Configuración Ambiental (Temperatura / Humedad)","Environmental Setup (Temperature / Humidity)",16050,true},
+            {"Ajustes Ambientales (Temperatura / Humedad)","Environmental Setup (Temperature / Humidity)",16050,true},
             {"Opciones de Visualización","Display Options",0,true,{
                 {"Ventana Única","Single Window",16020,true},
                 {"Doble Ventana (RTA + Espectrograma)","Dual Window (RTA + Spectrogram)",16021,true},
@@ -43,7 +43,7 @@ inline const std::vector<Menu>& dsp(){
             {"Importar Respuesta al Impulso","Import Impulse Response"}}},
         {"Configuración","Config",{
             {"Matriz de Ruteo DSP","DSP Routing Matrix"},
-            {"Configuración Ambiental (Temperatura / Humedad)","Environmental Setup (Temperature / Humidity)",16050,true},
+            {"Ajustes Ambientales (Temperatura / Humedad)","Environmental Setup (Temperature / Humidity)",16050,true},
             {"Preferencias del Simulador","Simulator Preferences"}}}
     };
     return menus;

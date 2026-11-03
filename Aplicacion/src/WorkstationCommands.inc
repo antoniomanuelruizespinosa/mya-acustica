@@ -6,7 +6,6 @@ void refreshModeMenus(){
  const bool spanish=commands.language==MyaCommands::Language::ES;
  languageES.setToggleState(spanish,dontSendNotification);
  languageEN.setToggleState(!spanish,dontSendNotification);
- navigationMenus.setButtonText(spanish?"Todos los menús...":"All menus...");
  menuItemsChanged();
 }
 void updateInterfaceLanguage(){
@@ -40,6 +39,7 @@ void showEnvironmentalSetup(){
  if(auto* editor=dialog->getTextEditor("temperature"))editor->setEnabled(false);
  if(auto* editor=dialog->getTextEditor("humidity"))editor->setEnabled(false);
  dialog->addButton(es?"Cerrar":"Close",0);
+ dialog->setSize(440,250);
  dialog->enterModalState(true,nullptr,true);
  dialog->toFront(true);
 }
