@@ -36,7 +36,7 @@ void RTAPanel::setFrozen(bool shouldFreeze){frozen=shouldFreeze;if(frozen)stopTi
 void RTAPanel::clearTraces(){traces.clear();spectrogramHistory.clear();spectrogramImage={};spectrogramDirty=true;spectrogramHead=0;spectrogramTraceId=-1;lastUpdateMs=0;cursorVisible=false;cursorReading.clear();microphoneSignature.clear();microphoneChoice.clear(juce::dontSendNotification);publishCursor();repaint();}
 void RTAPanel::setActive(bool active){if(frozen){stopTimer();return;}if(active&&!isTimerRunning()){timerCallback();startTimerHz(30);}else if(!active){stopTimer();clearTraces();}}
 void RTAPanel::visibilityChanged(){if(!isShowing())stopTimer();}
-juce::Rectangle<int> RTAPanel::plotArea()const{auto bounds=getLocalBounds().reduced(55,42);if(windowCount.getSelectedId()==2)bounds.setHeight(juce::jmax(1,(bounds.getHeight()-8)/2));return bounds;}
+juce::Rectangle<int> RTAPanel::plotArea()const{auto bounds=getLocalBounds().withTrimmedLeft(44).withTrimmedRight(8).withTrimmedTop(42).withTrimmedBottom(42);if(windowCount.getSelectedId()==2)bounds.setHeight(juce::jmax(1,(bounds.getHeight()-8)/2));return bounds;}
 juce::Rectangle<int> RTAPanel::spectrogramArea()const{if(windowCount.getSelectedId()!=2)return {};auto r=plotArea();return {r.getX(),r.getBottom()+8,r.getWidth(),r.getHeight()};}
 const RTAPanel::Trace* RTAPanel::selectedTrace()const{for(const auto& trace:traces)if(trace.id==microphoneChoice.getSelectedId()-1)return &trace;for(const auto& trace:traces)if(trace.selected)return &trace;return traces.empty()?nullptr:&traces.front();}
 void RTAPanel::refreshMicrophoneChoices(){

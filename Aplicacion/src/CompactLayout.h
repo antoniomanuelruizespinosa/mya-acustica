@@ -18,7 +18,7 @@ struct Box {int x,y,w,h;bool intersects(const Box& b) const{return x<b.x+b.w&&b.
 inline Box meterBar(int width,int channel){return {17,channel*24+1,std::max(1,width-19),14};}
 inline Box meterScale(int width,int channel){return {17,channel*24+15,std::max(1,width-19),9};}
 inline Box smoothing(int plotWidth){return {plotWidth-185,2,64,18};}
-inline Box plot(int width,int height){return {51,23,std::max(1,width-63),std::max(1,height-48)};}
+inline Box plot(int width,int height){return {44,23,std::max(1,width-52),std::max(1,height-48)};}
 inline int divisions(int kind){return kind==0?6:12;}
 inline double phaseTick(int index,double zoom=1.,double pan=0.){return (180.-index*30.)/zoom+pan*360.;}
 }

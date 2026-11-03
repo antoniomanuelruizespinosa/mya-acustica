@@ -249,7 +249,7 @@ void TransferFunctionPanel::paint(juce::Graphics& g){
 void TransferFunctionPanel::paintPane(juce::Graphics& g,juce::Rectangle<float> bounds,bool phase)const{
  g.fillAll(background);
  if(bounds.getWidth()<130.0f||bounds.getHeight()<80.0f)return;
- auto area=juce::Rectangle<float>{bounds.getX()+51.0f,bounds.getY()+23.0f,bounds.getWidth()-63.0f,bounds.getHeight()-48.0f};
+ auto area=juce::Rectangle<float>{bounds.getX()+44.0f,bounds.getY()+23.0f,bounds.getWidth()-52.0f,bounds.getHeight()-48.0f};
  if(area.isEmpty())return;
  g.setColour(text);g.setFont(12.0f);
  g.drawText(phase?"FASE / grados":"MAGNITUD / dB",12,2,180,18,juce::Justification::centredLeft);

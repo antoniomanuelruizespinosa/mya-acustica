@@ -4,7 +4,8 @@
 #include <cmath>
 
 namespace {
-juce::Rectangle<float> frequencyArea(const juce::Component& component){return component.getLocalBounds().reduced(40,22).toFloat();}
+juce::Rectangle<float> frequencyArea(const juce::Component& component){return component.getLocalBounds().withTrimmedLeft(40).withTrimmedRight(8).withTrimmedTop(22).withTrimmedBottom(22).toFloat();}
+juce::Rectangle<float> impulseArea(const juce::Component& component){return component.getLocalBounds().withTrimmedLeft(52).withTrimmedRight(8).withTrimmedTop(18).withTrimmedBottom(18).toFloat();}
 double minFrequency(){return 20.0;}
 double maxFrequency(const OfflineDSPCore* core,int engine){return core&&core->state(engine).loaded?std::min(20000.0,core->state(engine).sampleRate*0.49):20000.0;}
 float xFor(double frequency,juce::Rectangle<float> r,double maximum){return r.getX()+r.getWidth()*(float)(std::log(frequency/minFrequency())/std::log(maximum/minFrequency()));}
@@ -45,7 +46,7 @@ void OfflineDSPPlot::clear() {
 void OfflineDSPPlot::clearCursor(){cursorVisible=false;cursorSample.reset();if(onCursorReadout)onCursorReadout({});repaint();}
 
 void OfflineDSPPlot::updateCursor(juce::Point<float> point) {
-    const auto area=frequencyView?frequencyArea(*this):getLocalBounds().reduced(30,18).toFloat();
+    const auto area=frequencyView?frequencyArea(*this):impulseArea(*this);
     if(!area.contains(point)||area.getWidth()<=0.f){clearCursor();return;}
     CursorSample reading;
     if(frequencyView){
@@ -136,7 +137,7 @@ void OfflineDSPPlot::paint(juce::Graphics& g) {
         drawCursor(r);
         return;
     }
-    auto plot = getLocalBounds().reduced(30, 18).toFloat();
+    auto plot = impulseArea(*this);
     if (plot.isEmpty()) return;
     g.setColour(Colour(0xff142b38));
     for (int i = 0; i <= 8; ++i) {
@@ -144,9 +145,15 @@ void OfflineDSPPlot::paint(juce::Graphics& g) {
         g.drawVerticalLine(roundToInt(x), plot.getY(), plot.getBottom());
     }
     for (int i = 0; i <= 4; ++i) {
-        const float y = plot.getY() + plot.getHeight() * (float)i / 4.0f;
+        const int percent = 100 - i * 50;
+        const float y = plot.getCentreY() - (float)percent * plot.getHeight() * 0.0045f;
         g.drawHorizontalLine(roundToInt(y), plot.getX(), plot.getRight());
+        g.setColour(Colour(0xff26bad4));g.setFont(10.0f);
+        g.drawText(String(percent),16,roundToInt(y)-7,32,14,Justification::centredRight);
+        g.setColour(Colour(0xff142b38));
     }
+    g.setColour(Colour(0xff26bad4));g.setFont(10.0f);
+    g.saveState();g.addTransform(AffineTransform::rotation(-MathConstants<float>::halfPi).translated(2.f,plot.getCentreY()+40.f));g.drawText("Level (%)",0,0,80,12,Justification::centred);g.restoreState();
     g.setColour(Colour(0xffdcebf0));
     g.setFont(12.0f);
     if (prediction.empty() || rate <= 0.0) {
