@@ -505,7 +505,7 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
  TFMeterSettings inputMeterSettings;
  SidebarDivider leftDivider,rightDivider;TextButton closeLeft{"<"},closeRight{">"},restoreRight{"<"};
  int centerX() const{return leftVisible?leftWidth+16:8;}
- int layoutRightWidth() const{return mode==0?256:rightWidth;}
+ int layoutRightWidth() const{return rightWidth;}
  int centerWidth() const{return getWidth()-centerX()-(rightVisible?layoutRightWidth()+16:8);}
  AffineTransform rightTransform()const{float scale=(float)rightWidth/276.f;return AffineTransform::scale(scale,1.f).translated((float)getWidth()-8-scale*(float)(getWidth()-20),0);}
  void persistWorkspace(){WorkspaceViewState state{leftWidth,rightWidth,leftVisible,rightVisible,inputMeterSettings,avgColour.toString()};if(!state.save(projectFile.getParentDirectory().getChildFile("vista-trabajo.json")))status="No se pudo guardar la vista de trabajo";}
@@ -1037,7 +1037,7 @@ public:
   for(size_t i=0;i<capturedChoices.size();++i){auto id=capturedChoices[i];auto* node=savedTraces.find(id);if(!node||!node->visible)continue;bool phase=capturedInPanel(id,1),magnitude=capturedInPanel(id,2);if(!phase&&!magnitude)continue;TransferFunctionPanel::Trace trace;trace.id=100000+(int)i;trace.name=node->name;trace.colour=Colour::fromString(node->colour);trace.frozen=true;trace.showPhase=phase;trace.showMagnitude=magnitude;trace.selected=id==capturedFront(1)||id==capturedFront(2);trace.samples.reserve((size_t)MultiWindowSpectrum::gridCount());for(int x=0;x<MultiWindowSpectrum::gridCount();++x){double hz=MultiWindowSpectrum::gridFrequency(x);auto phaseValue=phase?savedTraces.value(id,hz,1,smoothingForPlot(0),0):std::optional<double>{};auto magnitudeValue=magnitude?savedTraces.value(id,hz,2,smoothingForPlot(1),0):std::optional<double>{};TransferFunctionPanel::Sample sample;sample.frequencyHz=hz;sample.valid=phaseValue.has_value()||magnitudeValue.has_value();sample.validPhase=phaseValue.has_value();sample.validMagnitude=magnitudeValue.has_value();sample.phaseDegrees=phaseValue?*phaseValue*360.:0.;sample.magnitudeDb=magnitudeValue?*magnitudeValue*36.:0.;sample.coherence=savedTraces.coherence(id,hz).value_or(std::numeric_limits<double>::quiet_NaN());sample.bypassBlanking=true;trace.samples.push_back(sample);}result.push_back(std::move(trace));}
   return result;
  });
- tfPanel->onResolutionChanged=[this](bool multi){for(auto& estimator:liveTFs)estimator.setMultiWindowEnabled(multi);};tfPanel->onCoherenceThresholdChanged=[this](double percent){coherenceThreshold.setValue(percent,dontSendNotification);tfSettings.coherenceThreshold=percent;status="Coherence Threshold: "+String(percent,1)+"%";repaint();};tfPanel->onCoherenceThresholdCommitted=[this]{persistTF();};tfPanel->setInterceptsMouseClicks(false,true);tfPanel->addMouseListener(this,true);addAndMakeVisible(*tfPanel);tfPanel->setVisible(false);
+ tfPanel->onResolutionChanged=[this](bool multi){for(auto& estimator:liveTFs)estimator.setMultiWindowEnabled(multi);};tfPanel->onCoherenceThresholdChanged=[this](double percent){coherenceThreshold.setValue(percent,dontSendNotification);tfSettings.coherenceThreshold=percent;status="Coherence Threshold: "+String(percent,1)+"%";repaint();};tfPanel->onCoherenceThresholdCommitted=[this]{persistTF();};tfPanel->setInterceptsMouseClicks(false,true);addAndMakeVisible(*tfPanel);tfPanel->setVisible(false);
  reticleOverlay.draw=[this](Graphics& g){for(int t=1;t<=2;++t)if(plotCursorVisible[(size_t)t]){auto p=plotArea(plotBounds(t)).translated(-reticleOverlay.getX(),-reticleOverlay.getY());double u=plotCursorU[(size_t)t];float x=(float)(p.getX()+((u-plotPanX[(size_t)t]-.5)*plotZoomX[(size_t)t]+.5)*p.getWidth());if(x<p.getX()||x>p.getRight())continue;float y=(float)(p.getY()+plotCursorY[(size_t)t]*p.getHeight());g.setColour(Palette::cyan.withAlpha(.6f));g.drawVerticalLine(roundToInt(x),(float)p.getY(),(float)p.getBottom());g.drawHorizontalLine(roundToInt(y),(float)p.getX(),(float)p.getRight());}};addAndMakeVisible(reticleOverlay);reticleOverlay.setVisible(false);
 
  for(int i=0;i<2;++i){auto& divider=plotDividers[(size_t)i];addAndMakeVisible(divider);divider.reset=[this]{irFraction=.14;phaseFraction=.5;resized();repaint();};divider.moved=[this,i](int y){int height=getHeight()-183;if(i==0)irFraction=jlimit(60.,(double)jmax(60,height-176),(double)y-118)/height;else{auto p=plotBounds(1);int remaining=118+height-p.getY()-8;phaseFraction=jlimit(80.,(double)jmax(80,remaining-80),(double)y-p.getY())/remaining;}resized();repaint();};}
@@ -1135,7 +1135,7 @@ public:
  globalFFTLabel.setText("FFT",dontSendNotification);globalSmthLabel.setText("Smth",dontSendNotification);
  for(auto* label:{&globalFFTLabel,&globalSmthLabel}){label->setColour(Label::textColourId,Palette::cyan);label->setJustificationType(Justification::centredLeft);addAndMakeVisible(*label);}
  globalFFT.addItem("64 FPPO",1);for(int fft=128,id=2;fft<=32768;fft*=2,++id)globalFFT.addItem("Fija "+String(fft),id);globalFFT.setSelectedId(1,dontSendNotification);globalFFT.setTitle("FFT de la pantalla activa");addAndMakeVisible(globalFFT);
- globalSmth.addItemList({"Off","1/48 Oct","1/24 Oct","1/12 Oct","1/6 Oct","1/3 Oct"},1);globalSmth.setSelectedId(2,dontSendNotification);globalSmth.setTitle("Suavizado de la pantalla activa");addAndMakeVisible(globalSmth);
+ globalSmth.addItemList({"Off","1/48 Oct","1/24 Oct","1/12 Oct","1/6 Oct","1/3 Oct"},1);globalSmth.addItem("Octave",7);globalSmth.setSelectedId(2,dontSendNotification);globalSmth.setTitle("Suavizado de la pantalla activa");addAndMakeVisible(globalSmth);
  auto applyDisplay=[this]{if(!mainTabs||!tfPanel)return;bool multi=globalFFT.getSelectedId()==1;int size=multi?16384:1<<(globalFFT.getSelectedId()+5);int smooth=globalSmth.getSelectedId();if(measurementView==2){rtaFFTSize=size;for(auto& estimator:liveRTAs)estimator.setFFTSize(size);mainTabs->rtaPanel().setDisplayOptions(multi,smooth);}else{tfFFTSize=size;for(auto& estimator:liveTFs)estimator.setFFTSize(size);tfPanel->setDisplayOptions(multi,smooth);tfPanel->refreshNow();}repaint();};globalFFT.onChange=applyDisplay;globalSmth.onChange=applyDisplay;
  for(auto* slider:{&selectedDelay,&phasePreview}){slider->setRange(0,2000,.01);slider->setSliderStyle(Slider::IncDecButtons);slider->setTextBoxStyle(Slider::TextBoxLeft,false,86,26);slider->setTextValueSuffix(" ms");addAndMakeVisible(slider);}
  selectedDelay.setTitle("Delay de referencia seleccionado");
@@ -1243,21 +1243,22 @@ public:
  void mouseExit(const MouseEvent& event) override {
   auto point=event.getEventRelativeTo(this).getPosition();
   for(int t=0;t<3;++t)if((measurementView==0||t==0)&&(t!=0||plotChoice.getSelectedId()!=2||measurementView==1)&&plotArea(plotBounds(t)).contains(point))return;
-  cursorPlot=-1;plotCursorVisible.fill(false);updateCursorReadout();reticleOverlay.repaint();repaint();
+  if(cursorPlot>=0){plotCursorVisible[(size_t)cursorPlot]=false;if(tfPanel&&cursorPlot>0)tfPanel->setPlotCursor(cursorPlot,{});}
+  cursorPlot=-1;updateCursorReadout();repaint();
  }
  void mouseMove(const MouseEvent& event) override{
- if(mode!=0)return;auto point=event.getEventRelativeTo(this).getPosition();
- for(int t=0;t<3;++t){if(measurementView==1&&t>0)continue;if(t==0&&plotChoice.getSelectedId()==2&&measurementView==0)continue;auto p=plotArea(plotBounds(t));if(!p.contains(point))continue;
- cursorPlot=t;cursorU=PlotPresentation::coordinate(((double)point.x-p.getX())/p.getWidth(),plotPanX[(size_t)t],plotZoomX[(size_t)t]);
- plotCursorVisible.fill(false);plotCursorU[(size_t)t]=cursorU;
- if(auto value=cursorNormalizedValue(t,cursorU)){
-  const double y=GraphCursor::screenY(*value,plotPanY[(size_t)t],plotZoomY[(size_t)t]);
-  plotCursorY[(size_t)t]=jlimit(0.,1.,y);
-  plotCursorVisible[(size_t)t]=true;
- }
- updateCursorReadout();reticleOverlay.repaint();repaint();return;
- }
- if(cursorPlot!=-1){cursorPlot=-1;plotCursorVisible.fill(false);cursorReadout.setText("-- Hz       -- dB       -- deg",dontSendNotification);reticleOverlay.repaint();repaint();}
+  if(mode!=0)return;auto point=event.getEventRelativeTo(this).getPosition();
+  for(int t=0;t<3;++t){if(measurementView==1&&t>0)continue;if(t==0&&plotChoice.getSelectedId()==2&&measurementView==0)continue;auto p=plotArea(plotBounds(t));if(!p.contains(point))continue;
+   cursorPlot=t;cursorU=PlotPresentation::coordinate(((double)point.x-p.getX())/p.getWidth(),plotPanX[(size_t)t],plotZoomX[(size_t)t]);
+   plotCursorU[(size_t)t]=cursorU;plotCursorVisible[(size_t)t]=false;
+   if(auto value=cursorNormalizedValue(t,cursorU)){
+    const double y=GraphCursor::screenY(*value,plotPanY[(size_t)t],plotZoomY[(size_t)t]);
+    plotCursorY[(size_t)t]=jlimit(0.,1.,y);plotCursorVisible[(size_t)t]=true;
+    if(tfPanel&&t>0)tfPanel->setPlotCursor(t,juce::Point<float>((float)(point.x-p.getX())/(float)p.getWidth(),(float)plotCursorY[(size_t)t]));
+   }else if(tfPanel&&t>0)tfPanel->setPlotCursor(t,{});
+   updateCursorReadout();repaint();return;
+  }
+  if(cursorPlot>=0){plotCursorVisible[(size_t)cursorPlot]=false;if(tfPanel&&cursorPlot>0)tfPanel->setPlotCursor(cursorPlot,{});cursorPlot=-1;updateCursorReadout();repaint();}
  }
  void mouseDown(const MouseEvent& event) override {
  if(event.originalComponent==this&&mode!=2){for(int t=0;t<3;++t)if((measurementView==0||t==0)&&(t!=0||plotChoice.getSelectedId()!=2||measurementView==1)&&activeGraphBounds(t).contains(event.getPosition())){activePlot=t;if(tfPanel)tfPanel->setSelectedPlot(activePlot);grabKeyboardFocus();status="Grafica seleccionada / flechas izquierda/derecha: zoom X / + y -: zoom Y / doble clic: centrar";repaint();return;}}
@@ -1318,7 +1319,7 @@ public:
  if(!ran){if(auto* definition=MyaCommands::find(id))status=commands.details(*definition,MyaCommands::state(*definition,commands.current()));repaint();}
  return true;
  }
- void resized() override {if(buttons.size()<19)return;int excess=jmax(0,680-centerWidth());if(rightVisible&&mode!=0){int reduction=jmin(excess,rightWidth-WorkspaceViewState::rightMin);rightWidth-=reduction;excess-=reduction;}if(leftVisible)leftWidth-=jmin(excess,leftWidth-WorkspaceViewState::leftMin);
+ void resized() override {if(buttons.size()<19)return;int excess=jmax(0,680-centerWidth());if(rightVisible){int reduction=jmin(excess,rightWidth-WorkspaceViewState::rightMin);rightWidth-=reduction;excess-=reduction;}if(leftVisible)leftWidth-=jmin(excess,leftWidth-WorkspaceViewState::leftMin);
  Component* dspItems[]{&dspPlotSlots[0],&dspPlotResizers[0],&dspPlotSlots[1],&dspPlotResizers[1],&dspPlotSlots[2]};
  dspPlotLayout.layOutComponents(dspItems,5,centerX()+8,106,centerWidth()-16,getHeight()-298,true,true);
  for(auto& bar:dspPlotResizers)bar.setVisible(mode==1);
@@ -1367,7 +1368,7 @@ public:
  if(mode==0){for(int i=12;i<19;++i)buttons[(size_t)i]->setVisible(false);gain.setVisible(false);gainLabel.setVisible(false);delay.setVisible(false);delayLabel.setVisible(false);}
  int rx=getWidth()-layoutRightWidth(),rw=layoutRightWidth()-16;
  auto mb=[&](int id,int bx,int y,int w,int h=26){auto& button=*measurementButtons[(size_t)id];button.setVisible(measuring);button.setBounds(bx,y,w,h);};
- int meterOffset=meterState.state().mainVisible?240:0;principalMeter.setVisible(measuring&&meterState.state().mainVisible);principalMeter.setBounds(rx,88,rw,240);
+ int meterOffset=meterState.state().mainVisible?PrincipalMeter::compactHeight:0;principalMeter.setVisible(measuring&&meterState.state().mainVisible);principalMeter.setBounds(rx,88,rw,PrincipalMeter::compactHeight);
  int tab=(rw-8)/3;mb(20,rx,94+meterOffset,tab);mb(0,rx+tab+4,94+meterOffset,tab);mb(21,rx+2*(tab+4),94+meterOffset,rw-2*(tab+4));
  averageChoice.setTransform({});averageChoice.setBounds(rx,128+meterOffset,rw,22);averageChoice.setTooltip("Promedio temporal de la TF seleccionada");
  if(mainTabs&&tfPanel){bool rta=measurementView==2;bool multi=rta?mainTabs->rtaPanel().multiWindow():tfPanel->multiWindow();int smooth=rta?mainTabs->rtaPanel().smoothingChoice():tfPanel->smoothingChoice();int size=rta?rtaFFTSize:tfFFTSize;int fftId=2;while(size>128){size/=2;++fftId;}globalFFT.setSelectedId(multi?1:fftId,dontSendNotification);globalSmth.setSelectedId(smooth,dontSendNotification);}
@@ -1377,7 +1378,7 @@ public:
  mb(19,rx,242+meterOffset,28);mb(5,rx+32,242+meterOffset,28);mb(26,rx+64,242+meterOffset,28);mb(4,rx+96,242+meterOffset,rw-128);measurementButtons[4]->getProperties().set("commandGlyph",true);measurementButtons[4]->setButtonText("Int.Loop");loopOptions.setVisible(measuring);loopOptions.setBounds(rx+rw-28,242+meterOffset,28,26);
  int gen=CompactLayout::generatorTop(getHeight());
  int footerTop=CompactLayout::actionTop(getHeight(),alignmentExpanded),alignmentY=footerTop+32;
- tfViewport.setTransform({});int tfStart=CompactLayout::tfStart(meterState.state().mainVisible)+(meterState.state().mainVisible?144:0);tfViewport.setBounds(rx,tfStart,rw,juce::jmax(0,CompactLayout::tfBottom(getHeight(),alignmentExpanded)-tfStart));
+ tfViewport.setTransform({});int tfStart=CompactLayout::tfStart(meterState.state().mainVisible)+(meterState.state().mainVisible?PrincipalMeter::compactHeight-96:0);tfViewport.setBounds(rx,tfStart,rw,juce::jmax(0,CompactLayout::tfBottom(getHeight(),alignmentExpanded)-tfStart));
  int contentHeight=averageTop()+(int)averageEntries.size()*CompactLayout::avgHeight+4,cw=rw-(contentHeight>tfViewport.getHeight()?10:0);tfContent.setSize(cw,contentHeight);refreshAverageRows();
  avgColourButton.setVisible(avgConfigured);avgReserve.setVisible(avgConfigured);avgPlay.setVisible(avgConfigured);int selectedAvgY=averageTop()+(int)selectedAverage*CompactLayout::avgHeight;avgColourButton.setBounds(0,selectedAvgY,24,24);avgReserve.setBounds(26,selectedAvgY,cw-60,24);avgPlay.setBounds(cw-29,selectedAvgY,27,24);for(size_t a=0;a<averageEntries.size();++a)if(a<averageRows.size()){int y=averageTop()+(int)a*CompactLayout::avgHeight;averageSwitches[a].setBounds(0,y,24,24);averageRows[a].setBounds(26,y,cw-60,24);averagePlays[a].setBounds(cw-29,y,27,24);}
  int half=(rw-4)/2;mb(13,rx,footerTop,half);mb(14,rx+half+4,footerTop,rw-half-4);
@@ -1392,7 +1393,7 @@ public:
  inputMeters[k].setBounds(4,y+24,w-8,48);micDelay[k].setSliderStyle(Slider::LinearHorizontal);micDelay[k].setTextBoxStyle(Slider::TextBoxLeft,false,w-82,18);micDelay[k].setBounds(4,y+76,w-78,18);tfActions[k][0].setBounds(w-70,y+76,38,18);tfActions[k][0].getProperties().set("commandGlyph",true);tfActions[k][0].setButtonText("Find");tfActions[k][1].setVisible(true);tfActions[k][1].setBounds(w-28,y+73,25,24);tfActions[k][2].setVisible(false);}
  auto compactLeft=AffineTransform::scale(.82f,1.f).translated(2.5f,0);for(int i=8;i<12;++i)buttons[(size_t)i]->setTransform(compactLeft);
  const bool sceneMode=mode==2&&rightVisible;stacks.setVisible(sceneMode);boxes.setVisible(sceneMode);spacing.setVisible(sceneMode);rotation.setVisible(sceneMode);stacksLabel.setVisible(sceneMode);boxesLabel.setVisible(sceneMode);spacingLabel.setVisible(sceneMode);rotationLabel.setVisible(sceneMode);
- Slider* ss[]={&stacks,&boxes,&spacing,&rotation};Label* ll[]={&stacksLabel,&boxesLabel,&spacingLabel,&rotationLabel};for(int i=0;i<4;++i){ll[i]->setBounds(right,473+i*64,200,23);ss[i]->setBounds(right,496+i*64,200,28);}if(mainTabs){mainTabs->setBounds(centerX()+8,118,centerWidth()-16,getHeight()-183);mainTabs->showRTA(mode==0&&measurementView==2);mainTabs->toFront(false);}if(tfPanel){auto phase=plotBounds(1),mag=plotBounds(2);bool live=false;if(mode==0&&measurementView==0&&inputEngine.running())for(size_t i=0;i<liveTFActive.size();++i)live=live||(liveTFActive[i]&&traceSwitch[i].getToggleState());auto frame=phase.getUnion(mag);tfPanel->setBounds(frame);tfPanel->setPlotLayout(phase.translated(-frame.getX(),-frame.getY()),mag.translated(-frame.getX(),-frame.getY()));tfPanel->setPlotTransforms(plotPanX,plotPanY,plotZoomX,plotZoomY);tfPanel->setCoherenceDisplay(tfSettings.coherenceThreshold,tfSettings.coherenceSquared,showCoherence.getToggleState(),tfSettings.coherenceHeight);tfPanel->setSelectedPlot(activePlot);bool showPanel=mode==0&&measurementView==0;tfPanel->setVisible(showPanel);tfPanel->setActive(live);reticleOverlay.setBounds(frame);reticleOverlay.setVisible(showPanel);if(showPanel){tfPanel->toFront(false);reticleOverlay.toFront(false);for(auto& c:plotTypeChoice)c.toFront(false);for(auto& c:plotMic)c.toFront(false);for(auto& c:plotSmooth)c.toFront(false);showCoherence.toFront(false);for(auto& c:graphGear)c.toFront(false);}}for(auto& divider:plotDividers)if(divider.isVisible())divider.toFront(false);for(auto& bar:dspPlotResizers)if(bar.isVisible())bar.toFront(false);if(reticleOverlay.isVisible()){reticleOverlay.toFront(false);for(auto& c:plotTypeChoice)c.toFront(false);for(auto& c:plotMic)c.toFront(false);for(auto& c:plotSmooth)c.toFront(false);showCoherence.toFront(false);for(auto& c:graphGear)c.toFront(false);}positionDrawer();positionAnchored();}
+ Slider* ss[]={&stacks,&boxes,&spacing,&rotation};Label* ll[]={&stacksLabel,&boxesLabel,&spacingLabel,&rotationLabel};for(int i=0;i<4;++i){ll[i]->setBounds(right,473+i*64,200,23);ss[i]->setBounds(right,496+i*64,200,28);}if(mainTabs){mainTabs->setBounds(centerX()+8,118,centerWidth()-16,getHeight()-183);mainTabs->showRTA(mode==0&&measurementView==2);mainTabs->toFront(false);}if(tfPanel){auto phase=plotBounds(1),mag=plotBounds(2);bool live=false;if(mode==0&&measurementView==0&&inputEngine.running())for(size_t i=0;i<liveTFActive.size();++i)live=live||(liveTFActive[i]&&traceSwitch[i].getToggleState());auto frame=phase.getUnion(mag);tfPanel->setBounds(frame);tfPanel->setPlotLayout(phase.translated(-frame.getX(),-frame.getY()),mag.translated(-frame.getX(),-frame.getY()));tfPanel->setPlotTransforms(plotPanX,plotPanY,plotZoomX,plotZoomY);tfPanel->setCoherenceDisplay(tfSettings.coherenceThreshold,tfSettings.coherenceSquared,showCoherence.getToggleState(),tfSettings.coherenceHeight);tfPanel->setSelectedPlot(activePlot);bool showPanel=mode==0&&measurementView==0;tfPanel->setVisible(showPanel);tfPanel->setActive(live);reticleOverlay.setBounds(frame);reticleOverlay.setVisible(false);if(showPanel){tfPanel->toFront(false);reticleOverlay.toFront(false);for(auto& c:plotTypeChoice)c.toFront(false);for(auto& c:plotMic)c.toFront(false);for(auto& c:plotSmooth)c.toFront(false);showCoherence.toFront(false);for(auto& c:graphGear)c.toFront(false);}}for(auto& divider:plotDividers)if(divider.isVisible())divider.toFront(false);for(auto& bar:dspPlotResizers)if(bar.isVisible())bar.toFront(false);if(reticleOverlay.isVisible()){reticleOverlay.toFront(false);for(auto& c:plotTypeChoice)c.toFront(false);for(auto& c:plotMic)c.toFront(false);for(auto& c:plotSmooth)c.toFront(false);showCoherence.toFront(false);for(auto& c:graphGear)c.toFront(false);}if(rightDivider.isVisible())rightDivider.toFront(false);positionDrawer();positionAnchored();}
  void text(Graphics& g,String s,Rectangle<int> r,float size=12,Colour c=Palette::ink){g.setColour(c);g.setFont(size);g.drawFittedText(s,r,Justification::centredLeft,1);}
  void panel(Graphics& g,Rectangle<int> r){g.setColour(Palette::panel);g.fillRoundedRectangle(r.toFloat(),6);g.setColour(Palette::line);g.drawRoundedRectangle(r.toFloat(),6,1.5f);}
  std::complex<double> response(double f,bool adjusted){auto recalled=mode==1&&dspRecall?CaptureLibrary::interpolate(*dspRecall,f):std::nullopt;auto h=recalled?recalled->value:demoTransfer(f);if(adjusted&&!disabled)h*=std::polar(std::pow(10.,gain.getValue()/20),-2*MathConstants<double>::pi*f*delay.getValue()/1000)*(polarity?-1.:1.);return h;}
@@ -1401,12 +1402,18 @@ public:
  double panX=mode!=2?plotPanX[(size_t)type]:0,panY=mode!=2?plotPanY[(size_t)type]:0,zoomX=mode!=2?plotZoomX[(size_t)type]:1.,zoomY=mode!=2?plotZoomY[(size_t)type]:1.;
  if(mode!=2&&type==activePlot){g.setColour(Palette::cyan);g.drawRect(r,1);}auto p=plotArea(r);
  g.setColour(Colour(0xff2c3135));g.drawRect(p,1);
- int divisions=kind==0?6:std::max(1,(int)std::ceil(tfSettings.span(kind)/(kind==1?tfSettings.phaseGrid:tfSettings.magGrid)));
- for(int i=0;i<=divisions;++i){if(kind==0&&amplitudeMode==0&&i%3!=0)continue;double axisValue=kind==0?0:tfSettings.maximum(kind)-i*(kind==1?tfSettings.phaseGrid:tfSettings.magGrid);double fraction=kind==0?i/(double)divisions:(tfSettings.maximum(kind)-axisValue)/tfSettings.span(kind);if(fraction>1.000001)continue;float yy=(float)(p.getY()+fraction*p.getHeight());g.setColour(Colour(0xff2c3135));g.drawHorizontalLine(roundToInt(yy),(float)p.getX(),(float)p.getRight());
-  double value=kind==0?(amplitudeMode==0?(1.-i/3.)/zoomY+panY*2.:-60.+(60.-i*20.)/zoomY+panY*120.):tfSettings.physical(tfSettings.normalize(axisValue,kind)/zoomY+panY,kind);
-  text(g,(kind==0&&amplitudeMode==0?String(roundToInt(value*100))+"%":String(value,2).trimCharactersAtEnd("0").trimCharactersAtEnd(".")+(kind==1?String::fromUTF8("°"):String())),{r.getX()+11,roundToInt(yy)-6,31,12},10,Palette::blue);
+ int divisions=kind==0?(amplitudeMode==0?4:6):std::max(1,(int)std::ceil(tfSettings.span(kind)/(kind==1?tfSettings.phaseGrid:tfSettings.magGrid)));
+ for(int i=0;i<=divisions;++i){
+  if(kind==0&&amplitudeMode==0&&p.getHeight()<100&&i%2!=0)continue;
+  double axisValue=kind==0?0:tfSettings.maximum(kind)-i*(kind==1?tfSettings.phaseGrid:tfSettings.magGrid);
+  double fraction=kind==0?i/(double)divisions:(tfSettings.maximum(kind)-axisValue)/tfSettings.span(kind);
+  if(fraction>1.000001)continue;
+  float yy=(float)(p.getY()+fraction*p.getHeight());g.setColour(Colour(0xff2c3135));g.drawHorizontalLine(roundToInt(yy),(float)p.getX(),(float)p.getRight());
+  double value=kind==0?(amplitudeMode==0?(1.-2.*fraction)/zoomY+panY*2.:-60.+(60.-i*20.)/zoomY+panY*120.):tfSettings.physical(tfSettings.normalize(axisValue,kind)/zoomY+panY,kind);
+  String label=kind==0&&amplitudeMode==0?(value>0?"+":"")+String(roundToInt(value*100))+"%":String(value,2).trimCharactersAtEnd("0").trimCharactersAtEnd(".")+(kind==1?String::fromUTF8("°"):String());
+  text(g,label,{r.getX()+(kind==0&&amplitudeMode==0?20:10),roundToInt(yy)-6,kind==0&&amplitudeMode==0?42:33,12},10,Palette::blue);
  }
- if(kind==0&&amplitudeMode==0){g.saveState();g.addTransform(AffineTransform::rotation(-MathConstants<float>::halfPi).translated((float)r.getX()+2.f,(float)p.getCentreY()+40.f));g.setColour(Palette::blue);g.setFont(10.f);g.drawText("Level (%)",0,0,80,12,Justification::centred);g.restoreState();}
+ if(kind==0&&amplitudeMode==0){String axis="Level (%)";int step=p.getHeight()<100?8:10;int top=p.getCentreY()-axis.length()*step/2;g.setColour(Palette::blue);g.setFont(p.getHeight()<100?8.f:10.f);for(int n=0;n<axis.length();++n)g.drawFittedText(axis.substring(n,n+1),r.getX()+2,top+n*step,12,step,Justification::centred,1);}
  auto tick=[&](double coordinate,String name){double position=PlotPresentation::screen(coordinate,panX,zoomX);if(position<0||position>1)return;int xx=roundToInt(p.getX()+position*p.getWidth());g.setColour(Colour(0xff2c3135));g.drawVerticalLine(xx,(float)p.getY(),(float)p.getBottom());text(g,name,{jlimit(r.getX()+1,r.getRight()-64,xx-18),p.getBottom()+3,40,14},10,Palette::blue);};
  if(kind==0){double first=ImpulseDisplay::timeMs(PlotPresentation::coordinate(0,panX,zoomX)),last=ImpulseDisplay::timeMs(PlotPresentation::coordinate(1,panX,zoomX));for(int t=(int)std::ceil(first/5.)*5;t<=last;t+=5)tick(t/ImpulseDisplay::spanMs+.5,String(t));}
  else{std::vector<double> ticks;if(tfSettings.frequencyGrid==1)ticks.assign(PlotPresentation::frequencyTicks.begin(),PlotPresentation::frequencyTicks.end());else if(tfSettings.frequencyGrid==2)ticks={20,50,100,200,500,1000,2000,5000,10000,20000};else if(tfSettings.frequencyGrid==3)ticks={20,25,31.5,40,50,63,80,100,125,160,200,250,315,400,500,630,800,1000,1250,1600,2000,2500,3150,4000,5000,6300,8000,10000,12500,16000,20000};else ticks={20,2000,4000,6000,8000,10000,12000,14000,16000,18000,20000};int index=0;for(double f:ticks){String name=f>=1000?String(f/1000.,2).trimCharactersAtEnd("0").trimCharactersAtEnd(".")+"k":std::abs(f-31.5)<.001?String("31,5"):String(f,0);if(tfSettings.frequencyGrid==3&&(index++%3)!=2)name.clear();tick(tfSettings.coordinate(f),name);}}

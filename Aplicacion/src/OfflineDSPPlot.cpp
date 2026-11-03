@@ -145,15 +145,16 @@ void OfflineDSPPlot::paint(juce::Graphics& g) {
         g.drawVerticalLine(roundToInt(x), plot.getY(), plot.getBottom());
     }
     for (int i = 0; i <= 4; ++i) {
+        if(plot.getHeight()<100.f&&i%2!=0)continue;
         const int percent = 100 - i * 50;
         const float y = plot.getCentreY() - (float)percent * plot.getHeight() * 0.0045f;
         g.drawHorizontalLine(roundToInt(y), plot.getX(), plot.getRight());
         g.setColour(Colour(0xff26bad4));g.setFont(10.0f);
-        g.drawText(String(percent),16,roundToInt(y)-7,32,14,Justification::centredRight);
+        g.drawFittedText((percent>0?String("+"):String{})+String(percent)+"%",20,roundToInt(y)-7,42,14,Justification::centredRight,1);
         g.setColour(Colour(0xff142b38));
     }
     g.setColour(Colour(0xff26bad4));g.setFont(10.0f);
-    g.saveState();g.addTransform(AffineTransform::rotation(-MathConstants<float>::halfPi).translated(2.f,plot.getCentreY()+40.f));g.drawText("Level (%)",0,0,80,12,Justification::centred);g.restoreState();
+    const String axis="Level (%)";const int step=plot.getHeight()<100.f?8:10;const int top=roundToInt(plot.getCentreY())-axis.length()*step/2;g.setFont(plot.getHeight()<100.f?8.f:10.f);for(int n=0;n<axis.length();++n)g.drawFittedText(axis.substring(n,n+1),2,top+n*step,12,step,Justification::centred,1);
     g.setColour(Colour(0xffdcebf0));
     g.setFont(12.0f);
     if (prediction.empty() || rate <= 0.0) {

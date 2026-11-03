@@ -157,6 +157,12 @@ void TransferFunctionPanel::setSelectedPlot(int plot){
  selectedPlot=plot;phasePane->repaint();magnitudePane->repaint();
 }
 
+void TransferFunctionPanel::setPlotCursor(int plot,std::optional<juce::Point<float>> position){
+ if(plot!=1&&plot!=2)return;
+ plotCursors[(size_t)plot]=position;
+ (plot==1?phasePane:magnitudePane)->repaint();
+}
+
 std::optional<float> TransferFunctionPanel::frequencyPosition(double hz,juce::Rectangle<float> area,bool phase)const{
  if(!std::isfinite(hz)||hz<minHz||hz>maxHz||area.isEmpty())return {};
  auto index=phase?1u:2u;
@@ -260,5 +266,13 @@ void TransferFunctionPanel::paintPane(juce::Graphics& g,juce::Rectangle<float> b
  if(selectedPlot==(phase?1:2)){
   g.setColour(juce::Colour(0xff43cce8).withAlpha(.8f));
   g.drawRect(bounds.reduced(1.0f),1.25f);
+ }
+ if(auto cursor=plotCursors[(size_t)(phase?1:2)]){
+  const float x=area.getX()+cursor->x*area.getWidth(),y=area.getY()+cursor->y*area.getHeight();
+  if(area.contains(x,y)){
+   g.setColour(juce::Colour(0xff00e5ed).withAlpha(.9f));
+   g.drawVerticalLine(juce::roundToInt(x),area.getY(),area.getBottom());
+   g.drawHorizontalLine(juce::roundToInt(y),area.getX(),area.getRight());
+  }
  }
 }

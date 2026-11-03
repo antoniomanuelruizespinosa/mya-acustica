@@ -50,6 +50,7 @@ public:
  void setPlotTransforms(const std::array<double,3>& panX,const std::array<double,3>& panY,
                         const std::array<double,3>& zoomX,const std::array<double,3>& zoomY);
  void setSelectedPlot(int plot);
+ void setPlotCursor(int plot,std::optional<juce::Point<float>> normalizedPosition);
  void setCoherenceDisplay(double thresholdPercent,bool squared,bool visible,double height);
  void setLineThickness(float pixels);
  std::optional<Sample> sampleAt(int traceId,double frequencyHz,bool phase) const;
@@ -73,6 +74,7 @@ private:
  DataProvider dataProvider;
  std::vector<Trace> traces;
  std::map<int,Trace> history;
+ std::array<std::optional<juce::Point<float>>,3> plotCursors{};
  std::set<int> suppressedTraces;
  std::unique_ptr<PlotPane> phasePane,magnitudePane;
  std::unique_ptr<CoherenceHandle> coherenceHandle;
