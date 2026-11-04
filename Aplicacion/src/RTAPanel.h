@@ -1,6 +1,7 @@
 #pragma once
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <functional>
+#include <future>
 #include <map>
 #include <vector>
 
@@ -9,6 +10,7 @@ public:
  struct Trace { int id=-1; juce::String name; juce::Colour colour; bool selected = false; double nyquistHz=20000.; std::vector<float> dbfs; };
  using DataProvider = std::function<std::vector<Trace>()>;
  explicit RTAPanel(DataProvider provider);
+ ~RTAPanel() override;
  void setActive(bool active);
  void setFrozen(bool shouldFreeze);
  void clearTraces();
@@ -43,6 +45,7 @@ private:
  void publishCursor();
  void refreshMicrophoneChoices();
  void updateSpectrogramImage();
+ void presentFrame(double timestamp);
  void dragLimitTo(float y);
  DataProvider dataProvider;
  std::vector<Trace> traces;
@@ -54,6 +57,9 @@ private:
  enum class DragLimit { None, Upper, Lower };
  DragLimit draggedLimit=DragLimit::None;
  juce::Image spectrogramImage;
+ std::future<std::pair<unsigned,juce::Image>> pendingSpectrogram;
+ unsigned spectrogramGeneration=0;
+ juce::VBlankAttachment vblank;
  bool spectrogramDirty=true;
  juce::ToggleButton peakTracker{"Peak Tracker"};
  std::vector<std::vector<float>> spectrogramHistory;

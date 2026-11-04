@@ -102,7 +102,7 @@ public:
   const juce::Rectangle<int> readingBox(3,27,juce::jmax(1,getWidth()-6),juce::jmax(46,getHeight()-66));
   g.setColour(background.darker(.15f));g.fillRoundedRectangle(readingBox.toFloat(),3.f);
   g.setColour(c?juce::Colour::fromString(c->textColour):juce::Colours::white);
-  g.setFont(model.state().clock?25.f:juce::jlimit(20.f,38.f,(float)getWidth()/6.f));
+  g.setFont(model.state().clock?25.f:juce::jlimit(42.f,72.f,juce::jmin((float)getWidth()/3.4f,(float)readingBox.getHeight()*.95f)));
   const auto value=model.state().clock?juce::Time::getCurrentTime().formatted(model.state().clock24?"%H:%M:%S":"%I:%M %p"):MeterState::valueText(current);
   g.drawFittedText(value,readingBox.reduced(5,2),juce::Justification::centred,1,.7f);
   g.setFont(10.f);g.setColour(juce::Colour(0xffa9bac8));

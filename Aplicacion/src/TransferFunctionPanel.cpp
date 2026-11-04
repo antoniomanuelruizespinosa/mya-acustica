@@ -161,15 +161,29 @@ void TransferFunctionPanel::setSelectedPlot(int plot){
 
 void TransferFunctionPanel::setPlotCursor(int plot,std::optional<juce::Point<float>> position){
  if(plot!=1&&plot!=2)return;
- plotCursors[(size_t)plot]=position;
- (plot==1?phasePane:magnitudePane)->repaint();
+ if(!position){plotCursors[1].reset();plotCursors[2].reset();phasePane->repaint();magnitudePane->repaint();return;}
+ const double u=PlotPresentation::coordinate(position->x,panX[(size_t)plot],zoomX[(size_t)plot]);
+ const double hz=minHz*std::pow(maxHz/minHz,u);
+ for(int target:{1,2}){
+  auto& pane=target==1?*phasePane:*magnitudePane;
+  auto area=pane.getLocalBounds().toFloat();area={area.getX()+44.f,area.getY()+23.f,area.getWidth()-52.f,area.getHeight()-48.f};
+  const float x=(float)PlotPresentation::screen(u,panX[(size_t)target],zoomX[(size_t)target]);
+  float y=std::numeric_limits<float>::quiet_NaN();
+  if(!area.isEmpty()){
+   std::optional<Sample> sample;
+   for(const auto& trace:traces)if(trace.selected&&!suppressedTraces.count(trace.id)&&(target==1?trace.showPhase:trace.showMagnitude)){sample=sampleAt(trace.id,hz,target==1);if(sample)break;}
+   if(!sample)for(auto it=traces.rbegin();it!=traces.rend();++it)if(!suppressedTraces.count(it->id)&&(target==1?it->showPhase:it->showMagnitude)){sample=sampleAt(it->id,hz,target==1);if(sample)break;}
+   if(sample)y=(valuePosition(target==1?sample->phaseDegrees:sample->magnitudeDb,area,target==1)-area.getY())/area.getHeight();
+  }
+  plotCursors[(size_t)target]=juce::Point<float>{x,y};pane.repaint();
+ }
 }
 
 void TransferFunctionPanel::updatePaneCursor(int plot,juce::Point<float> position,bool leaving){
  auto& pane=plot==1?*phasePane:*magnitudePane;
  auto area=pane.getLocalBounds().toFloat().reduced(0.f);
  area={area.getX()+44.f,area.getY()+23.f,area.getWidth()-52.f,area.getHeight()-48.f};
- if(leaving||area.isEmpty()||!area.contains(position)){setPlotCursor(plot,{});if(onCursorMoved)onCursorMoved(plot,0.,{});return;}
+ if(leaving||area.isEmpty()||!area.contains(position)){setPlotCursor(plot,{});if(onCursorMoved)onCursorMoved(-1,0.,{});return;}
  const auto index=(size_t)plot;
  const double screen=(position.x-area.getX())/area.getWidth();
  const double u=PlotPresentation::coordinate(screen,panX[index],zoomX[index]);
@@ -178,7 +192,7 @@ void TransferFunctionPanel::updatePaneCursor(int plot,juce::Point<float> positio
  for(const auto& trace:traces)if(trace.selected&&!suppressedTraces.count(trace.id)&&(plot==1?trace.showPhase:trace.showMagnitude)){sample=sampleAt(trace.id,hz,plot==1);if(sample)break;}
  if(!sample)for(auto it=traces.rbegin();it!=traces.rend();++it)if(!suppressedTraces.count(it->id)&&(plot==1?it->showPhase:it->showMagnitude)){sample=sampleAt(it->id,hz,plot==1);if(sample)break;}
  if(sample){const float y=valuePosition(plot==1?sample->phaseDegrees:sample->magnitudeDb,area,plot==1);setPlotCursor(plot,juce::Point<float>{(float)screen,(y-area.getY())/area.getHeight()});}
- else setPlotCursor(plot,{});
+ else setPlotCursor(plot,juce::Point<float>{(float)screen,std::numeric_limits<float>::quiet_NaN()});
  if(onCursorMoved)onCursorMoved(plot,u,sample);
 }
 
@@ -288,10 +302,10 @@ void TransferFunctionPanel::paintPane(juce::Graphics& g,juce::Rectangle<float> b
  }
  if(auto cursor=plotCursors[(size_t)(phase?1:2)]){
   const float x=area.getX()+cursor->x*area.getWidth(),y=area.getY()+cursor->y*area.getHeight();
-  if(area.contains(x,y)){
+  if(x>=area.getX()&&x<=area.getRight()){
    g.setColour(juce::Colour(0xff00e5ed).withAlpha(.9f));
    g.drawVerticalLine(juce::roundToInt(x),area.getY(),area.getBottom());
-   g.drawHorizontalLine(juce::roundToInt(y),area.getX(),area.getRight());
+   if(std::isfinite(y)&&y>=area.getY()&&y<=area.getBottom())g.drawHorizontalLine(juce::roundToInt(y),area.getX(),area.getRight());
   }
  }
 }
