@@ -47,7 +47,8 @@ class CaptureLibraryPanel : public juce::Component, public juce::DragAndDropCont
   void itemClicked(const juce::MouseEvent& e) override{
    if(e.mods.isPopupMenu()){if(folder)panel.folderMenu(id,e.getScreenPosition());else panel.traceMenu(id,e.getScreenPosition());return;}
    if(!folder&&e.x<19){auto key=id;juce::Component::SafePointer<CaptureLibraryPanel> safe(&panel);juce::MessageManager::callAsync([safe,key]{if(safe)safe->toggleTraceVisibility(key);});return;}
-   if(!folder&&panel.onFront)panel.onFront(id);
+   // TreeView updates its selection after itemClicked. Focus it once from
+   // handleAsyncUpdate, using the final single-item selection.
   }
   void itemDoubleClicked(const juce::MouseEvent&) override{if(!folder)panel.command(907);}
   void itemOpennessChanged(bool open) override{
