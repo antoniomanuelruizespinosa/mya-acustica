@@ -34,7 +34,7 @@ class CaptureLibraryPanel : public juce::Component, public juce::DragAndDropCont
   }
   void itemClicked(const juce::MouseEvent& e) override{
    if(e.mods.isPopupMenu()){if(folder)panel.folderMenu(id,e.getScreenPosition());else panel.traceMenu(id,e.getScreenPosition());return;}
-   if(!folder&&e.x<19){auto* n=panel.library.find(id);if(n){auto key=id;bool visible=!n->visible;juce::Component::SafePointer<CaptureLibraryPanel> safe(&panel);juce::MessageManager::callAsync([safe,key,visible]{if(safe)safe->finish(safe->library.setVisibility({key},visible));});}return;}
+   if(!folder&&e.x<19){auto key=id;juce::Component::SafePointer<CaptureLibraryPanel> safe(&panel);juce::MessageManager::callAsync([safe,key]{if(safe)safe->removeTraceByX(key);});return;}
    if(!folder&&panel.onFront)panel.onFront(id);
   }
   void itemDoubleClicked(const juce::MouseEvent&) override{if(!folder)panel.command(907);}
@@ -160,6 +160,16 @@ public:
   empty.setText(!library.ready()?library.lastError():count==0?(library.state().view==Kind::SnapshotTF?"Sin capturas TF.":library.state().view==Kind::Sweep?"Sin barridos guardados.":"Sin datos guardados."):juce::String{},juce::dontSendNotification);empty.setVisible(false);tree.setTooltip(empty.getText());info.setEnabled(selection.size()==1);resized();repaint();
  }
  void finish(bool success){if(!success&&onError)onError(library.lastError());refresh();if(onChange)onChange();if(onSelection)onSelection();}
+ void removeTraceByX(const juce::String& key){
+  if(!library.remove(key)){if(onError)onError(library.lastError());return;}
+  auto removeItem=[&](auto&& self,juce::TreeViewItem* parent)->bool{
+   for(int i=0;i<parent->getNumSubItems();++i){auto* child=parent->getSubItem(i);if(child->getUniqueName()==key){parent->removeSubItem(i);return true;}if(self(self,child))return true;}
+   return false;
+  };
+  if(root)removeItem(removeItem,root.get());
+  info.setEnabled(selected().size()==1);tree.repaint();
+  if(onChange)onChange();if(onSelection)onSelection();
+ }
  void menu(){juce::PopupMenu menu;auto ids=selected();bool canExport=ids.size()==1&&library.find(ids[0])&&library.find(ids[0])->kind!=Kind::Folder;menu.addItem(1,spanishLanguage?"Importar traza (JSON/CSV)":"Import trace (JSON/CSV)",library.ready());menu.addItem(2,spanishLanguage?"Exportar traza seleccionada":"Export selected trace",canExport);menu.addSeparator();menu.addItem(3,spanishLanguage?"Crear nuevo proyecto":"Create new project",library.ready());menu.addItem(4,spanishLanguage?"Crear nueva carpeta":"Create new folder",library.ready()&&folderForNew().isNotEmpty());juce::Component::SafePointer<CaptureLibraryPanel> safe(this);menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(&more),[safe,ids](int choice){if(!safe)return;switch(choice){case 1:safe->importTrace();break;case 2:if(ids.size()==1)safe->exportTrace(ids[0]);break;case 3:safe->command(900);break;case 4:safe->command(901);break;default:break;}});}
  MyaCommands::Context context() const{
   MyaCommands::Context x;x.libraryReady=library.ready();x.libraryTF=library.state().view==Kind::SnapshotTF;auto ids=selected();x.librarySelection=(int)ids.size();
