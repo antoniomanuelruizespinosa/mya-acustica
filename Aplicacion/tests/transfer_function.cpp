@@ -64,6 +64,9 @@ int main(){
   assert(estimator.fftSizeSamples()==fftSize&&rta.fftSize()==fftSize);
  }
  estimator.setFFTSize(16384);estimator.setMultiWindowEnabled(true);
+ // TF modes must apply distinct complex cross-spectrum weights, including a running mean.
+ auto averagedGain=[&](MultiWindowSpectrum::TfAverageMode mode){auto probe=std::make_unique<TransferFunctionCore::Estimator>();probe->setFFTSize(512);probe->setMultiWindowEnabled(false);probe->setAverageMode(mode);for(int frame=0;frame<2;++frame){TransferFunctionCore::RawBlock b;b.sequence=(std::uint64_t)frame+1;b.count=512;b.sampleRate=rate;for(int i=0;i<512;++i){double v=.5*std::sin(2.*3.14159265358979323846*1500.*(frame*512+i)/rate);b.ref[(size_t)i]=(float)v;b.mic[(size_t)i]=(float)(v*(frame==0?1.:.2));}probe->feed(b);}auto value=probe->at(1500.);assert(value&&probe->ready());return value->magnitudeDb;};
+ double fastGain=averagedGain(MultiWindowSpectrum::TfAverageMode::Fast),slowGain=averagedGain(MultiWindowSpectrum::TfAverageMode::Slow),infiniteGain=averagedGain(MultiWindowSpectrum::TfAverageMode::Infinite);assert(slowGain>fastGain&&fastGain>infiniteGain);assert(std::abs(infiniteGain-20.*std::log10(.6))<.3);
  // The decimated low-frequency window resolves a 31.25 Hz tone and preserves M/R phase.
  auto low=std::make_unique<MultiWindowSpectrum>();constexpr double lowHz=31.25;
  for(int i=0;i<288000;++i){double a=2.*3.14159265358979323846*lowHz*i/rate;low->feed(.25*std::sin(a+phase),.5*std::sin(a),rate);}

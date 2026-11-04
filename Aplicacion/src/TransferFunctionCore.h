@@ -48,9 +48,11 @@ class Estimator {
  std::array<double,maxFftSize> impulse{};
  std::array<double,maxFftSize> envelope{};
  int filled=0,averages=0;
+ double infiniteWindows=0;
  double rateHz=0;
  double delayMs=0;
  int averageDepth=8;
+ MultiWindowSpectrum::TfAverageMode averageMode=MultiWindowSpectrum::TfAverageMode::Depth;
  SignalWindow::Type windowType=SignalWindow::Type::Hann;
  bool multiWindowEnabled=true;
  std::unique_ptr<MultiWindowSpectrum> multi=std::make_unique<MultiWindowSpectrum>();
@@ -73,17 +75,17 @@ class Estimator {
  }
  void calculate(){
   sweepMeasurement=false;
-  if(pendingAlignmentReset){averages=0;cross.fill({});refPower.fill(0);micPower.fill(0);pendingAlignmentReset=false;}
+  if(pendingAlignmentReset){averages=0;infiniteWindows=0;cross.fill({});refPower.fill(0);micPower.fill(0);pendingAlignmentReset=false;}
   double refEnergy=0;for(int i=0;i<activeSize;++i)refEnergy+=ref[(size_t)i]*ref[(size_t)i];
   // Below -60 dBFS RMS there is no dependable excitation for a live TF.
-  if(refEnergy<activeSize*1.e-6){averages=0;readyFlag=false;cross.fill({});refPower.fill(0);micPower.fill(0);result.fill({});transfer.fill({});impulse.fill(0);envelope.fill(0);return;}
+  if(refEnergy<activeSize*1.e-6){averages=0;infiniteWindows=0;readyFlag=false;cross.fill({});refPower.fill(0);micPower.fill(0);result.fill({});transfer.fill({});impulse.fill(0);envelope.fill(0);return;}
   int alignedSamples=std::clamp((int)std::llround(delayMs*rateHz/1000.),0,activeSize-1);
   for(int i=0;i<activeSize;++i){double w=SignalWindow::coefficient(windowType,i,activeSize);xm[(size_t)i]={mic[(size_t)i]*w,0};double aligned=i>=alignedSamples?ref[(size_t)(i-alignedSamples)]:previousRef[(size_t)(activeSize+i-alignedSamples)];xr[(size_t)i]={aligned*w,0};}
   previousRef=ref;
   fft(xm,activeSize);fft(xr,activeSize);
-  double alpha=1./averageDepth;
+  double alpha=averageMode==MultiWindowSpectrum::TfAverageMode::Fast?1.-std::exp(-activeSize/(rateHz*.125)):averageMode==MultiWindowSpectrum::TfAverageMode::Slow?1.-std::exp(-activeSize/rateHz):averageMode==MultiWindowSpectrum::TfAverageMode::Infinite?1./(infiniteWindows+1.):1./averageDepth;
   for(int k=1;k<activeBins();++k){auto c=xm[(size_t)k]*std::conj(xr[(size_t)k]);double rp=std::norm(xr[(size_t)k]),mp=std::norm(xm[(size_t)k]);if(averages==0){cross[(size_t)k]=c;refPower[(size_t)k]=rp;micPower[(size_t)k]=mp;}else{cross[(size_t)k]=cross[(size_t)k]*(1-alpha)+c*alpha;refPower[(size_t)k]=refPower[(size_t)k]*(1-alpha)+rp*alpha;micPower[(size_t)k]=micPower[(size_t)k]*(1-alpha)+mp*alpha;}}
-  averages=std::min(averages+1,1000000);readyFlag=averages>=averageDepth;
+  averages=std::min(averages+1,1000000);infiniteWindows+=1.;readyFlag=averages>=(averageMode==MultiWindowSpectrum::TfAverageMode::Depth?averageDepth:1);
   if(!readyFlag)return;
   for(int k=1;k<activeBins();++k){auto& p=result[(size_t)k];p.frequency=k*rateHz/activeSize;p.valid=refPower[(size_t)k]>1.e-12&&micPower[(size_t)k]>1.e-12;if(!p.valid){transfer[(size_t)k]={};continue;}Complex h=cross[(size_t)k]/refPower[(size_t)k]*std::polar(1.,-2.*3.14159265358979323846*p.frequency*alignedSamples/rateHz);transfer[(size_t)k]=h;p.magnitudeDb=20.*std::log10(std::max(std::abs(h),1.e-12));p.phaseDegrees=std::arg(h)*180./3.14159265358979323846;p.coherence=std::clamp(std::norm(cross[(size_t)k])/(refPower[(size_t)k]*micPower[(size_t)k]),0.,1.);}
   rebuildSmoothing();rebuildImpulse();++revisionNumber;
@@ -94,8 +96,8 @@ public:
  static std::optional<double> findDelayMs(const DelaySnapshot& snapshot){if(snapshot.fftSize<128||snapshot.fftSize>maxFftSize||snapshot.sampleRate<=0||snapshot.transfer.size()!=(size_t)(snapshot.fftSize/2+1))return {};auto spectrum=std::make_unique<std::array<Complex,maxFftSize>>();for(int k=1;k<=snapshot.fftSize/2;++k){auto h=snapshot.transfer[(size_t)k];(*spectrum)[(size_t)k]=h;if(k<snapshot.fftSize/2)(*spectrum)[(size_t)(snapshot.fftSize-k)]=std::conj(h);}fft(*spectrum,snapshot.fftSize,true);int limit=std::min(snapshot.fftSize/2-1,(int)std::round(snapshot.sampleRate*.15));int best=0;double peak=0,energy=0;for(int i=0;i<=limit;++i){double value=std::abs((*spectrum)[(size_t)i].real());energy+=value*value;if(value>peak){peak=value;best=i;}}if(peak<1.e-9||peak<5.*std::sqrt(energy/(limit+1)))return {};return 1000.*best/snapshot.sampleRate;}
  void setFFTSize(int value){if(value<128||value>maxFftSize||(value&(value-1))!=0||activeSize==value)return;activeSize=value;reset();}
  int fftSizeSamples()const{return activeSize;}
- void reset(){filled=averages=0;rateHz=0;lastSequence=0;readyFlag=false;sweepMeasurement=false;pendingAlignmentReset=false;previousRef.fill(0);cross.fill({});refPower.fill(0);micPower.fill(0);result.fill({});transfer.fill({});impulse.fill(0);envelope.fill(0);multi->reset();++revisionNumber;}
- void clearAveragePreservingHistory(){if(sweepMeasurement)return;bool hadMeasurement=readyFlag;averages=0;readyFlag=false;cross.fill({});refPower.fill(0);micPower.fill(0);result.fill({});transfer.fill({});impulse.fill(0);envelope.fill(0);multi->clearAveragePreservingHistory();if(hadMeasurement&&rateHz>0){int depth=averageDepth;averageDepth=1;calculate();averageDepth=depth;}++revisionNumber;}
+ void reset(){filled=averages=0;infiniteWindows=0;rateHz=0;lastSequence=0;readyFlag=false;sweepMeasurement=false;pendingAlignmentReset=false;previousRef.fill(0);cross.fill({});refPower.fill(0);micPower.fill(0);result.fill({});transfer.fill({});impulse.fill(0);envelope.fill(0);multi->reset();++revisionNumber;}
+ void clearAveragePreservingHistory(){if(sweepMeasurement)return;bool hadMeasurement=readyFlag;averages=0;infiniteWindows=0;readyFlag=false;cross.fill({});refPower.fill(0);micPower.fill(0);result.fill({});transfer.fill({});impulse.fill(0);envelope.fill(0);multi->clearAveragePreservingHistory();if(hadMeasurement&&rateHz>0){int depth=averageDepth;averageDepth=1;calculate();averageDepth=depth;}++revisionNumber;}
  void setWindowType(SignalWindow::Type type){if(windowType==type)return;windowType=type;reset();multi->setWindowType(type);}
  SignalWindow::Type getWindowType()const{return windowType;}
  void setMultiWindowEnabled(bool enabled){if(multiWindowEnabled==enabled)return;multiWindowEnabled=enabled;reset();}
@@ -103,7 +105,8 @@ public:
  bool isSweep()const{return sweepMeasurement;}
  void loadSweepSpectrum(const std::vector<Complex>& values,const std::vector<bool>& valid,double rate){if(values.size()!=activeBins()||valid.size()!=activeBins()||rate<=0)return;reset();rateHz=rate;averages=1;readyFlag=sweepMeasurement=true;for(int k=1;k<activeBins();++k){auto& p=result[(size_t)k];p.frequency=k*rate/activeSize;p.valid=valid[(size_t)k]&&std::isfinite(values[(size_t)k].real())&&std::isfinite(values[(size_t)k].imag());if(!p.valid)continue;transfer[(size_t)k]=values[(size_t)k];p.magnitudeDb=20.*std::log10(std::max(1.e-12,std::abs(transfer[(size_t)k])));p.phaseDegrees=std::arg(transfer[(size_t)k])*180./3.14159265358979323846;p.coherence=0;}rebuildSmoothing();rebuildImpulse();}
  void setDelayMs(double value){if(!std::isfinite(value)||value<0||value>2000)return;if(std::abs(delayMs-value)>1.e-6)pendingAlignmentReset=true;delayMs=value;multi->setDelayMs(value);rebuildSmoothing();rebuildImpulse();}
- void setAverageDepth(int depth){if(depth<1||depth>64||averageDepth==depth)return;averageDepth=depth;readyFlag=averages>=averageDepth;multi->setAverageDepth(depth);}
+ void setAverageDepth(int depth){if(depth<1||depth>64||averageMode==MultiWindowSpectrum::TfAverageMode::Depth&&averageDepth==depth)return;averageDepth=depth;averageMode=MultiWindowSpectrum::TfAverageMode::Depth;averages=0;infiniteWindows=0;readyFlag=false;cross.fill({});refPower.fill(0);micPower.fill(0);multi->setAverageDepth(depth);multi->setTfAverageMode(averageMode);++revisionNumber;}
+ void setAverageMode(MultiWindowSpectrum::TfAverageMode mode){if(averageMode==mode)return;averageMode=mode;averages=0;infiniteWindows=0;readyFlag=false;cross.fill({});refPower.fill(0);micPower.fill(0);multi->setTfAverageMode(mode);++revisionNumber;}
  int averaging()const{return averageDepth;}
  double delay()const{return delayMs;}
  std::optional<double> findDelayMs()const{auto snapshot=delaySnapshot();return snapshot?findDelayMs(*snapshot):std::nullopt;}

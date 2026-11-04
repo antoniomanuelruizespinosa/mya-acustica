@@ -38,6 +38,7 @@ public:
  void setFrozen(bool shouldFreeze);
  void setTraceEnabled(int traceId,bool enabled);
  void clearTraces();
+ void clearLiveTraces();
  void refreshNow();
  void visibilityChanged() override;
  void paint(juce::Graphics& graphics) override;

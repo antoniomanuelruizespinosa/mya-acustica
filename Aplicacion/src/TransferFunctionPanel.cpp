@@ -69,6 +69,7 @@ void TransferFunctionPanel::setDisplayOptions(bool multi,int smooth){if(multiWin
 TransferFunctionPanel::~TransferFunctionPanel(){stopTimer();}
 
 void TransferFunctionPanel::clearTraces(){traces.clear();history.clear();lastUpdateMs=0;phasePane->repaint();magnitudePane->repaint();}
+void TransferFunctionPanel::clearLiveTraces(){traces.erase(std::remove_if(traces.begin(),traces.end(),[](const Trace& trace){return !trace.frozen;}),traces.end());for(auto it=history.begin();it!=history.end();){if(!it->second.frozen)it=history.erase(it);else ++it;}lastUpdateMs=0;phasePane->repaint();magnitudePane->repaint();}
 void TransferFunctionPanel::refreshNow(){if(!frozen)timerCallback();}
 void TransferFunctionPanel::setFrozen(bool shouldFreeze){frozen=shouldFreeze;if(frozen)stopTimer();else{suppressedTraces.clear();if(active&&isShowing()){timerCallback();startTimerHz(30);}}}
 void TransferFunctionPanel::setTraceEnabled(int traceId,bool enabled){if(enabled)suppressedTraces.erase(traceId);else suppressedTraces.insert(traceId);phasePane->repaint();magnitudePane->repaint();}
