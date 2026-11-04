@@ -435,9 +435,9 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
  }
  bool deleteLibraryFolder(const String& id){auto* node=captureLibrary.find(id);if(!node||node->kind!=CaptureLibrary::Kind::Folder)return false;auto physical=documentsFolder(id);if(node->parent.isEmpty())physical=physical.getParentDirectory();auto staged=physical.getSiblingFile(physical.getFileName()+"__eliminando_"+Uuid().toString());bool moved=physical.exists();if(moved&&!physical.moveFileTo(staged)){status="No se pudo preparar el borrado del proyecto en Documentos";return false;}if(!captureLibrary.removeFolder(id)){if(moved)staged.moveFileTo(physical);status=captureLibrary.lastError();return false;}if(moved&&!staged.deleteRecursively())status=juce::String::fromUTF8("Carpeta retirada de la biblioteca; quedó una copia recuperable en Documentos");refreshLibrary();return true;}
  Colour nextCaptureColour()const{
-  std::set<String> used;int count=0;for(const auto& node:captureLibrary.state().nodes)if(node.kind!=CaptureLibrary::Kind::Folder){used.insert(node.colour);++count;}
-  for(int attempt=0;attempt<4096;++attempt){float hue=(float)std::fmod((count+attempt)*0.618033988749895,1.);auto candidate=Colour::fromHSV(hue,.77f,.97f,1.f);if(!used.count(candidate.toString()))return candidate;}
-  return Palette::cyan;
+  static constexpr std::array<juce::uint32,5> colours{{0xff2068d9,0xffe844a5,0xffe94b4b,0xff00d6e5,0xffffdf40}};
+  size_t count=0;for(const auto& node:captureLibrary.state().nodes)if(node.kind!=CaptureLibrary::Kind::Folder)++count;
+  return Colour(colours[count%colours.size()]);
  }
  bool saveMeasuredTrace(int index,const String& name,const String& category,bool sweep){
   if(index<0||(size_t)index>=liveTFs.size()||!liveTFs[(size_t)index].ready())return false;
@@ -747,8 +747,8 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
  var libraryDSPBindings{Array<var>{}};
  void refreshLibrary(){
   savedTraces.reload(captureLibrary);
-  if(dspRecall&&!captureLibrary.find(dspRecall->node.id)){dspRecall.reset();dspImpulse.clear();dspImpulseRate=0.;dspImpulsePeak=1.;}
-  for(auto it=dspLoadedCaptures.begin();it!=dspLoadedCaptures.end();){if(!captureLibrary.find(it->first)){dspConsole.unloadImpulse(it->second);it=dspLoadedCaptures.erase(it);}else ++it;}
+  if(dspRecall){auto* node=captureLibrary.find(dspRecall->node.id);if(!node||!node->visible){dspRecall.reset();dspImpulse.clear();dspImpulseRate=0.;dspImpulsePeak=1.;}}
+  for(auto it=dspLoadedCaptures.begin();it!=dspLoadedCaptures.end();){auto* node=captureLibrary.find(it->first);if(!node||!node->visible){dspConsole.unloadImpulse(it->second);it=dspLoadedCaptures.erase(it);}else ++it;}
   for(auto& id:frontCaptured){auto* n=savedTraces.find(id);if(!n||!n->visible)id.clear();}
   refreshPlotSources();
   if(tfPanel)tfPanel->refreshNow();
