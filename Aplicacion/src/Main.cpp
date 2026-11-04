@@ -471,13 +471,44 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
  }
  void captureTrace(){std::vector<int> active;bool sweep=false;for(size_t i=0;i<liveTFs.size();++i)if(measuring((int)i)&&liveTFs[i].ready()){active.push_back((int)i);sweep=sweep||liveTFs[i].isSweep();}showSaveTrace(active,sweep);}
  void sumSelectedTraces(){
-  auto ids=libraryPanel.selected();if(ids.size()!=2){status="Selecciona exactamente dos capturas TF o Sweep en la lista izquierda.";repaint();return;}
-  auto left=captureLibrary.readTrace(ids[0]),right=captureLibrary.readTrace(ids[1]);if(!left||!right){status="La suma exige dos capturas medidas de respuesta compleja.";repaint();return;}
-  auto combined=CaptureLibrary::vectorSum(*left,*right);if(!combined){status="Las capturas deben ser medidas, compartir Fs y referencia temporal, y solaparse en frecuencia.";repaint();return;}
-  Array<var> samples;for(const auto& sample:*combined){auto* point=new DynamicObject();point->setProperty("frequencyHz",sample.frequency);point->setProperty("real",sample.value.real());point->setProperty("imaginary",sample.value.imag());samples.add(var(point));}
-  auto* data=new DynamicObject();data->setProperty("schema",1);data->setProperty("synthetic",false);data->setProperty("name",left->node.name+" + "+right->node.name);data->setProperty("category","Sum");data->setProperty("acquisitionMethod","vector-sum");data->setProperty("sampleRateHz",left->metadata["sampleRateHz"]);data->setProperty("timeReference",left->metadata["timeReference"]);data->setProperty("measurementDelayMs",left->metadata["measurementDelayMs"]);data->setProperty("sourceLeftId",ids[0]);data->setProperty("sourceRightId",ids[1]);data->setProperty("samples",samples);
-  auto id=captureLibrary.capture(var(data),data->getProperty("name").toString(),nextCaptureColour().toString());if(id.isEmpty()){status=captureLibrary.lastError();repaint();return;}
-  captureLibrary.setView(CaptureLibrary::Kind::SnapshotTF);libraryPanel.refresh();refreshLibrary();frontCaptured[1]=frontCaptured[2]=id;for(int panel:{1,2})plotMic[(size_t)panel].setSelectedId(1,dontSendNotification);if(tfPanel)tfPanel->refreshNow();status="Suma vectorial guardada; coherencia conjunta no disponible sin espectros cruzados.";repaint();
+  if(mode!=0)return;
+  const auto ids=libraryPanel.selected();
+  if(ids.size()!=2){status="Selecciona exactamente dos capturas TF o Sweep en la lista izquierda.";repaint();return;}
+  auto left=captureLibrary.readTrace(ids[0]);
+  auto right=captureLibrary.readTrace(ids[1]);
+  if(!left||!right){status="La suma exige dos capturas medidas de respuesta compleja.";repaint();return;}
+  auto combined=CaptureLibrary::vectorSum(*left,*right);
+  if(!combined){status="Las capturas deben ser medidas, compartir Fs y referencia temporal, y solaparse en frecuencia.";repaint();return;}
+  Array<var> samples;
+  for(const auto& sample:*combined){
+   auto* point=new DynamicObject();
+   point->setProperty("frequencyHz",sample.frequency);
+   point->setProperty("real",sample.value.real());
+   point->setProperty("imaginary",sample.value.imag());
+   samples.add(var(point));
+  }
+  auto* data=new DynamicObject();
+  data->setProperty("schema",1);
+  data->setProperty("synthetic",false);
+  data->setProperty("name","Suma Compleja: "+left->node.name+" + "+right->node.name);
+  data->setProperty("category","Sum");
+  data->setProperty("acquisitionMethod","vector-sum");
+  data->setProperty("sampleRateHz",left->metadata["sampleRateHz"]);
+  data->setProperty("timeReference",left->metadata["timeReference"]);
+  data->setProperty("measurementDelayMs",left->metadata["measurementDelayMs"]);
+  data->setProperty("sourceLeftId",ids[0]);
+  data->setProperty("sourceRightId",ids[1]);
+  data->setProperty("samples",samples);
+  auto id=captureLibrary.capture(var(data),data->getProperty("name").toString(),nextCaptureColour().toString());
+  if(id.isEmpty()){status=captureLibrary.lastError();repaint();return;}
+  captureLibrary.setView(CaptureLibrary::Kind::SnapshotTF);
+  libraryPanel.refresh();
+  refreshLibrary();
+  frontCaptured[1]=frontCaptured[2]=id;
+  for(int panel:{1,2})plotMic[(size_t)panel].setSelectedId(1,dontSendNotification);
+  if(tfPanel)tfPanel->refreshNow();
+  status="Suma vectorial guardada; coherencia conjunta no disponible sin espectros cruzados.";
+  repaint();
  }
  void addMeasurementButton(String name){auto b=std::make_unique<TextButton>(name);addAndMakeVisible(*b);measurementButtons.push_back(std::move(b));}
 
@@ -554,7 +585,7 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
    content->onCalibrate=[safe]{if(safe)safe->startPhysicalLoopCalibration();};content->onReset=[safe]{if(safe)safe->resetPhysicalLoopCalibration();};
   }else{
    content->onDevice=[safe,contentView](int device){if(!safe)return;String key;if(device>0&&(size_t)(device-1)<safe->audioEndpoints.size())key=safe->audioEndpoints[(size_t)device-1].key;if(safe->inputEngine.running()||safe->permissionPending)safe->stopInputs("Tarjeta del generador modificada; salida en silencio.");safe->outputKey=key;safe->outputChannel=0;safe->persistInputs();safe->syncNames();if(auto* endpoint=findEndpoint(safe->audioEndpoints,key))contentView->setGeneratorOutputs(endpoint->outputs,0);else contentView->setGeneratorOutputs({},0);};
-   content->onOutputChannel=[safe,isSweep](int channel){if(!safe)return;auto* endpoint=findEndpoint(safe->audioEndpoints,safe->outputKey);if(!endpoint||channel<0||(channel>endpoint->outputs.size()&&!((channel==InputLevels::maxChannels+1||channel==InputLevels::stereoOutput))))return;if(safe->inputEngine.running()||safe->permissionPending)safe->stopInputs("Salida del generador modificada; salida en silencio.");safe->outputChannel=channel;safe->persistInputs();safe->syncNames();};
+   content->onOutputChannel=[safe](int channel){if(!safe)return;auto* endpoint=findEndpoint(safe->audioEndpoints,safe->outputKey);if(!endpoint||channel<0||(channel>endpoint->outputs.size()&&!((channel==InputLevels::maxChannels+1||channel==InputLevels::stereoOutput))))return;if(safe->inputEngine.running()||safe->permissionPending)safe->stopInputs("Salida del generador modificada; salida en silencio.");safe->outputChannel=channel;safe->persistInputs();safe->syncNames();};
    content->onGeneratorToggle=[safe,isSweep](bool active){if(!safe)return;auto selected=safe->liveTFActive;if(!active){if(std::any_of(selected.begin(),selected.end(),[](bool on){return on;}))safe->beginInputs(0,{},LiveInputEngine::Signal::None,true,selected);else safe->stopInputs(isSweep?"Sweep detenido; salida en silencio.":"Ruido rosa detenido; salida en silencio.");return;}if(isSweep&&std::none_of(selected.begin(),selected.end(),[](bool on){return on;})){safe->status="Activa una TF antes de iniciar Sweep.";safe->refreshLoopOptions();return;}safe->beginInputs(0,{},isSweep?LiveInputEngine::Signal::Sweep:LiveInputEngine::Signal::Pink,true,selected);};
   }
   showAnchored(requestedAnchor?"generator":key,key=="loop"?"Loop Settings":requestedAnchor?"Generador / opciones":key=="pink"?"Pink / opciones":"Sweep / opciones",std::move(content),anchor);refreshLoopOptions();
@@ -739,7 +770,14 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
  void tfGraphSettings(int tab=1,bool toggle=true){if(toggle&&graphWindow&&graphWindow->isVisible()&&graphWindow->selectedTab()==tab){graphWindow->setVisible(false);return;}auto oldBounds=graphWindow?graphWindow->getBounds():Rectangle<int>{};bool en=commands.language==MyaCommands::Language::EN;if(graphWindow&&en!=graphWindowEnglish)graphWindow.reset();graphWindowEnglish=en;if(!graphWindow)graphWindow=std::make_unique<GraphSettingsWindow>(commands.language==MyaCommands::Language::EN,[this]{return tfSettings;},[this](TFDisplayState state){applyTF(state);},[this](int id){commands.invoke(id);},[this]{return irScale;});if(!oldBounds.isEmpty())graphWindow->setBounds(oldBounds.withSizeKeepingCentre(jlimit(600,1100,oldBounds.getWidth()),jlimit(460,850,oldBounds.getHeight())));graphWindow->setLookAndFeel(&floatingLook);graphWindow->toggleMeters=[this]{commands.invoke(203);};graphWindow->select(tab);graphWindow->setVisible(true);graphWindow->toFront(true);attachMyaFloatingWindow(*this,*graphWindow);}
 
  std::optional<double> panelCoherence(double u,int panel) const{auto saved=capturedFront(panel);if(saved.isNotEmpty())return savedTraces.coherence(saved,tfSettings.frequency(u));int index=frontTrace(panel);if(u<0||u>1)return {};if(index==-2){auto p=averagePoint(tfSettings.frequency(u));return p&&p->coherence>0?std::optional<double>(p->coherence):std::nullopt;}if(index<0)return {};if(measuring(index)||displayingFrozen(index)){if(liveTFs[(size_t)index].isSweep())return {};auto p=liveTFs[(size_t)index].at(tfSettings.frequency(u));return p?std::optional<double>(p->coherence):std::nullopt;}if(liveTracesCleared)return {};double sourceU=std::log(tfSettings.frequency(u)/20.)/std::log(1000.);return demoCoherence(sourceU,index);}
- std::optional<double> savedValue(const String& id,double u,int panel){auto c=savedTraces.coherence(id,tfSettings.frequency(u));if(!tfSettings.passes(c))return std::nullopt;int kind=displayType(panel);auto v=savedTraces.value(id,tfSettings.frequency(u),kind,smoothingForPlot(panel-1),0);return v?std::optional<double>(tfSettings.normalize(*v*(kind==1?360.:36.),kind)):std::nullopt;}
+ std::optional<double> savedValue(const String& id,double u,int panel){
+  auto c=savedTraces.coherence(id,tfSettings.frequency(u));
+  auto* trace=savedTraces.find(id);
+  if((!trace||trace->method!="vector-sum")&&!tfSettings.passes(c))return std::nullopt;
+  int kind=displayType(panel);
+  auto v=savedTraces.value(id,tfSettings.frequency(u),kind,smoothingForPlot(panel-1),0);
+  return v?std::optional<double>(tfSettings.normalize(*v*(kind==1?360.:36.),kind)):std::nullopt;
+ }
 
  CaptureLibrary captureLibrary{projectFile.getParentDirectory().getChildFile("Biblioteca")};
  CaptureLibraryPanel libraryPanel{captureLibrary};

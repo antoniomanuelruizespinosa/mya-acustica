@@ -27,7 +27,15 @@ int main(int argc,char** argv){
  assert(reopened.setView(K::Sweep));auto sweepId=reopened.capture(sweep,"Sweep L","ff54ee22");assert(sweepId.isNotEmpty());assert(reopened.find(sweepId)->kind==K::Sweep);auto measured=reopened.readTrace(sweepId);assert(measured);CapturedTraceDisplay cold;cold.reload(reopened);auto recalled=cold.value(sweepId,1000,2,1,0);assert(recalled&&std::abs(*recalled*36-20*std::log10(2.))<1.e-10);
  auto imported=reopened.capture(sweep,"Importada","ff4d88ff",{},false,a);assert(imported.isNotEmpty()&&reopened.find(imported)->parent==a);auto copied=reopened.duplicate(sweepId);assert(copied.isNotEmpty()&&reopened.find(copied)->parent==b&&reopened.readTrace(copied));auto exported=reopened.exportTrace(sweepId,a);assert(exported.existsAsFile()&&exported.getParentDirectory().getParentDirectory()==reopened.folderFile(a));assert(exported.loadFileAsString()==reopened.dataFile(sweepId).loadFileAsString());assert(reopened.remove(copied)&&!reopened.find(copied)&&!reopened.dataFile(copied).existsAsFile());assert(reopened.reload()&&reopened.find(imported)&&reopened.find(sweepId));
  auto same=*measured;auto constructive=CaptureLibrary::vectorSum(*measured,same);assert(constructive&&std::abs(constructive->front().value.real()-4.)<1.e-12);
- for(auto& sample:same.samples)sample.value=-sample.value;auto cancellation=CaptureLibrary::vectorSum(*measured,same);assert(cancellation&&std::abs(cancellation->front().value)<1.e-12);
+ for(auto& sample:same.samples)sample.value={0.,2.};
+ auto quadrature=CaptureLibrary::vectorSum(*measured,same);
+ assert(quadrature);
+ auto h=quadrature->front().value;
+ assert(std::abs(20.*std::log10(std::abs(h))-20.*std::log10(std::sqrt(8.)))<1.e-12);
+ assert(std::abs(std::arg(h)*180./std::acos(-1.)-45.)<1.e-12);
+ for(auto& sample:same.samples)sample.value={-2.,0.};
+ auto cancellation=CaptureLibrary::vectorSum(*measured,same);
+ assert(cancellation&&std::abs(cancellation->front().value)<1.e-12);
  same.metadata=same.metadata.clone();same.metadata.getDynamicObject()->setProperty("measurementDelayMs",1.);assert(!CaptureLibrary::vectorSum(*measured,same));
  assert(reopened.setView(K::SnapshotTF));
  // Failed batch moves do not partially relocate data.
