@@ -111,7 +111,7 @@ inline const std::vector<Command>& catalog(){
   {857,"plot.zoom.arrow.out",{"Ampliar intervalo X","Widen X interval"},"Right",4,{"Gráfica activa","Active plot"},Capability::Demo,{"",""}},
   {858,"plot.pan.up",{"Desplazar arriba","Pan up"},"Up",4,{"Gráfica activa","Active plot"},Capability::Demo,{"",""}},
   {859,"plot.pan.down",{"Desplazar abajo","Pan down"},"Down",4,{"Gráfica activa","Active plot"},Capability::Demo,{"",""}},
-  {900,"library.session.new",{"Nuevo Proyecto","New Project"},"",0,{"Biblioteca","Library"},Capability::Ready,{}},
+  {900,"library.session.new",{"Nueva carpeta de sesión","New Session Folder"},"",0,{"Biblioteca","Library"},Capability::Ready,{}},
   {901,"library.folder.new",{"Nueva Carpeta","New Folder"},"",0,{"Biblioteca","Library"},Capability::Ready,{}},
   {902,"library.rename",{"Renombrar selección","Rename selection"},"",0,{"Biblioteca","Library"},Capability::Ready,{}},
   {903,"library.destination",{"Fijar destino de captura","Pin capture destination"},"",0,{"Biblioteca","Library"},Capability::Ready,{}},
