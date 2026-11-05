@@ -40,6 +40,7 @@ public:
  void clearTraces();
  void clearLiveTraces();
  void refreshNow();
+ void refreshStoredTraces();
  void visibilityChanged() override;
  void paint(juce::Graphics& graphics) override;
  void resized() override;

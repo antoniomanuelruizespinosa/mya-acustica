@@ -472,8 +472,17 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
  void captureTrace(){std::vector<int> active;bool sweep=false;for(size_t i=0;i<liveTFs.size();++i)if(measuring((int)i)&&liveTFs[i].ready()){active.push_back((int)i);sweep=sweep||liveTFs[i].isSweep();}showSaveTrace(active,sweep);}
  void sumSelectedTraces(){
   if(mode!=0)return;
-  const auto ids=libraryPanel.selected();
-  if(ids.size()!=2){status="Selecciona exactamente dos capturas TF o Sweep en la lista izquierda.";repaint();return;}
+  const auto selected=libraryPanel.selected();
+  std::vector<String> visible;
+  for(const auto& id:savedTraces.visible())
+   if(capturedInPanel(id,1)||capturedInPanel(id,2))visible.push_back(id);
+  std::vector<String> ids;
+  for(const auto& id:selected)
+   if(std::find(visible.begin(),visible.end(),id)!=visible.end())ids.push_back(id);
+  if(ids.size()!=2){
+   if(visible.size()==2)ids=visible;
+   else{status="Muestra exactamente dos capturas o selecciona dos de las visibles para sumarlas.";repaint();return;}
+  }
   auto left=captureLibrary.readTrace(ids[0]);
   auto right=captureLibrary.readTrace(ids[1]);
   if(!left||!right){status="La suma exige dos capturas medidas de respuesta compleja.";repaint();return;}
@@ -501,13 +510,15 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
   data->setProperty("samples",samples);
   auto id=captureLibrary.capture(var(data),data->getProperty("name").toString(),nextCaptureColour().toString());
   if(id.isEmpty()){status=captureLibrary.lastError();repaint();return;}
+  if(auto* node=captureLibrary.find(id);node==nullptr||!node->visible){status="No se pudo mostrar la suma en la biblioteca.";repaint();return;}
   captureLibrary.setView(CaptureLibrary::Kind::SnapshotTF);
   libraryPanel.refresh();
   refreshLibrary();
   frontCaptured[1]=frontCaptured[2]=id;
   for(int panel:{1,2})plotMic[(size_t)panel].setSelectedId(1,dontSendNotification);
-  if(tfPanel)tfPanel->refreshNow();
+  if(tfPanel)tfPanel->refreshStoredTraces();
   status="Suma vectorial guardada; coherencia conjunta no disponible sin espectros cruzados.";
+  updateCursorReadout();
   repaint();
  }
  void addMeasurementButton(String name){auto b=std::make_unique<TextButton>(name);addAndMakeVisible(*b);measurementButtons.push_back(std::move(b));}
