@@ -763,9 +763,16 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
  void showCalibration(String key={},int ch=0){
   if(key.isEmpty()){
    int selected=source.getSelectedId()-1;
-   if(selected>=0&&(size_t)selected<tfPresent.size()&&tfPresent[(size_t)selected]){
+   if(selected>=0&&(size_t)selected<tfPresent.size()&&tfPresent[(size_t)selected]&&(size_t)selected<deviceKeys.size()&&(size_t)selected<micInputs.size()){
     key=deviceKeys[(size_t)selected];ch=micInputs[(size_t)selected];
    }else if(auto* c=meterState.primaryCard()){key=c->deviceKey;ch=c->channel;}
+  }
+  if(audioEndpoints.empty())audioEndpoints=discoverAudioEndpoints();
+  auto* endpoint=findEndpoint(audioEndpoints,key);
+  if(!endpoint||ch<1||ch>endpoint->inputs.size()){
+   auto available=std::find_if(audioEndpoints.begin(),audioEndpoints.end(),[](const auto& device){return !device.inputs.isEmpty();});
+   if(available!=audioEndpoints.end()){key=available->key;ch=1;}
+   else{key.clear();ch=0;}
   }
   Component::SafePointer<Workstation> safe(this);
   auto panel=std::make_unique<SplCalibrationPanel>(calibrationStore,calibrationCapture,audioEndpoints,key,ch,
