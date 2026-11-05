@@ -5,6 +5,7 @@
 int main(int argc,char** argv){
  if(argc!=2)return 2;juce::ScopedJuceInitialiser_GUI init;juce::File(juce::String::fromUTF8(MYA_PROJECT_DIRECTORY)).getChildFile("MYA-006-A-fixture").createDirectory();
  if(juce::String::fromUTF8(argv[1])=="--trace-visibility"){WorkstationSurface surface;return surface.station.previewHiddenTraceKeepsAverage()?0:114;}
+ if(juce::String::fromUTF8(argv[1])=="--graph-focus"){WorkstationSurface surface;surface.setSize(1440,960);return surface.station.previewGraphFocus()?0:115;}
  juce::File out(juce::String::fromUTF8(argv[1]));if(!out.createDirectory())return 3;
  auto write=[&](const juce::Image& image,juce::String name){juce::FileOutputStream stream(out.getChildFile(name));if(!stream.openedOk()||!stream.setPosition(0)||!stream.truncate())return false;return juce::PNGImageFormat{}.writeImageToStream(image,stream);};
  if(MyaIdentity::name()!=juce::String::fromUTF8("Mya Acústica Analyzer")||MyaIdentity::brand()+" "+MyaIdentity::descriptor()!=MyaIdentity::name())return 74;

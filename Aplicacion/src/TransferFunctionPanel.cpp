@@ -40,6 +40,8 @@ public:
  void paint(juce::Graphics& g) override{owner.paintPane(g,getLocalBounds().toFloat(),phase);}
  void mouseMove(const juce::MouseEvent& e) override{owner.updatePaneCursor(phase?1:2,e.position,false);}
  void mouseDrag(const juce::MouseEvent& e) override{owner.updatePaneCursor(phase?1:2,e.position,false);}
+ void mouseDown(const juce::MouseEvent&) override{if(owner.onPlotInteracted)owner.onPlotInteracted(phase?1:2,false);}
+ void mouseDoubleClick(const juce::MouseEvent&) override{if(owner.onPlotInteracted)owner.onPlotInteracted(phase?1:2,true);}
  void mouseExit(const juce::MouseEvent&) override{owner.updatePaneCursor(phase?1:2,{},true);}
 private:
  TransferFunctionPanel& owner;
@@ -64,6 +66,7 @@ TransferFunctionPanel::TransferFunctionPanel(DataProvider provider):dataProvider
  phasePane=std::make_unique<PlotPane>(*this,true);magnitudePane=std::make_unique<PlotPane>(*this,false);
  addAndMakeVisible(*phasePane);addAndMakeVisible(*magnitudePane);
  coherenceHandle=std::make_unique<CoherenceHandle>(*this);addAndMakeVisible(*coherenceHandle);
+ phasePane->toFront(true);magnitudePane->toFront(true);coherenceHandle->toFront(false);
 }
 void TransferFunctionPanel::setDisplayOptions(bool multi,int smooth){if(multiWindowMode!=multi){multiWindowMode=multi;if(onResolutionChanged)onResolutionChanged(multi);}smoothingMode=juce::jlimit(1,6,smooth);}
 TransferFunctionPanel::~TransferFunctionPanel(){stopTimer();}
@@ -131,7 +134,8 @@ std::optional<TransferFunctionPanel::Sample> TransferFunctionPanel::sampleAt(int
 void TransferFunctionPanel::resized(){}
 
 void TransferFunctionPanel::setPlotLayout(juce::Rectangle<int> phase,juce::Rectangle<int> magnitude){
- phasePane->setBounds(phase);magnitudePane->setBounds(magnitude);updateCoherenceHandle();
+ phasePane->setBounds(phase);magnitudePane->setBounds(magnitude);
+ phasePane->toFront(true);magnitudePane->toFront(true);updateCoherenceHandle();
 }
 
 void TransferFunctionPanel::setCoherenceDisplay(double thresholdPercent,bool squared,bool visible,double height){

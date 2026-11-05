@@ -59,6 +59,7 @@ public:
  std::function<void(double)> onCoherenceThresholdChanged;
  std::function<void()> onCoherenceThresholdCommitted;
  std::function<void(int,double,std::optional<Sample>)> onCursorMoved;
+ std::function<void(int,bool)> onPlotInteracted;
 
 private:
  class PlotPane;
