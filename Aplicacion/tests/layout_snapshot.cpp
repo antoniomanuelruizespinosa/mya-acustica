@@ -89,6 +89,7 @@ int main(int argc,char** argv){
   panel.previewReference(2);if(!panel.previewBegin()||capture.reference!=114)return 67;panel.previewCancel();if(file.loadFileAsString()!=saved||capture.confirmable())return 68;
   for(auto invalid:{"NaN","94 garbage","181",""}){panel.previewManual(invalid);if(panel.previewBegin()||file.loadFileAsString()!=saved)return 73;}
   panel.previewManual("118.25");if(!panel.previewBegin()||capture.reference!=118.25)return 69;feed(501,501,1.);in.clipped=true;panel.previewRefresh();if(panel.previewSaveEnabled()||file.loadFileAsString()!=saved)return 70;if(!write(panel.createComponentSnapshot(panel.getLocalBounds()),"calibracion-RMS-rechazo-clip-DEMO.png"))return 71;
+  in.clipped=false;if(!panel.previewBegin())return 74;feed(502,551,.01);feed(552,601,.02);panel.previewRefresh();if(capture.state!=RmsCalibration::Session::State::Invalid||!panel.previewTelemetry().contains("RECHAZADA: diferencia RMS")||!panel.previewTelemetry().contains("6,021 dB")&&!panel.previewTelemetry().contains("6.021 dB"))return 75;
   if(plays||changes==0)return 72;
  }
  // Separate, explicitly synthetic visual fixture. Never delivered to the application's meters.
