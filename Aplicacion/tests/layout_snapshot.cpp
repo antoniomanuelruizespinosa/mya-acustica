@@ -4,6 +4,7 @@
 #include <iostream>
 int main(int argc,char** argv){
  if(argc!=2)return 2;juce::ScopedJuceInitialiser_GUI init;juce::File(juce::String::fromUTF8(MYA_PROJECT_DIRECTORY)).getChildFile("MYA-006-A-fixture").createDirectory();
+ if(juce::String::fromUTF8(argv[1])=="--trace-visibility"){WorkstationSurface surface;return surface.station.previewHiddenTraceKeepsAverage()?0:114;}
  juce::File out(juce::String::fromUTF8(argv[1]));if(!out.createDirectory())return 3;
  auto write=[&](const juce::Image& image,juce::String name){juce::FileOutputStream stream(out.getChildFile(name));if(!stream.openedOk()||!stream.setPosition(0)||!stream.truncate())return false;return juce::PNGImageFormat{}.writeImageToStream(image,stream);};
  if(MyaIdentity::name()!=juce::String::fromUTF8("Mya Acústica Analyzer")||MyaIdentity::brand()+" "+MyaIdentity::descriptor()!=MyaIdentity::name())return 74;
@@ -103,6 +104,7 @@ int main(int argc,char** argv){
  {WorkstationSurface surface;if(!surface.station.previewRefreshAndGenerator())return 90;}
  {WorkstationSurface surface;if(!surface.station.previewTraceRemoval())return 85;}
  {WorkstationSurface surface;if(!surface.station.previewIndexAndAverages())return 113;}
+ {WorkstationSurface surface;if(!surface.station.previewHiddenTraceKeepsAverage())return 114;}
  {std::vector<bool> accepted;juce::StringArray names{"MIC 1 / TF 1","MIC 2 / TF 2","MIC 3 / TF 3","MIC 4 / TF 4"};AverageTFDialog dialog(names,{true,false,true,false},[&](std::vector<bool> selection){accepted=std::move(selection);});
    if(!write(dialog.createComponentSnapshot(dialog.getLocalBounds()),"create-average-tf.png"))return 89;
    auto button=[&](juce::String name)->juce::Button*{for(auto* child:dialog.getChildren())if(auto* b=dynamic_cast<juce::Button*>(child))if(b->getButtonText()==name)return b;return nullptr;};
