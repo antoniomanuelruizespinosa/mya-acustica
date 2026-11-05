@@ -711,8 +711,11 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
   if(selectedTF<0||(size_t)selectedTF>=active.size()||!active[(size_t)selectedTF]){selectedTF=-1;for(size_t i=0;i<active.size();++i)if(active[i]){selectedTF=(int)i;break;}}
   std::vector<InputLevels::Source> observers;
   auto observesDevice=[&](const String& key){if(signal==LiveInputEngine::Signal::None)return true;if(outputKey.isNotEmpty())return key==outputKey;return selectedTF>=0&&key==deviceKeys[(size_t)selectedTF];};
-  for(auto* model:meterModels())for(const auto& c:model->state().cards)if(c.deviceKey.isNotEmpty()&&c.channel>0&&observesDevice(c.deviceKey))observers.push_back({c.deviceKey.toStdString(),c.channel});
-  if(extra)observers.push_back(*extra);for(const auto& monitor:ioMonitorSources)if(observesDevice(String::fromUTF8(monitor.device.c_str())))observers.push_back(monitor);
+  if(extra)observers.push_back(*extra);
+  else{
+   for(auto* model:meterModels())for(const auto& c:model->state().cards)if(c.deviceKey.isNotEmpty()&&c.channel>0&&observesDevice(c.deviceKey))observers.push_back({c.deviceKey.toStdString(),c.channel});
+   for(const auto& monitor:ioMonitorSources)if(observesDevice(String::fromUTF8(monitor.device.c_str())))observers.push_back(monitor);
+  }
   auto plan=InputLevels::plan(chosen.allRoutes(),active,observers,LiveInputEngine::catalog(audioEndpoints),virtualRef||measurementView==2);
   String loopDevice;String configuredOutputKey=outputKey;int configuredOutput=outputChannel;
   if(signal==LiveInputEngine::Signal::Pink){
@@ -781,6 +784,8 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
    [safe](const SplCalibrationStore::Record& record){if(!safe)return false;auto generation=safe->inputEngine.generation();if(!safe->pollCalibration()||generation!=safe->inputEngine.generation()||!safe->inputEngine.channel(record.deviceKey.toStdString(),record.channel).valid||safe->inputEngine.rmsClip(record.deviceKey.toStdString(),record.channel)){safe->calibrationCapture.fail("Entrada no valida al confirmar");return false;}if(!safe->inputEngine.caughtUp(record.deviceKey.toStdString())){safe->status="Datos pendientes; vuelve a confirmar";return false;}auto finalRecord=record;finalRecord.range=safe->calibrationCapture.maximum-safe->calibrationCapture.minimum;if(!safe->calibrationStore.confirm(finalRecord,safe->calibrationCapture))return false;safe->calibrationCapture.confirmed();safe->invalidateCalibration(record.deviceKey,record.channel);safe->syncNames();return true;},
    [safe](String k,int c){if(safe)safe->invalidateCalibration(k,c);});
   panel->onCancel=[safe]{if(safe)safe->commands.invoke(602);};showDrawer("spl-calibration","Calibracion SPL RMS",std::move(panel));
+  if(key.isNotEmpty()&&ch>0&&!permissionPending&&(!inputEngine.running()||!inputEngine.displayChannel(key.toStdString(),ch).valid))
+   beginInputs(0,InputLevels::Source{key.toStdString(),ch});
  }
  void deferredCalibration(String key={},int ch=0){Component::SafePointer<Workstation> safe(this);MessageManager::callAsync([safe,key,ch]{if(safe)safe->showCalibration(key,ch);});}
  void inputRoutesChanged(){if(inputEngine.running()||permissionPending)stopInputs("Ruta modificada. Pulsa Play para abrir las entradas seleccionadas.");inputEngine.setReferenceGainDb(0);loopCalMessage.clear();refreshLoopOptions();persistInputs();}
