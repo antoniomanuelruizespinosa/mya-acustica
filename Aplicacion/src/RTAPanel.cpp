@@ -26,7 +26,7 @@ RTAPanel::RTAPanel(DataProvider provider):dataProvider(std::move(provider)){
  microphoneChoice.setTextWhenNothingSelected("Micro");microphoneChoice.onChange=[this]{spectrogramTraceId=-1;spectrogramHistory.clear();spectrogramImage={};spectrogramDirty=true;++spectrogramGeneration;cursorVisible=false;cursorReading.clear();publishCursor();repaint();};addAndMakeVisible(microphoneChoice);
  peakTracker.setTooltip("Seguir el pico de nivel entre 20 Hz y Nyquist de la traza seleccionada");peakTracker.onClick=[this]{if(cursorVisible&&peakTracker.getToggleState())if(auto* trace=selectedTrace()){int index=peakIndex(*trace);if(index>=0)updateCursor(*trace,plotArea(),index);}repaint();};addAndMakeVisible(peakTracker);vblank=juce::VBlankAttachment(this,[this](double timestamp){presentFrame(timestamp);});resized();
 }
-RTAPanel::~RTAPanel(){stopTimer();vblank={};if(pendingSpectrogram.valid())pendingSpectrogram.wait();}
+RTAPanel::~RTAPanel(){stopTimer();vblank={};cancelPendingUpdate();if(pendingSpectrogram.valid())pendingSpectrogram.wait();}
 
 void RTAPanel::setDisplayOptions(bool multi,int smooth){if(multiWindowMode!=multi){multiWindowMode=multi;if(onResolutionChanged)onResolutionChanged(multi);}smoothingMode=juce::jlimit(1,7,smooth);smoothingChoiceBox.setSelectedId(smoothingMode,juce::dontSendNotification);repaint();}
 void RTAPanel::setWindowCount(int count){if(count==1||count==2)windowCount.setSelectedId(count,juce::sendNotificationSync);}
@@ -34,7 +34,7 @@ void RTAPanel::setTemporalModeChoice(int choice){if(choice<1||choice>9||choice==
 void RTAPanel::updateComponentLanguage(bool spanish){spanishLanguage=spanish;windowCount.changeItemText(1,spanish?"1 Ventana":"1 Window");windowCount.changeItemText(2,spanish?"2 Ventanas":"2 Windows");bandedStyle.changeItemText(1,spanish?"Barras":"Bar");bandedStyle.changeItemText(2,spanish?juce::String::fromUTF8("Líneas"):"Line");bandedStyle.changeItemText(3,spanish?"Ambas":"Both");bandedStyle.changeItemText(4,"3D");smoothingChoiceBox.changeItemText(1,spanish?"Ninguno":"No Banding");smoothingChoiceBox.changeItemText(7,spanish?"Octava":"Octave");microphoneChoice.setTextWhenNothingSelected(spanish?juce::String::fromUTF8("Micrófono"):"Microphone");peakTracker.setButtonText(spanish?"Seguir pico":"Peak Tracker");refreshMicrophoneChoices();repaint();}
 void RTAPanel::setLineThickness(float pixels){lineThickness=juce::jlimit(1.f,4.f,pixels);repaint();}
 void RTAPanel::setFrozen(bool shouldFreeze){frozen=shouldFreeze;if(frozen)stopTimer();}
-void RTAPanel::clearTraces(){traces.clear();spectrogramHistory.clear();spectrogramImage={};spectrogramDirty=true;++spectrogramGeneration;spectrogramHead=0;spectrogramTraceId=-1;lastUpdateMs=0;cursorVisible=false;cursorReading.clear();microphoneSignature.clear();microphoneChoice.clear(juce::dontSendNotification);publishCursor();repaint();}
+void RTAPanel::clearTraces(){traces.clear();displayTraces.clear();spectrogramHistory.clear();spectrogramImage={};spectrogramDirty=true;++spectrogramGeneration;spectrogramHead=0;spectrogramTraceId=-1;lastPresentationMs=0;cursorVisible=false;cursorReading.clear();microphoneSignature.clear();microphoneChoice.clear(juce::dontSendNotification);publishCursor();repaint();}
 void RTAPanel::setActive(bool active){if(frozen){stopTimer();return;}if(active&&!isTimerRunning()){timerCallback();startTimerHz(30);}else if(!active){stopTimer();clearTraces();}}
 void RTAPanel::visibilityChanged(){if(!isShowing())stopTimer();}
 juce::Rectangle<int> RTAPanel::plotArea()const{auto bounds=getLocalBounds().withTrimmedLeft(44).withTrimmedRight(8).withTrimmedTop(42).withTrimmedBottom(42);if(windowCount.getSelectedId()==2)bounds.setHeight(juce::jmax(1,(bounds.getHeight()-8)/2));return bounds;}
@@ -67,22 +67,11 @@ void RTAPanel::updateCursor(const Trace& trace,juce::Rectangle<int> area,double 
 void RTAPanel::timerCallback(){
  if(frozen)return;
  auto incoming=dataProvider?dataProvider():std::vector<Trace>{};if(incoming.empty()){if(!traces.empty()||!spectrogramHistory.empty())clearTraces();return;}
- const double now=juce::Time::getMillisecondCounterHiRes();
- const double dt=lastUpdateMs>0.?juce::jlimit(0.,.25,(now-lastUpdateMs)/1000.):0.;
- lastUpdateMs=now;
  const auto rawSpectrum=incoming.front().dbfs;
- if(temporalMode==2||temporalMode==3){
-  const double tau=temporalMode==2?.11:.38;
-  const double retention=std::exp(-dt/tau);
-  for(auto& current:incoming)for(const auto& previous:traces)if(previous.id==current.id&&previous.dbfs.size()==current.dbfs.size()){
-   for(size_t i=0;i<current.dbfs.size();++i){auto& value=current.dbfs[i];const float old=previous.dbfs[i];if(std::isfinite(value)&&std::isfinite(old)&&value<old)value=(float)(value+(old-value)*retention);}
-   break;
-  }
- }
  traces=std::move(incoming);refreshMicrophoneChoices();
- if(const auto* chosen=selectedTrace()){if(spectrogramTraceId!=chosen->id){spectrogramHistory.clear();spectrogramHead=0;spectrogramTraceId=chosen->id;++spectrogramGeneration;}if(!rawSpectrum.empty()){if(spectrogramHistory.size()<spectrogramRows)spectrogramHistory.push_back(rawSpectrum);else{spectrogramHistory[spectrogramHead]=rawSpectrum;spectrogramHead=(spectrogramHead+1)%spectrogramRows;}spectrogramDirty=true;updateSpectrogramImage();}if(cursorVisible&&peakTracker.getToggleState()){int index=peakIndex(*chosen);if(index>=0)updateCursor(*chosen,plotArea(),index);}}
+ if(const auto* chosen=selectedTrace()){if(spectrogramTraceId!=chosen->id){spectrogramHistory.clear();spectrogramHead=0;spectrogramTraceId=chosen->id;++spectrogramGeneration;}if(!rawSpectrum.empty()){if(spectrogramHistory.size()<spectrogramRows)spectrogramHistory.push_back(rawSpectrum);else{spectrogramHistory[spectrogramHead]=rawSpectrum;spectrogramHead=(spectrogramHead+1)%spectrogramRows;}spectrogramDirty=true;triggerAsyncUpdate();}if(cursorVisible&&peakTracker.getToggleState()){int index=peakIndex(*chosen);if(index>=0)updateCursor(*chosen,plotArea(),index);}}
 }
-void RTAPanel::resized(){peakTracker.setBounds(juce::jmax(8,getWidth()-114),8,104,23);windowCount.setBounds(juce::jmax(8,getWidth()-236),8,114,23);bandedStyle.setBounds(juce::jmax(8,getWidth()-342),8,100,23);microphoneChoice.setBounds(juce::jmax(8,getWidth()-480),8,130,23);auto plot=plotArea();smoothingChoiceBox.setBounds(plot.getRight()-112,plot.getBottom()-26,108,22);spectrogramDirty=true;++spectrogramGeneration;updateSpectrogramImage();repaint();}
+void RTAPanel::resized(){peakTracker.setBounds(juce::jmax(8,getWidth()-114),8,104,23);windowCount.setBounds(juce::jmax(8,getWidth()-236),8,114,23);bandedStyle.setBounds(juce::jmax(8,getWidth()-342),8,100,23);microphoneChoice.setBounds(juce::jmax(8,getWidth()-480),8,130,23);auto plot=plotArea();smoothingChoiceBox.setBounds(plot.getRight()-112,plot.getBottom()-26,108,22);spectrogramDirty=true;++spectrogramGeneration;triggerAsyncUpdate();repaint();}
 void RTAPanel::mouseMove(const juce::MouseEvent& event){auto p=plotArea();if(!p.contains(event.getPosition())){mouseExit(event);return;}const auto* chosen=selectedTrace();cursorVisible=false;cursorReading.clear();if(chosen&&chosen->dbfs.size()>1){double index=juce::jlimit(0.0,(double)chosen->dbfs.size()-1.0,(double)(event.position.x-p.getX())*(double)(chosen->dbfs.size()-1)/(double)p.getWidth());if(peakTracker.getToggleState())index=peakIndex(*chosen);if(index>=0){cursorVisible=true;updateCursor(*chosen,p,index);}}else publishCursor();repaint();}
 void RTAPanel::mouseExit(const juce::MouseEvent&){cursorVisible=false;cursorReading.clear();publishCursor();repaint();}
 void RTAPanel::mouseDown(const juce::MouseEvent& event){
@@ -100,8 +89,9 @@ void RTAPanel::dragLimitTo(float y){
  double value=std::round(-120.*juce::jlimit(0.f,1.f,(y-area.getY())/(float)area.getHeight()));
  if(draggedLimit==DragLimit::Upper)upperLimit=juce::jlimit(lowerLimit+1.,0.,value);
  else if(draggedLimit==DragLimit::Lower)lowerLimit=juce::jlimit(-120.,upperLimit-1.,value);
- spectrogramDirty=true;repaint();
+ spectrogramDirty=true;triggerAsyncUpdate();repaint();
 }
+void RTAPanel::handleAsyncUpdate(){updateSpectrogramImage();}
 void RTAPanel::updateSpectrogramImage(){
  if(!spectrogramDirty||pendingSpectrogram.valid())return;
  if(spectrogramHistory.empty()||spectrogramHistory.front().empty()){spectrogramImage={};spectrogramDirty=false;return;}
@@ -136,8 +126,23 @@ void RTAPanel::presentFrame(double){
  if(pendingSpectrogram.valid()&&pendingSpectrogram.wait_for(std::chrono::seconds(0))==std::future_status::ready){
   auto ready=pendingSpectrogram.get();if(ready.first==spectrogramGeneration)spectrogramImage=std::move(ready.second);
  }
- updateSpectrogramImage();
- if(isShowing())repaint();
+ if(spectrogramDirty&&!pendingSpectrogram.valid())triggerAsyncUpdate();
+ if(!isShowing())return;
+ const double now=juce::Time::getMillisecondCounterHiRes();
+ const double dt=lastPresentationMs>0.?juce::jlimit(0.,.25,(now-lastPresentationMs)/1000.):0.;
+ lastPresentationMs=now;
+ if(!frozen){
+  std::vector<Trace> next=traces;
+  if(temporalMode==2||temporalMode==3){
+   const double retention=std::exp(-dt/(temporalMode==2?.11:.38));
+   for(auto& current:next)for(const auto& previous:displayTraces)if(previous.id==current.id&&previous.dbfs.size()==current.dbfs.size()){
+    for(size_t i=0;i<current.dbfs.size();++i){auto& value=current.dbfs[i];const float old=previous.dbfs[i];if(std::isfinite(value)&&std::isfinite(old)&&value<old)value=(float)(value+(old-value)*retention);}
+    break;
+   }
+  }
+  displayTraces=std::move(next);
+ }
+ repaint();
 }
 void RTAPanel::paint(juce::Graphics& g){
  using namespace juce;const Colour plot(0xff080a0c),line(0xff626e78),muted(0xffa9bac8),green(0xff54ee22),orange(0xffffac24);auto bounds=getLocalBounds();g.fillAll(plot);auto p=plotArea();if(p.isEmpty())return;
@@ -152,7 +157,7 @@ void RTAPanel::paint(juce::Graphics& g){
  g.setColour(line);g.drawRect(p);
  for(int db=-120;db<=0;db+=20){float y=(float)(p.getBottom()-(db+120.)/120.*p.getHeight());g.setColour(line.withAlpha(.55f));g.drawHorizontalLine((int)y,(float)p.getX(),(float)p.getRight());g.setColour(muted);g.setFont(10.f);g.drawText(String(db),5,(int)y-9,43,18,Justification::centredLeft);}
  for(double hz:PlotPresentation::frequencyTicks){float x=(float)(p.getX()+std::log(hz/20.)/std::log(1000.)*p.getWidth());g.setColour(line.withAlpha(.45f));g.drawVerticalLine((int)x,(float)p.getY(),(float)p.getBottom());g.setColour(muted);g.setFont(10.f);g.drawText(hz>=1000?String(hz/1000.,hz==1000?0:1)+"k":String(hz,0),(int)x-24,p.getBottom()+5,48,18,Justification::centred);}
- for(const auto& trace:traces){
+ for(const auto& trace:displayTraces.empty()?traces:displayTraces){
   if(microphoneChoice.getSelectedId()>0&&trace.id!=microphoneChoice.getSelectedId()-1)continue;
   if(trace.dbfs.size()<2)continue;
   const int divisions=bandDivisions(smoothingMode);

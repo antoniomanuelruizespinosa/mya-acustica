@@ -5,7 +5,7 @@
 #include <map>
 #include <vector>
 
-class RTAPanel : public juce::Component, private juce::Timer {
+class RTAPanel : public juce::Component, private juce::Timer, private juce::AsyncUpdater {
 public:
  struct Trace { int id=-1; juce::String name; juce::Colour colour; bool selected = false; double nyquistHz=20000.; std::vector<float> dbfs; };
  using DataProvider = std::function<std::vector<Trace>()>;
@@ -37,6 +37,7 @@ public:
  std::function<void(juce::String)> onCursorReadout;
 private:
  void timerCallback() override;
+ void handleAsyncUpdate() override;
  juce::Rectangle<int> plotArea() const;
  juce::Rectangle<int> spectrogramArea() const;
  const Trace* selectedTrace() const;
@@ -49,6 +50,7 @@ private:
  void dragLimitTo(float y);
  DataProvider dataProvider;
  std::vector<Trace> traces;
+ std::vector<Trace> displayTraces;
  juce::ComboBox windowCount;
  juce::ComboBox bandedStyle;
  juce::ComboBox smoothingChoiceBox,microphoneChoice;
@@ -71,7 +73,7 @@ private:
  bool multiWindowMode=true;
  int smoothingMode=2;
  int temporalMode=2;
- double lastUpdateMs=0;
+ double lastPresentationMs=0;
  float lineThickness=2.f;
  bool spanishLanguage=true;
  bool frozen=false;
