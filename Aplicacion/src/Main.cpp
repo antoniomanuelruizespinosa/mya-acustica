@@ -761,7 +761,12 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
  void invalidateCalibration(const String& key,int ch){for(auto* model:meterModels())model->invalidateRms(key,ch);}
  void closeCalibration(){if(drawerKey=="spl-calibration"&&(calibrationCapture.state==RmsCalibration::Session::State::Measuring||calibrationCapture.state==RmsCalibration::Session::State::Ready))calibrationCapture.cancel();}
  void showCalibration(String key={},int ch=0){
-  if(key.isEmpty())if(auto* c=meterState.primaryCard()){key=c->deviceKey;ch=c->channel;}
+  if(key.isEmpty()){
+   int selected=source.getSelectedId()-1;
+   if(selected>=0&&(size_t)selected<tfPresent.size()&&tfPresent[(size_t)selected]){
+    key=deviceKeys[(size_t)selected];ch=micInputs[(size_t)selected];
+   }else if(auto* c=meterState.primaryCard()){key=c->deviceKey;ch=c->channel;}
+  }
   Component::SafePointer<Workstation> safe(this);
   auto panel=std::make_unique<SplCalibrationPanel>(calibrationStore,calibrationCapture,audioEndpoints,key,ch,
    [safe](const String& k,int c){return safe?safe->calibrationSnapshot(k,c):CalibrationInputSnapshot{};},
@@ -919,7 +924,7 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
  #endif
  std::array<String,4> oldKeys{{deviceKeys[0],deviceKeys[1],deviceKeys[2],deviceKeys[3]}};std::array<int,4> oldMic{{micInputs[0],micInputs[1],micInputs[2],micInputs[3]}},oldRef{{refInputs[0],refInputs[1],refInputs[2],refInputs[3]}};
  auto panel=std::make_unique<RoutingPanel>(audioEndpoints,names,oldKeys,oldMic,oldRef,outputKey,outputChannel,[safe](int i){return safe?safe->traceSwitch[(size_t)i].colour:Palette::muted;},[safe](int i,String name,String key,int mic,int ref){if(safe){auto k=(size_t)i;safe->micNames[k].setText(name.trim().isEmpty()?"TF "+String(i+1):name,dontSendNotification);bool changed=safe->deviceKeys[k]!=key||safe->micInputs[k]!=mic||safe->refInputs[k]!=ref;safe->deviceKeys[k]=key;safe->micInputs[k]=mic;safe->refInputs[k]=ref;if(changed)safe->inputRoutesChanged();safe->syncNames();}},[safe](String key,int channel){if(safe){bool changed=safe->outputKey!=key||safe->outputChannel!=channel;if(changed&&(safe->inputEngine.running()||safe->permissionPending))safe->stopInputs("Salida modificada; audio detenido.");safe->outputKey=key;safe->outputChannel=channel;if(changed){safe->inputEngine.setReferenceGainDb(0);safe->loopCalMessage.clear();safe->persistInputs();}safe->syncNames();safe->refreshLoopOptions();}});
- panel->calibrateRequested=[this]{int i=source.getSelectedId()-1;if(i>=0&&i<4)deferredCalibration(deviceKeys[(size_t)i],micInputs[(size_t)i]);else deferredCalibration();};panel->layoutChanged=[safe]{if(safe)safe->positionDrawer();};routingStatusPanel=panel.get();refreshRoutingStatus();showDrawer("audio","Measurement Configuration",std::move(panel));}
+ panel->calibrateRequested=[this]{int i=source.getSelectedId()-1;if(i>=0&&(size_t)i<tfPresent.size()&&tfPresent[(size_t)i])deferredCalibration(deviceKeys[(size_t)i],micInputs[(size_t)i]);else deferredCalibration();};panel->layoutChanged=[safe]{if(safe)safe->positionDrawer();};routingStatusPanel=panel.get();refreshRoutingStatus();showDrawer("audio","Measurement Configuration",std::move(panel));}
 
  void info(String title,String body){AlertWindow::showMessageBoxAsync(MessageBoxIconType::InfoIcon,title,body,"Cerrar");}
  void showUpdateResult(MyaUpdate::Result result,bool manual){
