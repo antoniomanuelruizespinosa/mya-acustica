@@ -1657,6 +1657,7 @@ class MainWindow : public DocumentWindow {
  Workstation* workstation=nullptr;
  ApplicationProperties& preferences;
  bool readyToPersist=false;
+ bool restoringNativeFullScreen=false;
  static bool coversDisplay(Rectangle<int> bounds){
   if(bounds.isEmpty())return false;
   auto* display=Desktop::getInstance().getDisplays().getDisplayForRect(bounds);
@@ -1668,6 +1669,11 @@ class MainWindow : public DocumentWindow {
       && std::abs(bounds.getY()-area.getY())<=80;
  }
  void saveUiState(){
+  if(restoringNativeFullScreen){
+   if(!isFullScreen())return;
+   restoringNativeFullScreen=false;
+   readyToPersist=true;
+  }
   if(!readyToPersist)return;
   if(auto* properties=preferences.getUserSettings()){
    properties->setValue("window.bounds",getBounds().toString());
@@ -1687,22 +1693,39 @@ public:
  // All menus are retained in the chevron overlay on Windows.
  #endif
  setResizable(true,false);setResizeLimits(1120,900,3000,2000);
+ }
+ void showRestored(std::function<void()> onReady){
  bool restored=false;
- bool wasMaximized=false;
+ bool nativeFullScreen=false;
  if(auto* properties=preferences.getUserSettings()){
   auto state=properties->getValue("window.state");
-  if(state.isNotEmpty())restored=restoreWindowStateFromString(state);
   auto bounds=Rectangle<int>::fromString(properties->getValue("window.bounds"));
+  nativeFullScreen=properties->getBoolValue("window.fullScreen",state.startsWithIgnoreCase("fs "));
+  const bool maximized=properties->getBoolValue("isWindowMaximized",nativeFullScreen||coversDisplay(bounds));
+  if(maximized||nativeFullScreen){
+   auto* display=Desktop::getInstance().getDisplays().getDisplayForRect(bounds.isEmpty()?getBounds():bounds);
+   if(!display)display=Desktop::getInstance().getDisplays().getPrimaryDisplay();
+   if(display){setBounds(display->userArea);restored=true;}
+  }else if(state.isNotEmpty()&&!state.startsWithIgnoreCase("fs "))restored=restoreWindowStateFromString(state);
   if(!restored&&!bounds.isEmpty()){setBounds(bounds);restored=true;}
-  wasMaximized=properties->getBoolValue("isWindowMaximized",
-      properties->getBoolValue("window.fullScreen",false)||coversDisplay(bounds));
-  if(wasMaximized)setFullScreen(true);
-  // The administrator's saved layout is applied after all child components exist.
+  // Apply the administrator's rack dimensions after the native peer and window bounds exist.
   workstation->restoreUiLayout(*properties);
  }
- if(!restored&&!wasMaximized)centreWithSize(1440,960);
- setVisible(true);readyToPersist=true;workstation->onUiLayoutChanged=[this]{saveUiState();};
- installMyaNativeTitleBrand(*this);workstation->grabKeyboardFocus();}
+ if(!restored)centreWithSize(1440,960);
+ const auto restoredBounds=getBounds();
+ restoringNativeFullScreen=nativeFullScreen;
+ setVisible(true);workstation->onUiLayoutChanged=[this]{saveUiState();};
+ installMyaNativeTitleBrand(*this);workstation->grabKeyboardFocus();
+ Component::SafePointer<MainWindow> safe(this);
+ MessageManager::callAsync([safe,restoredBounds,nativeFullScreen,onReady=std::move(onReady)]{
+  if(!safe)return;
+  if(safe->getBounds()!=restoredBounds)safe->setBounds(restoredBounds);
+  if(auto* properties=safe->preferences.getUserSettings())safe->workstation->restoreUiLayout(*properties);
+  if(nativeFullScreen)safe->setFullScreen(true);
+  safe->readyToPersist=!nativeFullScreen;
+  if(onReady)onReady();
+ });
+ }
  ~MainWindow()override{
  saveUiState();
  preferences.saveIfNeeded();
@@ -1722,7 +1745,7 @@ class MyaApp:public JUCEApplication {
  ApplicationProperties preferences;
 public:
  const String getApplicationName()override{return MyaIdentity::name();}const String getApplicationVersion()override{return MyaIdentity::version();}
- void initialise(const String&)override{PropertiesFile::Options options;options.applicationName="Mya Acustica";options.filenameSuffix=".settings";options.folderName="Mya Acustica";options.osxLibrarySubFolder="Application Support";preferences.setStorageParameters(options);startup=std::make_unique<MyaStartupWindow>(true);auto token=alive;MessageManager::callAsync([this,token]{if(!*token)return;window=std::make_unique<MainWindow>(preferences);startup.reset();window->checkForUpdates();});}
+ void initialise(const String&)override{PropertiesFile::Options options;options.applicationName="Mya Acustica";options.filenameSuffix=".settings";options.folderName="Mya Acustica";options.osxLibrarySubFolder="Application Support";preferences.setStorageParameters(options);startup=std::make_unique<MyaStartupWindow>(true);auto token=alive;MessageManager::callAsync([this,token]{if(!*token)return;window=std::make_unique<MainWindow>(preferences);MessageManager::callAsync([this,token]{if(!*token||!window)return;window->showRestored([this,token]{if(!*token||!window)return;startup.reset();window->checkForUpdates();});});});}
  void shutdown()override{*alive=false;startup.reset();window.reset();preferences.saveIfNeeded();}
 };
 
