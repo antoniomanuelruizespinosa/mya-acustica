@@ -512,14 +512,18 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
   if(id.isEmpty()){status=captureLibrary.lastError();repaint();return;}
   if(auto* node=captureLibrary.find(id);node==nullptr||!node->visible){status="No se pudo mostrar la suma en la biblioteca.";repaint();return;}
   captureLibrary.setView(CaptureLibrary::Kind::SnapshotTF);
-  libraryPanel.refresh();
-  refreshLibrary();
-  frontCaptured[1]=frontCaptured[2]=id;
-  for(int panel:{1,2})plotMic[(size_t)panel].setSelectedId(1,dontSendNotification);
-  if(tfPanel)tfPanel->refreshStoredTraces();
-  status="Suma vectorial guardada; coherencia conjunta no disponible sin espectros cruzados.";
-  updateCursorReadout();
-  repaint();
+  Component::SafePointer<Workstation> safe(this);
+  MessageManager::callAsync([safe,id]{
+   if(!safe||safe->mode!=0)return;
+   safe->libraryPanel.refresh();
+   safe->refreshLibrary();
+   safe->frontCaptured[1]=safe->frontCaptured[2]=id;
+   for(int panel:{1,2})safe->plotMic[(size_t)panel].setSelectedId(1,dontSendNotification);
+   if(safe->tfPanel){safe->tfPanel->refreshStoredTraces();safe->tfPanel->repaint();}
+   safe->status="Suma vectorial guardada; coherencia conjunta no disponible sin espectros cruzados.";
+   safe->updateCursorReadout();
+   safe->repaint();
+  });
  }
  void addMeasurementButton(String name){auto b=std::make_unique<TextButton>(name);addAndMakeVisible(*b);measurementButtons.push_back(std::move(b));}
 

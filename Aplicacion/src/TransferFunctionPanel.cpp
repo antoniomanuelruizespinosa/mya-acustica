@@ -77,6 +77,7 @@ void TransferFunctionPanel::refreshStoredTraces(){
  if(dataProvider)for(auto& trace:dataProvider())if(trace.frozen)traces.push_back(std::move(trace));
  phasePane->repaint();
  magnitudePane->repaint();
+ repaint();
 }
 void TransferFunctionPanel::setFrozen(bool shouldFreeze){frozen=shouldFreeze;if(frozen)stopTimer();else{suppressedTraces.clear();if(active&&isShowing()){timerCallback();startTimerHz(30);}}}
 void TransferFunctionPanel::setTraceEnabled(int traceId,bool enabled){if(enabled)suppressedTraces.erase(traceId);else suppressedTraces.insert(traceId);phasePane->repaint();magnitudePane->repaint();}
