@@ -68,7 +68,7 @@ TransferFunctionPanel::TransferFunctionPanel(DataProvider provider):dataProvider
  coherenceHandle=std::make_unique<CoherenceHandle>(*this);addAndMakeVisible(*coherenceHandle);
  phasePane->toFront(true);magnitudePane->toFront(true);coherenceHandle->toFront(false);
 }
-void TransferFunctionPanel::setDisplayOptions(bool multi,int smooth){if(multiWindowMode!=multi){multiWindowMode=multi;if(onResolutionChanged)onResolutionChanged(multi);}smoothingMode=juce::jlimit(1,6,smooth);}
+void TransferFunctionPanel::setDisplayOptions(bool multi,int smooth){if(multiWindowMode!=multi){multiWindowMode=multi;if(onResolutionChanged)onResolutionChanged(multi);}smoothingMode=juce::jlimit(1,7,smooth);}
 TransferFunctionPanel::~TransferFunctionPanel(){stopTimer();}
 
 void TransferFunctionPanel::clearTraces(){traces.clear();history.clear();lastUpdateMs=0;phasePane->repaint();magnitudePane->repaint();}
@@ -119,7 +119,7 @@ std::optional<TransferFunctionPanel::Sample> TransferFunctionPanel::sampleAt(int
  for(const auto& trace:traces){
   if(trace.id!=traceId||suppressedTraces.count(traceId)||(phase?!trace.showPhase:!trace.showMagnitude))continue;
   const auto& samples=trace.samples;
-  auto valid=[this,phase](const Sample& s){return s.valid&&(phase?s.validPhase:s.validMagnitude)&&std::isfinite(phase?s.phaseDegrees:s.magnitudeDb)&&(s.bypassBlanking||(std::isfinite(s.coherence)&&CoherenceBlanking::passes(s.coherence,coherenceThresholdPercent,coherenceSquared)));};
+  auto valid=[this,phase](const Sample& s){return s.valid&&(phase?s.validPhase:s.validMagnitude)&&std::isfinite(phase?s.phaseDegrees:s.magnitudeDb)&&(s.bypassBlanking||CoherenceBlanking::passesVisual(s.coherence,coherenceThresholdPercent,coherenceSquared));};
   auto upper=std::lower_bound(samples.begin(),samples.end(),hz,[](const Sample& s,double value){return s.frequencyHz<value;});
   if(upper!=samples.end()&&upper->frequencyHz==hz)return valid(*upper)?std::optional<Sample>(*upper):std::nullopt;
   if(upper==samples.begin()||upper==samples.end())return {};
@@ -265,7 +265,7 @@ void TransferFunctionPanel::drawTraces(juce::Graphics& g,juce::Rectangle<float> 
   for(const auto& sample:trace.samples){
    auto x=frequencyPosition(sample.frequencyHz,area,phase);
    double value=phase?sample.phaseDegrees:sample.magnitudeDb;
-   if(!sample.valid||(phase?!sample.validPhase:!sample.validMagnitude)||!x||!std::isfinite(value)||(!sample.bypassBlanking&&!CoherenceBlanking::passes(sample.coherence,coherenceThresholdPercent,coherenceSquared))){started=false;continue;}
+   if(!sample.valid||(phase?!sample.validPhase:!sample.validMagnitude)||!x||!std::isfinite(value)||(!sample.bypassBlanking&&!CoherenceBlanking::passesVisual(sample.coherence,coherenceThresholdPercent,coherenceSquared))){started=false;continue;}
    auto y=valuePosition(value,area,phase);
    bool lowCoherence=!sample.bypassBlanking&&CoherenceBlanking::visuallyQuiet(sample.coherence,coherenceSquared);
    auto& path=lowCoherence?muted:strong;

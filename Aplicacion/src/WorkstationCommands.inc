@@ -58,6 +58,16 @@ void restoreView(){
  plotChoice.setSelectedId(1,dontSendNotification);leftVisible=rightVisible=true;
  if(settingsDrawer)settingsDrawer->setVisible(false);
 }
+void findTFDelay(int index){
+ if(index<0||(size_t)index>=liveTFs.size()||!measuring(index)){status="Find: inicia la TF con referencia M/R antes de medir el retardo.";repaint();return;}
+ auto found=liveTFs[(size_t)index].findDelayMs();
+ if(!found){status="Find: espera un promedio M/R estable; rango 0-150 ms.";repaint();return;}
+ micDelay[(size_t)index].setValue(*found,sendNotificationSync);
+ if(source.getSelectedId()==index+1)selectedDelay.setValue(*found,dontSendNotification);
+ if(tfPanel)tfPanel->refreshNow();
+ status="TF "+String(index+1)+": retardo medido "+String(*found,2)+" ms; IR relativo a ese tiempo.";
+ repaint();
+}
 void executeCommand(int id){
  if(id>=930&&id<=932){irScale=id-930;impulseScale.setSelectedId(irScale+1,dontSendNotification);plotPanY[0]=0;plotZoomY[0]=1;}
  else if(id==940||id==941||id==950||id==951){size_t panel=id>=950?1:0;plotTypes[panel]=(id==940||id==950)?2:1;plotTypeChoice[panel].setSelectedId(plotTypes[panel],dontSendNotification);plotPanY[panel+1]=0;plotZoomY[panel+1]=1;activePlot=(int)panel+1;}
@@ -87,7 +97,7 @@ void executeCommand(int id){
  case 510:showAverageDialog();break;
  case 968:sumSelectedTraces();break;
  case 969:if(avgConfigured){source.setSelectedId((int)micNames.size()+1,sendNotificationSync);avgActive=!avgActive;commitAverage();refreshAverageRows();if(tfPanel)tfPanel->refreshNow();status=avgActive?"AVG de TF seleccionadas habilitado":"AVG desactivado";}break;
- case 502:{int n=source.getSelectedId()-1;if(!measuring(n)){status="Find: inicia la TF con referencia M/R antes de medir el retardo.";break;}auto found=liveTFs[(size_t)n].findDelayMs();if(!found){status="Find: espera un promedio M/R estable; rango 0–150 ms.";break;}micDelay[(size_t)n].setValue(*found);status="TF "+String(n+1)+": retardo medido "+String(*found,2)+" ms; IR relativo a ese tiempo.";break;}
+ case 502:findTFDelay(source.getSelectedId()-1);break;
  case 507:freezeInputs();break;
  case 508:stopInputs("Entradas en pausa. Pulsa Play para reabrir.");break;
  case 526:inputEngine.discardPendingTF();for(auto& tf:liveTFs)tf.clearAveragePreservingHistory();for(auto& rta:liveRTAs)rta.clearAveragePreservingHistory();if(tfPanel)tfPanel->clearLiveTraces();if(mainTabs)mainTabs->rtaPanel().clearTraces();liveTracesCleared=true;irResetBlank=true;for(const auto& id:capturedChoices)if(capturedInPanel(id,0)){irResetBlank=false;break;}irResetRevisions.clear();for(const auto& tf:liveTFs)irResetRevisions.push_back(tf.revision());if(tfPanel)tfPanel->refreshNow();repaint(plotBounds(0));liveTFState=0;status=inputEngine.running()?"Trazos en directo reiniciados con V; esperando nuevas muestras.":"Trazos en directo borrados con V; entradas detenidas.";break;
@@ -110,7 +120,7 @@ void executeCommand(int id){
  case 407:plotChoice.setSelectedId(plotChoice.getSelectedId()==1?2:1,sendNotificationSync);break;
  case 408:showCoherence.setToggleState(!showCoherence.getToggleState(),dontSendNotification);break;
  case 409:restoreView();break;
- case 520:{auto n=(size_t)(source.getSelectedId()-1);micDelay[n].setValue(0);selectedDelay.setValue(0);break;}
+ case 520:{int n=source.getSelectedId()-1;if(n>=0&&(size_t)n<micDelay.size()){micDelay[(size_t)n].setValue(0);selectedDelay.setValue(0);}break;}
  case 290:showCalibration();break;
  case 602:{closeCalibration();if(settingsDrawer)settingsDrawer->setVisible(false);break;}
  case 701:info(commands.language==MyaCommands::Language::ES?"Atajos / perfil Mya":"Shortcuts / Mya profile",commands.shortcutsHelp());break;
@@ -127,7 +137,7 @@ void executeCommand(int id){
  if(id==405||id==406||id==409||id==960||id==961)persistWorkspace();
  resized();if(graphWindow)graphWindow->repaint();repaint();menuItemsChanged();
 }
-void bindTFRow(size_t k){for(size_t j=0;j<tfActions[k].size();++j){auto& button=tfActions[k][j];commands.bind(button,MyaCommands::tfBindings[j],true,(int)k+1);button.onClick=[this,k,j]{preservingPinkForTFPlay=j==3&&pinkLoopActive;source.setSelectedId((int)k+1,sendNotificationSync);preservingPinkForTFPlay=false;commands.invoke(MyaCommands::tfBindings[j]);};}}
+void bindTFRow(size_t k){for(size_t j=0;j<tfActions[k].size();++j){auto& button=tfActions[k][j];commands.bind(button,MyaCommands::tfBindings[j],true,(int)k+1);button.onClick=[this,k,j]{preservingPinkForTFPlay=j==3&&pinkLoopActive;source.setSelectedId((int)k+1,sendNotificationSync);preservingPinkForTFPlay=false;if(j==0){findTFDelay((int)k);commands.refresh();return;}commands.invoke(MyaCommands::tfBindings[j]);};}}
 void setupCommands(){
  commands.context=[this]{return commandContext();};commands.action=[this](int id){executeCommand(id);};
  const auto& top=MyaCommands::topBindings;

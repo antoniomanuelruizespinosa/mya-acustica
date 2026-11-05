@@ -14,6 +14,9 @@ int main(){
  assert(!CoherenceBlanking::passes(.49,70.1,false));
  assert(CoherenceBlanking::visuallyQuiet(.08,false)&&!CoherenceBlanking::visuallyQuiet(.25,false));
  assert(CoherenceBlanking::visuallyQuiet(.25,true)&&!CoherenceBlanking::visuallyQuiet(.5,true));
+ assert(!CoherenceBlanking::passesVisual(.08,0.,false));
+ assert(CoherenceBlanking::passesVisual(.25,0.,false));
+ assert(!CoherenceBlanking::passesVisual(.25,60.,false));
  TransferFunctionCore::Estimator estimator;RTAEstimator retainedRta;
  constexpr double rate=48000.,frequency=1000.,gain=.5,phase=.4;
  int sample=0;
@@ -42,6 +45,7 @@ int main(){
  estimator.reset();constexpr int delayedSamples=5472;std::array<float,delayedSamples> history{};int position=0;std::uint32_t seed=1;
  for(int block=0;block<480;++block){TransferFunctionCore::RawBlock b;b.sequence=(std::uint64_t)block+1;b.sampleRate=rate;b.count=512;for(int i=0;i<b.count;++i){seed=seed*1664525u+1013904223u;float reference=(float)((int)(seed>>8)%65536-32768)/131072.f;b.ref[(size_t)i]=reference;b.mic[(size_t)i]=.5f*history[(size_t)position];history[(size_t)position]=reference;position=(position+1)%delayedSamples;}estimator.feed(b);}
  assert(estimator.ready());auto found=estimator.findDelayMs();assert(found&&std::abs(*found-114.)<.1);auto trackCopy=estimator.delaySnapshot();assert(trackCopy&&trackCopy->fftSize==estimator.fftSizeSamples());auto tracked=TransferFunctionCore::Estimator::findDelayMs(*trackCopy);assert(tracked&&std::abs(*tracked-*found)<1.e-9);estimator.setDelayMs(*found);auto impulse=estimator.impulseAt(0.);assert(impulse&&*impulse>.2);auto side=estimator.impulseAt(10.);assert(side&&std::abs(*side)<.2);
+ estimator.setDelayMs(0.);assert(estimator.delay()==0.);auto unaligned=estimator.impulseAt(0.);assert(unaligned&&std::abs(*unaligned)<.2);estimator.setDelayMs(*found);assert(std::abs(estimator.delay()-*found)<1.e-9);
  for(int block=480;block<960;++block){TransferFunctionCore::RawBlock b;b.sequence=(std::uint64_t)block+1;b.sampleRate=rate;b.count=512;for(int i=0;i<b.count;++i){seed=seed*1664525u+1013904223u;float reference=(float)((int)(seed>>8)%65536-32768)/131072.f;b.ref[(size_t)i]=reference;b.mic[(size_t)i]=.5f*history[(size_t)position];history[(size_t)position]=reference;position=(position+1)%delayedSamples;}estimator.feed(b);}auto aligned=estimator.at(1000.);assert(aligned&&aligned->coherence>.8&&std::abs(aligned->magnitudeDb+6.02)<1.);
  TransferFunctionCore::RawBlock gap;gap.sequence=1000;gap.sampleRate=rate;gap.count=512;estimator.feed(gap);assert(!estimator.ready());
  TransferFunctionCore::Queue<1> queue;assert(queue.push(gap));assert(!queue.push(gap));TransferFunctionCore::RawBlock out;assert(queue.pop(out)&&out.sequence==1000);assert(!queue.pop(out));

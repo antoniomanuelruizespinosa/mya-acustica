@@ -56,6 +56,7 @@ int main(int argc,char**){
  assert(shortcut('o',false,false,false,true,false)==406);assert(shortcut('O',false,false,false,true,false)==406);
  assert(shortcut('b',false,false,false,true,false)==405);assert(shortcut('B',false,false,false,true,false)==405);
  assert(shortcut('l',false,false,false,true,false)==502&&shortcut('f',false,false,false,true,false)==502);
+ {Context selected;selected.tfCount=4;for(int tf=1;tf<=4;++tf){selected.selectedTF=tf;assert(state(*find(502),selected).enabled&&state(*find(520),selected).enabled);}selected.selectedTF=5;assert(!state(*find(502),selected).enabled&&!state(*find(520),selected).enabled);}
  assert(shortcut('g',false,false,false,true,false)==504&&shortcut('s',false,false,false,true,false)==505);
  assert(shortcut(' ',false,false,false,true,false)==103);assert(shortcut('5',false,true,false,true,false)==409);
  assert(shortcut('+',false,false,true,true,false)==850);assert(shortcut('-',true,false,false,true,false)==853);assert(shortcut('+',true,true,true,true,false)==854);

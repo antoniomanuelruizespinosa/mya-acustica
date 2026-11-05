@@ -12,5 +12,8 @@ inline double displayed(double raw,bool squared){
 inline bool passes(double raw,double thresholdPercent,bool squared){
  return thresholdPercent<=0.||displayed(raw,squared)*100.>=thresholdPercent;
 }
+inline bool passesVisual(double raw,double thresholdPercent,bool squared){
+ return std::isfinite(raw)&&passes(raw,std::max(thresholdPercent,minimumReadablePercent),squared);
+}
 inline bool visuallyQuiet(double raw,bool squared){return !std::isfinite(raw)||displayed(raw,squared)*100.<minimumReadablePercent;}
 }
