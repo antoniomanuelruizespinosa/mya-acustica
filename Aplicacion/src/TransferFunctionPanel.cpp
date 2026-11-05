@@ -119,7 +119,7 @@ std::optional<TransferFunctionPanel::Sample> TransferFunctionPanel::sampleAt(int
  for(const auto& trace:traces){
   if(trace.id!=traceId||suppressedTraces.count(traceId)||(phase?!trace.showPhase:!trace.showMagnitude))continue;
   const auto& samples=trace.samples;
-  auto valid=[this,phase](const Sample& s){return s.valid&&(phase?s.validPhase:s.validMagnitude)&&std::isfinite(phase?s.phaseDegrees:s.magnitudeDb)&&(s.bypassBlanking||CoherenceBlanking::passesVisual(s.coherence,coherenceThresholdPercent,coherenceSquared));};
+  auto valid=[this,phase](const Sample& s){return s.valid&&(phase?s.validPhase:s.validMagnitude)&&std::isfinite(phase?s.phaseDegrees:s.magnitudeDb)&&(!coherenceVisible||s.bypassBlanking||CoherenceBlanking::passesVisual(s.coherence,coherenceThresholdPercent,coherenceSquared));};
   auto upper=std::lower_bound(samples.begin(),samples.end(),hz,[](const Sample& s,double value){return s.frequencyHz<value;});
   if(upper!=samples.end()&&upper->frequencyHz==hz)return valid(*upper)?std::optional<Sample>(*upper):std::nullopt;
   if(upper==samples.begin()||upper==samples.end())return {};
@@ -265,9 +265,9 @@ void TransferFunctionPanel::drawTraces(juce::Graphics& g,juce::Rectangle<float> 
   for(const auto& sample:trace.samples){
    auto x=frequencyPosition(sample.frequencyHz,area,phase);
    double value=phase?sample.phaseDegrees:sample.magnitudeDb;
-   if(!sample.valid||(phase?!sample.validPhase:!sample.validMagnitude)||!x||!std::isfinite(value)||(!sample.bypassBlanking&&!CoherenceBlanking::passesVisual(sample.coherence,coherenceThresholdPercent,coherenceSquared))){started=false;continue;}
+   if(!sample.valid||(phase?!sample.validPhase:!sample.validMagnitude)||!x||!std::isfinite(value)||(coherenceVisible&&!sample.bypassBlanking&&!CoherenceBlanking::passesVisual(sample.coherence,coherenceThresholdPercent,coherenceSquared))){started=false;continue;}
    auto y=valuePosition(value,area,phase);
-   bool lowCoherence=!sample.bypassBlanking&&CoherenceBlanking::visuallyQuiet(sample.coherence,coherenceSquared);
+   bool lowCoherence=coherenceVisible&&!sample.bypassBlanking&&CoherenceBlanking::visuallyQuiet(sample.coherence,coherenceSquared);
    auto& path=lowCoherence?muted:strong;
    if(!started||lowCoherence!=previousMuted||(phase&&std::abs(value-previousPhase)>180.0))path.startNewSubPath(*x,y);
    else path.lineTo(*x,y);

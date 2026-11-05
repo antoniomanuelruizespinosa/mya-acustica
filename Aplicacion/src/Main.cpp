@@ -824,7 +824,7 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
  std::optional<double> savedValue(const String& id,double u,int panel){
   auto c=savedTraces.coherence(id,tfSettings.frequency(u));
   auto* trace=savedTraces.find(id);
-  if((!trace||trace->method!="vector-sum")&&!tfSettings.passes(c))return std::nullopt;
+  if(showCoherence.getToggleState()&&(!trace||trace->method!="vector-sum")&&!tfSettings.passes(c))return std::nullopt;
   int kind=displayType(panel);
   auto v=savedTraces.value(id,tfSettings.frequency(u),kind,smoothingForPlot(panel-1),0);
   return v?std::optional<double>(tfSettings.normalize(*v*(kind==1?360.:36.),kind)):std::nullopt;
@@ -1088,6 +1088,25 @@ public:
  bool previewNavigationChoice(){for(int index:{0,1}){if(!navigationOverlay.isVisible())navigationTab.onClick();buttons[(size_t)index]->onClick();if(navigationOverlay.isVisible()||mode!=index)return false;if(!commands.invoke(980)||mode!=0||measurementView!=0)return false;}return !navigationOverlay.isVisible()&&!vision->isEnabled()&&!lab->isVisible();}
  bool previewNavigationOverlay(bool open){auto p1=plotBounds(1),p2=plotBounds(2);if(navigationOverlay.isVisible()!=open)navigationTab.onClick();return navigationOverlay.isVisible()==open&&p1==plotBounds(1)&&p2==plotBounds(2)&&navigationTab.getY()==66&&buttons[0]->getParentComponent()==&navigationOverlay;}
  bool previewSurface(const Component& surface)const{for(int i=0;i<3;++i)if(buttons[(size_t)i]->getParentComponent()!=&navigationOverlay)return false;return getY()==-66&&getHeight()==surface.getHeight()+66&&plotBounds(1).getHeight()==plotBounds(2).getHeight()&&!navigationOverlay.isVisible();}
+ String previewHitRegions(const Component& surface)const{
+  auto check=[&](const Component& target,const String& name)->String{
+   if(!target.isVisible()||!target.isEnabled()||target.getWidth()<1||target.getHeight()<1)return name+" invisible";
+   auto area=surface.getLocalArea(&target,target.getLocalBounds());
+   auto* hit=const_cast<Component&>(surface).getComponentAt(area.getCentre());
+   for(auto* current=hit;current;current=current->getParentComponent())if(current==&target)return {};
+   return name+" hit="+(hit?hit->getName():"none")+" area="+area.toString();
+  };
+  for(const auto& item:std::initializer_list<std::pair<const Component*,const char*>>{{&globalSmth,"octave"},{&showCoherence,"coherence"},{&plotTypeChoice[0],"phase choice"},{&plotTypeChoice[1],"magnitude choice"},{&plotSmooth[0],"phase smooth"},{&plotSmooth[1],"magnitude smooth"},{&tfActions[0][0],"TF1 Find"},{&tfActions[3][0],"TF4 Find"},{&micDelay[0],"TF1 delay"},{&micDelay[3],"TF4 delay"}}){auto failure=check(*item.first,item.second);if(failure.isNotEmpty())return failure;}
+  return {};
+ }
+ bool previewFindPressIsolation(){
+  int previous=source.getSelectedId();source.setSelectedId(1,sendNotificationSync);
+  auto& button=tfActions[1][0];auto point=button.getLocalBounds().getCentre().toFloat();auto now=Time::getCurrentTime();
+  MouseEvent event(Desktop::getInstance().getMainMouseSource(),point,ModifierKeys{},1.f,0.f,0.f,0.f,0.f,&button,&button,now,point,now,1,false);
+  mouseDown(event);bool isolated=source.getSelectedId()==1;
+  if(button.onClick)button.onClick();bool found=source.getSelectedId()==2&&status.startsWith("Find:");
+  source.setSelectedId(previous,sendNotificationSync);return isolated&&found;
+ }
 
  bool previewIndependentViews(){auto side=dockMeterState.primaryCard()->id,floating=floatingMeterState.primaryCard()->id;int sChannel=dockMeterState.primaryCard()->channel,fMetric=floatingMeterState.primaryCard()->metric;auto card=*meterState.primaryCard();card.channel=3;card.metric=3;card.weight=2;if(!meterState.update(card)||dockMeterState.primaryCard()->channel!=sChannel||floatingMeterState.primaryCard()->metric!=fMetric||side==card.id||floating==card.id||side==floating)return false;for(auto grid:{std::pair<int,int>{2,2},{1,4},{4,1},{1,1}}){if(!dockMeterState.setGrid(grid.first,grid.second))return false;dockMeters.refreshNow();if(!dockMeters.previewPages())return false;MeterPanel floats(floatingMeterState);floats.setSize(480,340);if(!floatingMeterState.setGrid(grid.first,grid.second)||!floats.previewPages())return false;}return dockMeterState.primaryCard()->id==side&&floatingMeterState.primaryCard()->id==floating;}
  bool previewRoutingStatus(){closeCalibration();if(settingsDrawer)settingsDrawer->setVisible(false);auto keys=deviceKeys;auto m=micInputs,r=refInputs;audioSettings();if(!routingStatusPanel||!routingStatusPanel->previewStatus().contains("Entradas detenidas"))return false;auto* panel=routingStatusPanel.getComponent();panel->setAcquisitionState(true);if(!panel->previewStatus().contains("Entradas dBFS activas"))return false;panel->setAcquisitionState(false,true);if(!panel->previewStatus().contains("Esperando permiso"))return false;stopInputs();if(!panel->previewStatus().contains("Entradas detenidas"))return false;return keys==deviceKeys&&m==micInputs&&r==refInputs&&!inputEngine.running();}
@@ -1202,7 +1221,7 @@ public:
      double phaseSmoothing=smoothingDivisions(smoothingForPlot(0)),magnitudeSmoothing=smoothingDivisions(smoothingForPlot(1));
      auto phase=phaseSmoothing>0?liveTFs[i].smoothedAt(hz,phaseSmoothing,true):point;
      auto magnitude=magnitudeSmoothing>0?liveTFs[i].smoothedAt(hz,magnitudeSmoothing,false):point;
-     if(phase&&magnitude){sample.phaseDegrees=phase->phaseDegrees;sample.magnitudeDb=magnitude->magnitudeDb;sample.coherence=point->coherence;sample.valid=true;sample.bypassBlanking=liveTFs[i].isSweep();}
+     if(phase&&magnitude){sample.phaseDegrees=phase->phaseDegrees;sample.magnitudeDb=magnitude->magnitudeDb;sample.coherence=magnitude->coherence;sample.valid=true;sample.bypassBlanking=liveTFs[i].isSweep();}
     }
     trace.samples.push_back(sample);
    }
@@ -1377,12 +1396,12 @@ public:
  std::optional<TransferFunctionCore::Point> averagePoint(double hz)const{return avgConfigured?averagePointFor(hz,avgMembers,avgActive):std::nullopt;}
  std::optional<double> measuredImpulse(double u,int scale,int index)const{if(!measuring(index)&&!displayingFrozen(index))return {};auto value=liveTFs[(size_t)index].impulseAt(ImpulseDisplay::timeMs(u),scale==2);if(!value)return {};return scale==0?*value:std::max(ImpulseDisplay::floorDb,20.*std::log10(std::max(1.e-6,std::abs(*value))));}
  std::optional<double> plotValue(double u,int index,int type){
-  if(index<=-2){size_t a=(size_t)(-2-index);if(a>=averageEntries.size())return {};const auto& entry=averageEntries[a];bool active=a==selectedAverage?avgActive:entry.active;const auto& members=a==selectedAverage?avgMembers:entry.members;if(!active)return {};if(type==0){double sum=0.;int count=0;for(size_t i=0;i<members.size()&&i<liveTFs.size();++i)if(members[i]&&(measuring((int)i)||displayingFrozen((int)i))&&liveTFs[i].ready()){auto value=liveTFs[i].impulseAt(ImpulseDisplay::timeMs(u),irScale==2);if(value){sum+=*value;++count;}}if(count==0)return {};double mean=sum/count;return irScale==0?mean/2.:(std::max(ImpulseDisplay::floorDb,20.*std::log10(std::max(1.e-6,std::abs(mean))))+60.)/120.;}auto p=averagePointFor(tfSettings.frequency(u),members,active);if(!p||(p->coherence>0&&!tfSettings.passes(p->coherence)))return {};return tfSettings.normalize(displayType(type)==1?p->phaseDegrees:p->magnitudeDb,displayType(type));}
+  if(index<=-2){size_t a=(size_t)(-2-index);if(a>=averageEntries.size())return {};const auto& entry=averageEntries[a];bool active=a==selectedAverage?avgActive:entry.active;const auto& members=a==selectedAverage?avgMembers:entry.members;if(!active)return {};if(type==0){double sum=0.;int count=0;for(size_t i=0;i<members.size()&&i<liveTFs.size();++i)if(members[i]&&(measuring((int)i)||displayingFrozen((int)i))&&liveTFs[i].ready()){auto value=liveTFs[i].impulseAt(ImpulseDisplay::timeMs(u),irScale==2);if(value){sum+=*value;++count;}}if(count==0)return {};double mean=sum/count;return irScale==0?mean/2.:(std::max(ImpulseDisplay::floorDb,20.*std::log10(std::max(1.e-6,std::abs(mean))))+60.)/120.;}auto p=averagePointFor(tfSettings.frequency(u),members,active);if(!p||(showCoherence.getToggleState()&&p->coherence>0&&!tfSettings.passes(p->coherence)))return {};return tfSettings.normalize(displayType(type)==1?p->phaseDegrees:p->magnitudeDb,displayType(type));}
   if(index<0)return std::nullopt;
  if(liveTracesCleared&&!measuring(index)&&!displayingFrozen(index))return std::nullopt;
   if(type==0){auto value=measuredImpulse(u,irScale,index);if(!value)return {};return irScale==0?*value/2.:(*value+60.)/120.;}
-  if(measuring(index)||displayingFrozen(index)){double smoothing=smoothingDivisions(smoothingForPlot(type-1));auto p=smoothing<=0?liveTFs[(size_t)index].at(tfSettings.frequency(u)):liveTFs[(size_t)index].smoothedAt(tfSettings.frequency(u),smoothing,displayType(type)==1);if(!p||(!liveTFs[(size_t)index].isSweep()&&!tfSettings.passes(p->coherence)))return std::nullopt;return tfSettings.normalize(displayType(type)==1?p->phaseDegrees:p->magnitudeDb,displayType(type));}
-  if(!validTF(u,index))return std::nullopt;
+  if(measuring(index)||displayingFrozen(index)){double smoothing=smoothingDivisions(smoothingForPlot(type-1));auto p=smoothing<=0?liveTFs[(size_t)index].at(tfSettings.frequency(u)):liveTFs[(size_t)index].smoothedAt(tfSettings.frequency(u),smoothing,displayType(type)==1);if(!p||(showCoherence.getToggleState()&&!liveTFs[(size_t)index].isSweep()&&!tfSettings.passes(p->coherence)))return std::nullopt;return tfSettings.normalize(displayType(type)==1?p->phaseDegrees:p->magnitudeDb,displayType(type));}
+  if(showCoherence.getToggleState()&&!validTF(u,index))return std::nullopt;
   int kind=displayType(type);auto h=cursorResponse(tfSettings.frequency(u),index,kind,type);
   if(!std::isfinite(h.real())||!std::isfinite(h.imag())||std::abs(h)<=1.e-15)return std::nullopt;
   return tfSettings.normalize(kind==1?std::arg(h)*180/MathConstants<double>::pi:20*std::log10(std::abs(h)),kind);
@@ -1452,6 +1471,11 @@ public:
  if(event.originalComponent==this&&mode!=2){for(int t=0;t<3;++t)if((measurementView==0||t==0)&&(t!=0||plotChoice.getSelectedId()!=2||measurementView==1)&&activeGraphBounds(t).contains(event.getPosition())){activateGraph(t,false);return;}}
  auto* origin=event.originalComponent;
  if(origin!=&tfContent&&!tfContent.isParentOf(origin))return;
+ // Child controls handle their own press/release sequence. Selecting the row here
+ // relays a synchronous source change and relayout before their mouseUp arrives.
+ for(auto* child=origin;child&&child!=&tfContent;child=child->getParentComponent())
+  if(dynamic_cast<Button*>(child)||dynamic_cast<Slider*>(child)
+     ||dynamic_cast<ComboBox*>(child)||dynamic_cast<TextEditor*>(child))return;
  auto point=event.getEventRelativeTo(&tfContent).getPosition();
  if(event.mods.isPopupMenu()){
   if(point.y>=averageTop()&&point.y<averageTop()+(int)averageEntries.size()*CompactLayout::avgHeight){loadAverage((size_t)((point.y-averageTop())/CompactLayout::avgHeight));showTraceContextMenu(-1,origin);return;}
@@ -1615,7 +1639,7 @@ public:
   double u=PlotPresentation::coordinate(i/(double)points,panX,zoomX),val=0;
   if(mode==0){if(type==0&&irResetBlank){gap=true;continue;}auto displayed=plotValue(u,s,type);if(!displayed){gap=true;continue;}val=*displayed;}
   else if(type==0){if(mode==1&&(dspImpulseRate<=0||dspImpulse.empty())){gap=true;continue;}if(mode==1&&dspImpulseRate>0&&!dspImpulse.empty()){auto sample=roundToInt(ImpulseDisplay::timeMs(u)*dspImpulseRate/1000.);if(sample<0||sample>=(int)dspImpulse.size()){gap=true;continue;}double value=dspImpulse[(size_t)sample]/dspImpulsePeak;val=irScale==0?value/2.:jlimit(0.,1.,(20.*std::log10(std::max(1.e-6,std::abs(value)))+60.)/120.);}else{auto value=impulseDisplay.normalized(u,irScale);if(!value){gap=true;continue;}val=*value;}}
-  else{double f=tfSettings.frequency(u);if(u<0||u>1||!tfSettings.passes(demoCoherence(std::log(f/20.)/std::log(1000.),0))){gap=true;continue;}auto h=response(f,s==1&&(mode==1||mode==3));val=tfSettings.normalize(kind==1?std::arg(h)*180/MathConstants<double>::pi:20*std::log10(std::abs(h)),kind);}
+  else{double f=tfSettings.frequency(u);if(u<0||u>1||(showCoherence.getToggleState()&&!tfSettings.passes(demoCoherence(std::log(f/20.)/std::log(1000.),0)))){gap=true;continue;}auto h=response(f,s==1&&(mode==1||mode==3));val=tfSettings.normalize(kind==1?std::arg(h)*180/MathConstants<double>::pi:20*std::log10(std::abs(h)),kind);}
   float xx=(float)(p.getX()+PlotPresentation::screen(u,panX,zoomX)*p.getWidth());
   float yy=(float)(p.getCentreY()-(val-panY)*zoomY*p.getHeight());
   if(gap||(kind==1&&std::abs(val-previous)>.5))path.startNewSubPath(xx,yy);else path.lineTo(xx,yy);

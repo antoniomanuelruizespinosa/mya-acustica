@@ -89,18 +89,23 @@ public:
   auto* c=model.primaryCard();const auto& runtime=model.runtime(c?c->id:juce::String{});
   auto background=c?juce::Colour::fromString(c->backgroundColour):juce::Colour(0xff080a0c);
   const auto digital=MeterPulse::classify(runtime.digitalPeakDbfs,runtime.digitalPeakClipped);
+  std::optional<MeterAlarm::Reading> reading;
+  if(c&&runtime.current)reading=MeterAlarm::Reading{*runtime.current,c->metric,c->weight,runtime.acquisitionValid,runtime.calibrated,c->deviceKey,c->channel};
+  alarmLevel=c?MeterAlarm::evaluate(*c,reading,alarmLevel):MeterAlarm::Level::None;
   if(c){
-   if(digital==MeterPulse::Level::Red)background=background.interpolatedWith(juce::Colour(0xffff4040),MeterPulse::opacity(juce::Time::getMillisecondCounterHiRes()));
-   else if(alarmLevel==MeterAlarm::Level::Alarm)background=background.interpolatedWith(juce::Colour::fromString(c->alarmColour),MeterPulse::opacity(juce::Time::getMillisecondCounterHiRes()));
-   else if(digital==MeterPulse::Level::Orange)background=background.interpolatedWith(juce::Colour(0xffffac24),MeterPulse::opacity(juce::Time::getMillisecondCounterHiRes()));
-   else if(alarmLevel==MeterAlarm::Level::Warning)background=background.interpolatedWith(juce::Colour::fromString(c->warningColour),MeterPulse::opacity(juce::Time::getMillisecondCounterHiRes()));
+   const auto opacity=c->animate?MeterPulse::opacity(juce::Time::getMillisecondCounterHiRes()):.9f;
+   if(digital==MeterPulse::Level::Red)background=background.interpolatedWith(juce::Colour(0xffff4040),opacity);
+   else if(alarmLevel==MeterAlarm::Level::Alarm)background=background.interpolatedWith(juce::Colour::fromString(c->alarmColour),opacity);
+   else if(digital==MeterPulse::Level::Orange)background=background.interpolatedWith(juce::Colour(0xffffac24),opacity);
+   else if(alarmLevel==MeterAlarm::Level::Warning)background=background.interpolatedWith(juce::Colour::fromString(c->warningColour),opacity);
   }
   paintMeterSurface(g,getLocalBounds().toFloat().reduced(.5f),background,3);
   const bool valid=c&&runtime.acquisitionValid&&(c->metric==1||runtime.calibrated);
   const auto current=valid?runtime.current:std::nullopt;
   const auto maximum=valid?runtime.maximum:std::nullopt;
   const juce::Rectangle<int> readingBox(3,27,juce::jmax(1,getWidth()-6),juce::jmax(46,getHeight()-66));
-  g.setColour(background.darker(.15f));g.fillRoundedRectangle(readingBox.toFloat(),3.f);
+  const bool alert=digital!=MeterPulse::Level::None||alarmLevel!=MeterAlarm::Level::None;
+  g.setColour(alert?background:background.darker(.15f));g.fillRoundedRectangle(readingBox.toFloat(),3.f);
   g.setColour(c?juce::Colour::fromString(c->textColour):juce::Colours::white);
   g.setFont(model.state().clock?25.f:juce::jlimit(42.f,72.f,juce::jmin((float)getWidth()/3.4f,(float)readingBox.getHeight()*.95f)));
   const auto value=model.state().clock?juce::Time::getCurrentTime().formatted(model.state().clock24?"%H:%M:%S":"%I:%M %p"):MeterState::valueText(current);
