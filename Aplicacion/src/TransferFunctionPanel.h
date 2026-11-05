@@ -83,6 +83,7 @@ private:
  std::set<int> suppressedTraces;
  std::unique_ptr<PlotPane> phasePane,magnitudePane;
  std::unique_ptr<CoherenceHandle> coherenceHandle;
+ juce::Rectangle<int> phaseBounds,magnitudeBounds;
  std::array<double,3> panX{},panY{};
  std::array<double,3> zoomX{{1.,1.,1.}},zoomY{{1.,1.,1.}};
  bool multiWindowMode=true;

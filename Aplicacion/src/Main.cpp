@@ -274,7 +274,7 @@ public:
  PlotDivider(StretchableLayoutManager& manager,int index):StretchableLayoutResizerBar(&manager,index,false),layout(manager),item(index){setMouseCursor(MouseCursor::UpDownResizeCursor);setTitle("Arrastrar para redimensionar graficas");}
  void hasBeenMoved()override{if(moved)moved(layout.getItemCurrentPosition(item));}
  void mouseDoubleClick(const MouseEvent&)override{if(reset)reset();}
- void paint(Graphics& g)override{g.setColour(isMouseOverOrDragging()?Palette::cyan:Palette::line);g.fillRoundedRectangle((float)getWidth()/2-24,2,48,3,1.5f);}
+ void paint(Graphics& g)override{g.setColour(Palette::line);g.fillRect(0,3,getWidth(),1);g.setColour(isMouseOverOrDragging()?Palette::cyan:Palette::line);g.fillRoundedRectangle((float)getWidth()/2-24,2,48,3,1.5f);}
 };
 class SidebarDivider : public Component {
 public:
@@ -1083,12 +1083,21 @@ public:
   plotPanX[2]=.4;if(!clickPlot(2,true)||plotPanX[2]!=0.)return false;
   irCollapseButton.onClick();
   if(impulseScale.isVisible()||impulseScale.isEnabled()||plotMic[0].isVisible()||plotMic[0].isEnabled()||graphGear[0].isVisible()||graphGear[0].isEnabled()||plotDividers[0].isVisible()||plotDividers[0].isEnabled()||!hit(plotTypeChoice[0])||!hit(plotTypeChoice[1]))return false;
-  irCollapseButton.onClick();return impulseScale.isVisible()&&impulseScale.isEnabled()&&hit(plotTypeChoice[0])&&hit(plotTypeChoice[1]);
+  irCollapseButton.onClick();
+  if(!impulseScale.isVisible()||!impulseScale.isEnabled()||!hit(plotTypeChoice[0])||!hit(plotTypeChoice[1]))return false;
+  const int initialIR=plotBounds(0).getHeight();
+  plotDividers[0].moved(initialIR+24);
+  if(plotBounds(0).getHeight()<=initialIR)return false;
+  const int initialPhase=plotBounds(1).getHeight();
+  plotDividers[1].moved(plotBounds(0).getHeight()+8+initialPhase+24);
+  if(plotBounds(1).getHeight()<=initialPhase)return false;
+  for(int plot=0;plot<2;++plot){auto upper=plotBounds(plot),lower=plotBounds(plot+1);if(upper.getBottom()>lower.getY()||plotDividers[(size_t)plot].getY()!=upper.getBottom())return false;}
+  return hit(plotTypeChoice[0])&&hit(plotTypeChoice[1])&&hit(plotSmooth[0])&&hit(plotSmooth[1])&&clickPlot(1,false)&&clickPlot(2,false);
  }
  bool previewNavigationChoice(){for(int index:{0,1}){if(!navigationOverlay.isVisible())navigationTab.onClick();buttons[(size_t)index]->onClick();if(navigationOverlay.isVisible()||mode!=index)return false;if(!commands.invoke(980)||mode!=0||measurementView!=0)return false;}return !navigationOverlay.isVisible()&&!vision->isEnabled()&&!lab->isVisible();}
  bool previewNavigationOverlay(bool open){auto p1=plotBounds(1),p2=plotBounds(2);if(navigationOverlay.isVisible()!=open)navigationTab.onClick();return navigationOverlay.isVisible()==open&&p1==plotBounds(1)&&p2==plotBounds(2)&&navigationTab.getY()==66&&buttons[0]->getParentComponent()==&navigationOverlay;}
  bool previewSurface(const Component& surface)const{for(int i=0;i<3;++i)if(buttons[(size_t)i]->getParentComponent()!=&navigationOverlay)return false;return getY()==-66&&getHeight()==surface.getHeight()+66&&plotBounds(1).getHeight()==plotBounds(2).getHeight()&&!navigationOverlay.isVisible();}
- String previewHitRegions(const Component& surface)const{
+ String previewHitRegions(const Component& surface){
   auto check=[&](const Component& target,const String& name)->String{
    if(!target.isVisible()||!target.isEnabled()||target.getWidth()<1||target.getHeight()<1)return name+" invisible";
    auto area=surface.getLocalArea(&target,target.getLocalBounds());
@@ -1096,7 +1105,12 @@ public:
    for(auto* current=hit;current;current=current->getParentComponent())if(current==&target)return {};
    return name+" hit="+(hit?hit->getName():"none")+" area="+area.toString();
   };
-  for(const auto& item:std::initializer_list<std::pair<const Component*,const char*>>{{&globalSmth,"octave"},{&showCoherence,"coherence"},{&plotTypeChoice[0],"phase choice"},{&plotTypeChoice[1],"magnitude choice"},{&plotSmooth[0],"phase smooth"},{&plotSmooth[1],"magnitude smooth"},{&tfActions[0][0],"TF1 Find"},{&tfActions[3][0],"TF4 Find"},{&micDelay[0],"TF1 delay"},{&micDelay[3],"TF4 delay"}}){auto failure=check(*item.first,item.second);if(failure.isNotEmpty())return failure;}
+  for(const auto& item:std::initializer_list<std::pair<const Component*,const char*>>{{&globalSmth,"octave"},{&showCoherence,"coherence"},{&plotTypeChoice[0],"phase choice"},{&plotTypeChoice[1],"magnitude choice"},{&plotSmooth[0],"phase smooth"},{&plotSmooth[1],"magnitude smooth"}}){auto failure=check(*item.first,item.second);if(failure.isNotEmpty())return failure;}
+  tfViewport.setViewPosition(0,0);
+  for(const auto& item:std::initializer_list<std::pair<const Component*,const char*>>{{&tfActions[0][0],"TF1 Find"},{&micDelay[0],"TF1 delay"}}){auto failure=check(*item.first,item.second);if(failure.isNotEmpty())return failure;}
+  tfViewport.setViewPosition(0,jmax(0,tfContent.getHeight()-tfViewport.getHeight()));
+  for(const auto& item:std::initializer_list<std::pair<const Component*,const char*>>{{&tfActions[3][0],"TF4 Find"},{&micDelay[3],"TF4 delay"}}){auto failure=check(*item.first,item.second);if(failure.isNotEmpty())return failure;}
+  tfViewport.setViewPosition(0,0);
   return {};
  }
  bool previewFindPressIsolation(){
@@ -1235,7 +1249,13 @@ public:
  tfPanel->onResolutionChanged=[this](bool multi){for(auto& estimator:liveTFs)estimator.setMultiWindowEnabled(multi);};tfPanel->onCoherenceThresholdChanged=[this](double percent){coherenceThreshold.setValue(percent,dontSendNotification);tfSettings.coherenceThreshold=percent;status="Coherence Threshold: "+String(percent,1)+"%";repaint();};tfPanel->onCoherenceThresholdCommitted=[this]{persistTF();};tfPanel->onCursorMoved=[this](int plot,double u,std::optional<TransferFunctionPanel::Sample> sample){if(mode!=0||measurementView!=0)return;cursorPlot=plot;cursorU=u;cursorSample=sample;updateCursorReadout();cursorReadout.repaint();};tfPanel->onPlotInteracted=[this](int plot,bool reset){if(mode==0&&measurementView==0)activateGraph(plot,reset);};tfPanel->setInterceptsMouseClicks(false,true);addAndMakeVisible(*tfPanel);tfPanel->setVisible(false);
  reticleOverlay.draw=[this](Graphics& g){for(int t=1;t<=2;++t)if(plotCursorVisible[(size_t)t]){auto p=plotArea(plotBounds(t)).translated(-reticleOverlay.getX(),-reticleOverlay.getY());double u=plotCursorU[(size_t)t];float x=(float)(p.getX()+((u-plotPanX[(size_t)t]-.5)*plotZoomX[(size_t)t]+.5)*p.getWidth());if(x<p.getX()||x>p.getRight())continue;float y=(float)(p.getY()+plotCursorY[(size_t)t]*p.getHeight());g.setColour(Palette::cyan.withAlpha(.6f));g.drawVerticalLine(roundToInt(x),(float)p.getY(),(float)p.getBottom());g.drawHorizontalLine(roundToInt(y),(float)p.getX(),(float)p.getRight());}};addAndMakeVisible(reticleOverlay);reticleOverlay.setVisible(false);
 
- for(int i=0;i<2;++i){auto& divider=plotDividers[(size_t)i];addAndMakeVisible(divider);divider.reset=[this]{irFraction=.14;phaseFraction=.5;resized();repaint();};divider.moved=[this,i](int y){int height=getHeight()-183;if(i==0)irFraction=jlimit(60.,(double)jmax(60,height-176),(double)y-118)/height;else{auto p=plotBounds(1);int remaining=118+height-p.getY()-8;phaseFraction=jlimit(80.,(double)jmax(80,remaining-80),(double)y-p.getY())/remaining;}resized();repaint();};}
+ for(int i=0;i<2;++i){auto& divider=plotDividers[(size_t)i];addAndMakeVisible(divider);divider.reset=[this]{irFraction=.14;phaseFraction=.5;resized();repaint();};divider.moved=[this,i](int y){
+  const int height=getHeight()-183;
+  const int irHeight=plotBounds(0).getHeight();
+  if(i==0)irFraction=jlimit(60.,(double)jmax(60,height-156),(double)y)/height;
+  else{const bool showIR=plotChoice.getSelectedId()!=2;const int remaining=height-irHeight-(showIR?16:8);const int phaseHeight=y-irHeight-(showIR?8:0);phaseFraction=jlimit(80.,(double)jmax(80,remaining-60),(double)phaseHeight)/remaining;}
+  resized();repaint();
+ };}
  dspPlotLayout.setItemLayout(0,60,-1,-0.14);
  dspPlotLayout.setItemLayout(1,8,8,8);
  dspPlotLayout.setItemLayout(2,80,-1,-0.43);

@@ -66,7 +66,7 @@ TransferFunctionPanel::TransferFunctionPanel(DataProvider provider):dataProvider
  phasePane=std::make_unique<PlotPane>(*this,true);magnitudePane=std::make_unique<PlotPane>(*this,false);
  addAndMakeVisible(*phasePane);addAndMakeVisible(*magnitudePane);
  coherenceHandle=std::make_unique<CoherenceHandle>(*this);addAndMakeVisible(*coherenceHandle);
- phasePane->toFront(true);magnitudePane->toFront(true);coherenceHandle->toFront(false);
+ coherenceHandle->toFront(false);
 }
 void TransferFunctionPanel::setDisplayOptions(bool multi,int smooth){if(multiWindowMode!=multi){multiWindowMode=multi;if(onResolutionChanged)onResolutionChanged(multi);}smoothingMode=juce::jlimit(1,7,smooth);}
 TransferFunctionPanel::~TransferFunctionPanel(){stopTimer();}
@@ -131,11 +131,17 @@ std::optional<TransferFunctionPanel::Sample> TransferFunctionPanel::sampleAt(int
  return {};
 }
 
-void TransferFunctionPanel::resized(){}
+void TransferFunctionPanel::resized(){
+ auto phase=phaseBounds.getIntersection(getLocalBounds());
+ auto magnitude=magnitudeBounds.getIntersection(getLocalBounds());
+ if(magnitude.getY()<phase.getBottom())magnitude.setTop(phase.getBottom());
+ phasePane->setBounds(phase);
+ magnitudePane->setBounds(magnitude);
+ updateCoherenceHandle();
+}
 
 void TransferFunctionPanel::setPlotLayout(juce::Rectangle<int> phase,juce::Rectangle<int> magnitude){
- phasePane->setBounds(phase);magnitudePane->setBounds(magnitude);
- phasePane->toFront(true);magnitudePane->toFront(true);updateCoherenceHandle();
+ phaseBounds=phase;magnitudeBounds=magnitude;resized();
 }
 
 void TransferFunctionPanel::setCoherenceDisplay(double thresholdPercent,bool squared,bool visible,double height){
