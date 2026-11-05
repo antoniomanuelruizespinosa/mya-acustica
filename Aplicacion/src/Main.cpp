@@ -675,7 +675,7 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
  MeterState floatingMeterState{projectFile.getParentDirectory().getChildFile("medidores-flotantes.json"),&meterState};
  std::array<MeterState*,3> meterModels(){return {{&meterState,&dockMeterState,&floatingMeterState}};}
  std::unique_ptr<MeterWindow> meters;
- MeterPanel dockMeters{dockMeterState,true};
+ MeterPanel dockMeters{dockMeterState,true,&meterState};
  PrincipalMeter principalMeter{meterState};
  TextButton tracesPage{"Trazos"},metersPage{"dB Meter"};
  int meterListener=0,dockListener=0;unsigned meterRevision=0,dockRevision=0;
@@ -1276,7 +1276,7 @@ public:
  }for(size_t a=0;a<averageEntries.size();++a){bool selected=a==selectedAverage&&source.getSelectedId()==(int)micNames.size()+1;auto row=Rectangle<float>{0,(float)(averageTop()+(int)a*CompactLayout::avgHeight),(float)w,(float)CompactLayout::avgHeight};g.setColour(selected?Colour(0xff35434d):Colour(0xff192126));g.fillRoundedRectangle(row,4);g.setColour((a==selectedAverage?avgColour:averageEntries[a].colour).withAlpha(selected?1.f:.55f));g.drawRoundedRectangle(row.reduced(1.5f),4,selected?3.f:1.f);}};
 
   deviceWatcher.addChangeListener(this);audioEndpoints=discoverAudioEndpoints();syncNames();refreshDspInputs();setupCommands();refreshMeterSources();
- addAndMakeVisible(tracesPage);addAndMakeVisible(metersPage);commands.bind(tracesPage,960);commands.bind(metersPage,961);addAndMakeVisible(dockMeters);dockMeters.toggleRequested=[this]{commands.invoke(203);};meterRevision=meterState.configRevision();meterListener=meterState.listen([this]{if(meterRevision!=meterState.configRevision()){meterRevision=meterState.configRevision();resized();repaint();menuItemsChanged();}});dockRevision=dockMeterState.configRevision();dockListener=dockMeterState.listen([this]{if(dockRevision!=dockMeterState.configRevision()){dockRevision=dockMeterState.configRevision();resized();repaint();menuItemsChanged();}});addAndMakeVisible(principalMeter);principalMeter.command=[this](int id){commands.invoke(id);};for(size_t i=0;i<graphGear.size();++i){auto& gear=graphGear[i];gear.setButtonText("...");gear.getProperties().set("commandGlyph",true);commands.bind(gear,i==0?963:303);addAndMakeVisible(gear);}
+ addAndMakeVisible(tracesPage);addAndMakeVisible(metersPage);commands.bind(tracesPage,960);commands.bind(metersPage,961);addAndMakeVisible(dockMeters);dockMeters.toggleRequested=[this]{commands.invoke(203);};meterRevision=meterState.configRevision();meterListener=meterState.listen([this]{if(meterRevision!=meterState.configRevision()){meterRevision=meterState.configRevision();dockMeters.refreshNow();resized();repaint();menuItemsChanged();}});dockRevision=dockMeterState.configRevision();dockListener=dockMeterState.listen([this]{if(dockRevision!=dockMeterState.configRevision()){dockRevision=dockMeterState.configRevision();resized();repaint();menuItemsChanged();}});addAndMakeVisible(principalMeter);principalMeter.command=[this](int id){commands.invoke(id);};for(size_t i=0;i<graphGear.size();++i){auto& gear=graphGear[i];gear.setButtonText("...");gear.getProperties().set("commandGlyph",true);commands.bind(gear,i==0?963:303);addAndMakeVisible(gear);}
  captureLibrary.adoptLegacy(projectFile.getParentDirectory().getChildFile("Capturas"));
  libraryPanel.onCommand=[this](int id){commands.invoke(id);};
  libraryPanel.commandText=[this](int id){auto* c=MyaCommands::find(id);return c?commands.details(*c,MyaCommands::state(*c,commands.current())):String{};};
