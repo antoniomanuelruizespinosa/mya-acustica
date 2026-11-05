@@ -58,10 +58,12 @@ private:
   Clock clock=systemClock;double sampleRate=0;
   std::array<RmsCalibration::Rolling,InputLevels::maxChannels> rms;
   std::array<WeightedMeter::Channel,InputLevels::maxChannels> weighted;
+  std::array<std::optional<double>,InputLevels::maxChannels> fastRmsDbfs;
   InputLevels::Window latest;
   double receivedAt=0,openedAt=0;unsigned seenDrops=0;
   juce::String key;
-  Signal signal=Signal::None;
+  std::atomic<Signal> signal{Signal::None};
+  bool outputReady=false;
   bool virtualReference=false;
   std::atomic<float> pinkScale{1.f};
   std::atomic<float> sweepScale{1.f};
@@ -86,7 +88,8 @@ private:
    for(int ch=0;ch<outputs;++ch)if(output&&output[ch])std::fill_n(output[ch],samples,0.f);
    float outputPeak=0.f;
    // JUCE packs enabled physical outputs; mono pink uses the same sample on each.
-   if(signal!=Signal::None&&outputs>=1&&output&&output[0]){float scale=(signal==Signal::Pink?pinkScale:sweepScale).load(std::memory_order_relaxed);for(int i=0;i<samples;++i){float value=(signal==Signal::Pink?pink.next():sweep.next())*scale;for(int ch=0;ch<outputs;++ch)if(output[ch])output[ch][i]=value;outputPeak=std::max(outputPeak,std::abs(value));}if(signal==Signal::Sweep&&sweep.complete())sweepFinished.store(true,std::memory_order_release);}
+   const auto currentSignal=signal.load(std::memory_order_acquire);
+   if(currentSignal!=Signal::None&&outputs>=1&&output&&output[0]){float scale=(currentSignal==Signal::Pink?pinkScale:sweepScale).load(std::memory_order_relaxed);for(int i=0;i<samples;++i){float value=(currentSignal==Signal::Pink?pink.next():sweep.next())*scale;for(int ch=0;ch<outputs;++ch)if(output[ch])output[ch][i]+=value;outputPeak=std::max(outputPeak,std::abs(value));}if(currentSignal==Signal::Sweep&&sweep.complete())sweepFinished.store(true,std::memory_order_release);}
    lastOutputs.store(outputs,std::memory_order_relaxed);lastOutputPeak.store(outputPeak,std::memory_order_release);
    const double now=clock();lastCallbackMs.store(now,std::memory_order_release);
    lastInputs.store(inputs,std::memory_order_relaxed);lastSamples.store(samples,std::memory_order_relaxed);
@@ -99,17 +102,17 @@ private:
     int micChannel=captureMics[route],refChannel=captureRefs[route];if(micChannel<=0)continue;
     int mi=-1,ri=-1;
     for(int ch=0;ch<count;++ch){if(physical[(size_t)ch]==micChannel-1)mi=ch;if(physical[(size_t)ch]==refChannel-1)ri=ch;}
-    if(mi>=0&&input[mi]&&(virtualReference?(signal!=Signal::None&&outputs>=1&&output&&output[0]):(refChannel<=0||ri>=0&&input[ri])))for(int offset=0;offset<samples;){
+    if(mi>=0&&input[mi]&&(virtualReference?(currentSignal!=Signal::None&&outputs>=1&&output&&output[0]):(refChannel<=0||ri>=0&&input[ri])))for(int offset=0;offset<samples;){
      TransferFunctionCore::RawBlock block;block.sequence=rawSequences[route].fetch_add(1,std::memory_order_acq_rel)+1;block.sampleRate=sampleRate;
      block.count=std::min(TransferFunctionCore::blockCapacity,samples-offset);
      std::copy_n(input[mi]+offset,block.count,block.mic.begin());
-     if(virtualReference&&signal!=Signal::None&&outputs>=1&&output&&output[0])std::copy_n(output[0]+offset,block.count,block.ref.begin());else if(ri>=0&&input[ri])std::copy_n(input[ri]+offset,block.count,block.ref.begin());
+     if(virtualReference&&currentSignal!=Signal::None&&outputs>=1&&output&&output[0])std::copy_n(output[0]+offset,block.count,block.ref.begin());else if(ri>=0&&input[ri])std::copy_n(input[ri]+offset,block.count,block.ref.begin());
      float trim=referenceScale.load(std::memory_order_relaxed);if(trim!=1.f)for(int j=0;j<block.count;++j)block.ref[(size_t)j]*=trim;
      if(!rawQueues[route].push(block))rawDropped.fetch_add(1,std::memory_order_relaxed);
      offset+=block.count;
     }
    }
-   if(collectLoop.load(std::memory_order_relaxed)&&signal==Signal::Pink&&output&&outputs>0&&output[0]&&input&&inputs==count){int ri=-1;for(int ch=0;ch<count;++ch)if(physical[(size_t)ch]==captureRef-1)ri=ch;if(ri>=0&&input[ri])for(int offset=0;offset<samples;){TransferFunctionCore::RawBlock block;block.sampleRate=sampleRate;block.count=std::min(TransferFunctionCore::blockCapacity,samples-offset);std::copy_n(input[ri]+offset,block.count,block.mic.begin());std::copy_n(output[0]+offset,block.count,block.ref.begin());if(!loopQueue.push(block)){loopOverflow.store(true,std::memory_order_release);collectLoop.store(false,std::memory_order_relaxed);}offset+=block.count;}}
+   if(collectLoop.load(std::memory_order_relaxed)&&currentSignal==Signal::Pink&&output&&outputs>0&&output[0]&&input&&inputs==count){int ri=-1;for(int ch=0;ch<count;++ch)if(physical[(size_t)ch]==captureRef-1)ri=ch;if(ri>=0&&input[ri])for(int offset=0;offset<samples;){TransferFunctionCore::RawBlock block;block.sampleRate=sampleRate;block.count=std::min(TransferFunctionCore::blockCapacity,samples-offset);std::copy_n(input[ri]+offset,block.count,block.mic.begin());std::copy_n(output[0]+offset,block.count,block.ref.begin());if(!loopQueue.push(block)){loopOverflow.store(true,std::memory_order_release);collectLoop.store(false,std::memory_order_relaxed);}offset+=block.count;}}
    produced.store(frame.sequence,std::memory_order_release);
   }
   ~Session()override{if(device){device->stop();device->close();}}
@@ -143,15 +146,24 @@ public:
  const juce::String& summary()const{return runningFlag?description:error;}
  juce::String details()const{auto text=description;if(runningFlag)for(const auto& s:sessions)text+="\n"+diagnostic(*s,clock());return text;}
  unsigned drops()const{unsigned n=0;for(const auto& s:sessions)n+=s->dropped.load(std::memory_order_relaxed);return n;}
- void setPinkLevelDb(double db){if(!std::isfinite(db))return;db=juce::jlimit(-96.,0.,db);pinkLevelDb=db;float scale=(float)std::pow(10.,(db+40.)/20.);for(auto& s:sessions)if(s->signal==Signal::Pink)s->pinkScale.store(scale,std::memory_order_release);}
+ // A prepared output can change signal without closing its live input device.
+ bool setGeneratorSignal(Signal next,const juce::String& deviceKey={}){
+  if(!runningFlag||next==Signal::Sweep)return false;
+  if(next==Signal::None){for(auto& s:sessions)s->signal.store(Signal::None,std::memory_order_release);return true;}
+  for(auto& s:sessions)if(s->outputReady&&(deviceKey.isEmpty()||s->key==deviceKey)){
+   s->signal.store(next,std::memory_order_release);return true;
+  }
+  return false;
+ }
+ void setPinkLevelDb(double db){if(!std::isfinite(db))return;db=juce::jlimit(-96.,0.,db);pinkLevelDb=db;float scale=(float)std::pow(10.,(db+40.)/20.);for(auto& s:sessions)s->pinkScale.store(scale,std::memory_order_release);}
  double pinkLevel()const{return pinkLevelDb;}
- void setSweepLevelDb(double db){if(!std::isfinite(db))return;db=juce::jlimit(-60.,-20.,db);sweepLevelDb=db;for(auto& s:sessions)if(s->signal==Signal::Sweep)s->sweepScale.store((float)std::pow(10.,(db+40.)/20.),std::memory_order_release);}
+ void setSweepLevelDb(double db){if(!std::isfinite(db))return;db=juce::jlimit(-60.,-20.,db);sweepLevelDb=db;for(auto& s:sessions)s->sweepScale.store((float)std::pow(10.,(db+40.)/20.),std::memory_order_release);}
  double sweepLevel()const{return sweepLevelDb;}
  void setSweep(double startHz,double endHz,double duration){sweepStartHz=juce::jlimit(10.,20000.,startHz);sweepEndHz=juce::jlimit(sweepStartHz+1.,24000.,endHz);sweepDuration=juce::jlimit(.1,60.,duration);}
  double sweepStart()const{return sweepStartHz;} double sweepEnd()const{return sweepEndHz;} double sweepSeconds()const{return sweepDuration;}
  void setReferenceGainDb(double db){db=juce::jlimit(-24.,24.,db);referenceGainDb=db;float scale=(float)std::pow(10.,db/20.);for(auto& s:sessions)if(!s->virtualReference)s->referenceScale.store(scale,std::memory_order_release);}
  double referenceGain()const{return referenceGainDb;}
- bool startLoopCalibration(const std::string& key){for(auto& s:sessions)if(s->key.toStdString()==key&&s->signal==Signal::Pink&&!s->virtualReference&&s->captureRef>0){bool hasReference=false;for(int i=0;i<s->count;++i)hasReference=hasReference||s->physical[(size_t)i]==s->captureRef-1;if(!hasReference)return false;TransferFunctionCore::RawBlock discarded;while(s->loopQueue.pop(discarded)){}s->loopOverflow.store(false);s->collectLoop.store(true,std::memory_order_release);return true;}return false;}
+ bool startLoopCalibration(const std::string& key){for(auto& s:sessions)if(s->key.toStdString()==key&&s->signal.load(std::memory_order_acquire)==Signal::Pink&&!s->virtualReference&&s->captureRef>0){bool hasReference=false;for(int i=0;i<s->count;++i)hasReference=hasReference||s->physical[(size_t)i]==s->captureRef-1;if(!hasReference)return false;TransferFunctionCore::RawBlock discarded;while(s->loopQueue.pop(discarded)){}s->loopOverflow.store(false);s->collectLoop.store(true,std::memory_order_release);return true;}return false;}
  void cancelLoopCalibration(){for(auto& s:sessions)s->collectLoop.store(false,std::memory_order_release);}
  bool loopCalibrationActive(const std::string& key)const{for(const auto& s:sessions)if(s->key.toStdString()==key)return s->collectLoop.load(std::memory_order_acquire);return false;}
  bool loopCalibrationOverflow(const std::string& key)const{for(const auto& s:sessions)if(s->key.toStdString()==key)return s->loopOverflow.load(std::memory_order_acquire);return false;}
@@ -175,15 +187,21 @@ public:
    juce::AudioDeviceManager manager;manager.createAudioDeviceTypes(session->types);juce::AudioIODeviceType* type=nullptr;
    for(auto* t:session->types)if(t->getTypeName()==endpoint->backend){type=t;break;}
    if(!type){error="Backend no disponible: "+endpoint->backend;stop();return false;}
-   type->scanForDevices();juce::BigInteger mask;for(int ch=0;ch<InputLevels::maxChannels;++ch)if(group.enabled[(size_t)ch])mask.setBit(ch);session->device.reset(type->createDevice(outputSignal!=Signal::None?endpoint->name:juce::String{},mask.isZero()?juce::String{}:endpoint->name));
+   const bool prepareOutput=endpoint->key==outputDeviceKey&&outputChannel>0&&!endpoint->outputs.isEmpty()&&(outputChannel<=endpoint->outputs.size()||outputChannel==InputLevels::maxChannels+1||(outputChannel==InputLevels::stereoOutput&&endpoint->outputs.size()>=2));
+   type->scanForDevices();juce::BigInteger mask;for(int ch=0;ch<InputLevels::maxChannels;++ch)if(group.enabled[(size_t)ch])mask.setBit(ch);session->device.reset(type->createDevice(prepareOutput?endpoint->name:juce::String{},mask.isZero()?juce::String{}:endpoint->name));
+   if(!session->device&&outputSignal==Signal::None&&prepareOutput)session->device.reset(type->createDevice({},mask.isZero()?juce::String{}:endpoint->name));
    if(!session->device){error="No se pudo crear entrada: "+endpoint->name;stop();return false;}
    auto rates=session->device->getAvailableSampleRates();double rate=session->device->getCurrentSampleRate();
    if(rate<=0||!rates.contains(rate))rate=rates.isEmpty()?0:rates[0];int size=session->device->getDefaultBufferSize();
    if(rate<=0||size<=0){error="Formato de entrada no disponible";stop();return false;}
-   juce::BigInteger outputMask;if(outputSignal!=Signal::None){if(outputChannel==InputLevels::maxChannels+1){for(int ch=0;ch<endpoint->outputs.size();++ch)outputMask.setBit(ch);}else if(outputChannel==InputLevels::stereoOutput){outputMask.setBit(0);outputMask.setBit(1);}else outputMask.setBit(outputChannel-1);}
+   juce::BigInteger outputMask;if(prepareOutput){if(outputChannel==InputLevels::maxChannels+1){for(int ch=0;ch<endpoint->outputs.size();++ch)outputMask.setBit(ch);}else if(outputChannel==InputLevels::stereoOutput){outputMask.setBit(0);outputMask.setBit(1);}else outputMask.setBit(outputChannel-1);}
    auto failure=session->device->open(mask,outputMask,rate,size);
+   if(failure.isNotEmpty()&&outputSignal==Signal::None&&!outputMask.isZero()){
+    session->device->close();outputMask.clear();failure=session->device->open(mask,outputMask,rate,size);
+   }
    if(failure.isNotEmpty()){error=endpoint->name+": "+failure;stop();return false;}
    if(session->device->getActiveInputChannels()!=mask||session->device->getActiveOutputChannels()!=outputMask){error="Backend no respeto los canales de entrada/salida solicitados";stop();return false;}
+   session->outputReady=!outputMask.isZero();
    // start() may invoke the audio callback immediately; finish Sweep setup first.
    session->sweep.configure(session->device->getCurrentSampleRate(),sweepStartHz,sweepEndHz,sweepDuration);
    session->openedAt=clock();session->device->start(session.get());
@@ -218,12 +236,12 @@ public:
    for(int drained=0;drained<64&&s->queue.pop(frame);++drained){
     if(!std::isfinite(frame.timeSeconds)||frame.timeSeconds<=0)return fail(*s,"Timestamp de callback invalido",clock());
     lastProcessedMs=frame.timeSeconds*1000.;window.merge(frame);
-    for(int i=0;i<s->count;++i){auto ch=(size_t)s->physical[(size_t)i];s->rms[ch].feed(frame.channels[ch],frame.sequence,s->sampleRate,frame.timeSeconds);}
+    for(int i=0;i<s->count;++i){auto ch=(size_t)s->physical[(size_t)i];s->rms[ch].feed(frame.channels[ch],frame.sequence,s->sampleRate,frame.timeSeconds);s->fastRmsDbfs[ch]=frame.channels[ch].valid&&frame.channels[ch].weightedValid?WeightedMeter::db(frame.channels[ch].fastPower[0]):std::nullopt;}
     if(observe)observe(s->key.toStdString(),frame,s->sampleRate);
    }
    if(observeRaw||observeTF)for(size_t i=0;i<s->rawQueues.size();++i){TransferFunctionCore::RawBlock raw;for(int drained=0;drained<64&&s->rawQueues[i].pop(raw);++drained)if(raw.sequence>s->minimumRawSequences[i]){if(observeTF)observeTF((int)i,raw);else if(observeRaw&&i==0)observeRaw(s->key.toStdString(),raw);}}
    unsigned count=s->dropped.load();bool gap=count!=s->seenDrops;s->seenDrops=count;
-   if(gap){for(auto& rms:s->rms)rms.reset();s->resetWeighted.store(true,std::memory_order_release);}
+   if(gap){for(auto& rms:s->rms)rms.reset();s->fastRmsDbfs.fill(std::nullopt);s->resetWeighted.store(true,std::memory_order_release);}
    if(window.any){window.gap=window.gap||gap;s->latest=window;s->receivedAt=lastProcessedMs;}else if(gap)s->latest={};
    now=clock();fault=s->fault.load(std::memory_order_acquire);
    if(fault==Fault::BackendError)return fail(*s,"Error notificado por backend",now);
@@ -239,7 +257,8 @@ public:
  double rate(const std::string& key)const{for(const auto& s:sessions)if(s->key.toStdString()==key)return s->aboutReady.load(std::memory_order_acquire)?s->sampleRate:0.;return 0;}
  int bufferSamples(const std::string& key)const{for(const auto& s:sessions)if(s->key.toStdString()==key)return s->device?s->device->getCurrentBufferSizeSamples():0;return 0;}
  std::optional<double> outputDbfs(const std::string& key)const{if(!runningFlag)return {};for(const auto& s:sessions)if(s->key.toStdString()==key){if(s->lastOutputs.load(std::memory_order_acquire)<1)return {};float peak=s->lastOutputPeak.load(std::memory_order_acquire);if(peak<=0)return {};return 20.*std::log10((double)peak);}return {};}
- bool sweepComplete()const{for(const auto& s:sessions)if(s->signal==Signal::Sweep&&s->sweepFinished.load(std::memory_order_acquire))return true;return false;}
+ bool sweepComplete()const{for(const auto& s:sessions)if(s->signal.load(std::memory_order_acquire)==Signal::Sweep&&s->sweepFinished.load(std::memory_order_acquire))return true;return false;}
+ std::optional<double> fastRms(const std::string& key,int ch)const{if(ch<1||ch>InputLevels::maxChannels||!channel(key,ch).valid)return {};for(const auto& s:sessions)if(s->key.toStdString()==key)return s->fastRmsDbfs[(size_t)ch-1];return {};}
  std::uint64_t cursor(const std::string& key)const{for(const auto& s:sessions)if(s->key.toStdString()==key)return s->produced.load(std::memory_order_acquire);return 0;}
  std::optional<double> rms(const std::string& key,int ch)const{if(!channel(key,ch).valid)return {};for(const auto& s:sessions)if(s->key.toStdString()==key)return s->rms[(size_t)ch-1].level;return {};}
  bool rmsClip(const std::string& key,int ch)const{if(ch<1||ch>InputLevels::maxChannels)return false;for(const auto& s:sessions)if(s->key.toStdString()==key)return s->rms[(size_t)ch-1].hasClip();return false;}
@@ -248,7 +267,7 @@ public:
  #if defined(MYA_INPUT_ENGINE_TEST)
  // Drive the ACTUAL callback/queue/poll path with a clock, no device creation/open.
  void fixtureStart(juce::String key,double rate,const std::vector<int>& channels,bool pinkOutput=false,int tfMic=0,int tfRef=0,bool internalReference=false){fixtureSignal(key,rate,channels,pinkOutput?Signal::Pink:Signal::None,tfMic,tfRef,internalReference);}
- void fixtureSignal(juce::String key,double rate,const std::vector<int>& channels,Signal signal,int tfMic=0,int tfRef=0,bool internalReference=false){stop();error.clear();description.clear();auto s=std::make_unique<Session>();s->setRouteCount(1);s->key=key;s->clock=clock;s->sampleRate=rate;s->openedAt=clock();s->starts=1;s->aboutReady=true;s->stopped=false;s->signal=signal;s->captureMic=tfMic;s->captureRef=tfRef;s->captureMics[0]=tfMic;s->captureRefs[0]=tfRef;s->virtualReference=internalReference;s->pinkScale.store((float)std::pow(10.,(pinkLevelDb+40.)/20.));s->sweepScale.store((float)std::pow(10.,(sweepLevelDb+40.)/20.));s->sweep.configure(rate,sweepStartHz,sweepEndHz,sweepDuration);for(int ch:channels){s->physical[(size_t)s->count++]=ch-1;s->weighted[(size_t)ch-1].configure(rate);}sessions.push_back(std::move(s));runningFlag=true;}
+ void fixtureSignal(juce::String key,double rate,const std::vector<int>& channels,Signal signal,int tfMic=0,int tfRef=0,bool internalReference=false){stop();error.clear();description.clear();auto s=std::make_unique<Session>();s->setRouteCount(1);s->key=key;s->clock=clock;s->sampleRate=rate;s->openedAt=clock();s->starts=1;s->aboutReady=true;s->stopped=false;s->signal=signal;s->outputReady=signal!=Signal::None;s->captureMic=tfMic;s->captureRef=tfRef;s->captureMics[0]=tfMic;s->captureRefs[0]=tfRef;s->virtualReference=internalReference;s->pinkScale.store((float)std::pow(10.,(pinkLevelDb+40.)/20.));s->sweepScale.store((float)std::pow(10.,(sweepLevelDb+40.)/20.));s->sweep.configure(rate,sweepStartHz,sweepEndHz,sweepDuration);for(int ch:channels){s->physical[(size_t)s->count++]=ch-1;s->weighted[(size_t)ch-1].configure(rate);}sessions.push_back(std::move(s));runningFlag=true;}
  void fixtureRoutes(const std::vector<InputLevels::Route>& routes,const std::vector<bool>& active){auto& s=*sessions.front();s.setRouteCount(routes.size());for(size_t i=0;i<routes.size();++i){s.captureMics[i]=i<active.size()&&active[i]?routes[i].mic:0;s.captureRefs[i]=i<active.size()&&active[i]?routes[i].ref:0;}}
  void fixtureCallback(const float* const* input,int inputs,int samples,size_t session=0){sessions[session]->audioDeviceIOCallbackWithContext(input,inputs,nullptr,0,samples,{});}
  void fixtureOutputCallback(const float* const* input,int inputs,float* output,int samples){float* channels[]={output};sessions.front()->audioDeviceIOCallbackWithContext(input,inputs,channels,1,samples,{});}

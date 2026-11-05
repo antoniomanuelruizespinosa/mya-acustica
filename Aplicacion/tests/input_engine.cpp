@@ -43,6 +43,17 @@ int main(int argc,char** argv){
   engine.setPinkLevelDb(-20);engine.fixtureSignal(juce::String(key),48000,{1},LiveInputEngine::Signal::Pink);engine.fixtureOutputCallback(input,1,out.data(),480);for(float sample:out)assert(std::isfinite(sample)&&std::abs(sample)<=0.1f);engine.stop();engine.setPinkLevelDb(-40);
   engine.setPinkLevelDb(0);engine.fixtureSignal(juce::String(key),48000,{1},LiveInputEngine::Signal::Pink);engine.fixtureOutputCallback(input,1,out.data(),480);for(float sample:out)assert(std::isfinite(sample)&&std::abs(sample)<=1.f);engine.stop();engine.setPinkLevelDb(-96);assert(engine.pinkLevel()==-96);engine.setPinkLevelDb(-40);
   engine.setSweepLevelDb(-20);engine.fixtureSignal(juce::String(key),48000,{1},LiveInputEngine::Signal::Sweep);engine.fixtureOutputCallback(input,1,out.data(),480);for(float sample:out)assert(std::isfinite(sample)&&std::abs(sample)<=0.1f);engine.stop();engine.setSweepLevelDb(-40);
+  // Turning the generator off and on must retain the same acquisition session.
+  engine.fixtureSignal(juce::String(key),48000,{1},LiveInputEngine::Signal::Pink);
+  auto generation=engine.generation();
+  nowMs+=10;engine.fixtureOutputCallback(input,1,out.data(),480);assert(engine.poll());
+  auto before=engine.cursor(key);assert(before>0&&engine.setGeneratorSignal(LiveInputEngine::Signal::None,juce::String(key)));
+  nowMs+=10;engine.fixtureOutputCallback(input,1,out.data(),480);assert(engine.poll());
+  assert(engine.running()&&engine.generation()==generation&&engine.cursor(key)==before+1&&engine.channel(key,1).valid&&!engine.outputDbfs(key));
+  assert(engine.setGeneratorSignal(LiveInputEngine::Signal::Pink,juce::String(key)));
+  nowMs+=10;engine.fixtureOutputCallback(input,1,out.data(),480);assert(engine.poll());
+  assert(engine.running()&&engine.generation()==generation&&engine.cursor(key)==before+2&&engine.outputDbfs(key));
+  engine.stop();
  }
  // Single physical Input1: actual IO callback -> SPSC -> peak/RMS poll, no backend open.
  start();assert(engine.poll()&&!engine.rms(key,1));
@@ -76,6 +87,13 @@ int main(int argc,char** argv){
  for(size_t ch=0;ch<5;++ch){channels[ch]=x;for(auto& sample:channels[ch])sample*=(float)(ch+1);five[ch]=channels[ch].data();}
  for(int i=0;i<100;++i){nowMs+=10;engine.fixtureCallback(five,5,480);assert(engine.poll());}
  for(int ch=1;ch<=5;++ch){assert(engine.channel(key,ch).valid&&engine.rms(key,ch));assert(std::abs(*engine.rms(key,ch)-(-43.01029995664+20*std::log10(ch)))<1.e-6);}
+ // The time-domain Fast integrator is independent per input and agrees for identical stimuli.
+ engine.fixtureStart(juce::String(key),48000,{1,2});const float* identical[]={x.data(),x.data()};
+ for(int i=0;i<100;++i){nowMs+=10;engine.fixtureCallback(identical,2,480);assert(engine.poll());}
+ auto firstFast=engine.fastRms(key,1),secondFast=engine.fastRms(key,2);
+ assert(firstFast&&secondFast&&std::abs(*firstFast-*secondFast)<0.05);
+ const double calibrationOffset=114.-(-43.01029995664);
+ assert(std::abs(*firstFast+calibrationOffset-114.)<0.05);
  // M/R raw capture uses physical Input1 and Input5, not packed positions 1 and 5.
  engine.fixtureStart(juce::String(key),48000,{1,2,3,4,5},false,1,5);
  nowMs+=10;engine.fixtureCallback(five,5,480);
