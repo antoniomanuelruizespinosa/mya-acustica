@@ -13,7 +13,22 @@ inline int actionTop(int height,bool alignmentExpanded=false){return signalTop(h
 inline int tfBottom(int height,bool alignmentExpanded=false){return actionTop(height,alignmentExpanded)-8;}
 inline int tfViewportHeight(int height,bool alignmentExpanded=false,bool mainVisible=true){return std::max(0,tfBottom(height,alignmentExpanded)-tfStart(mainVisible));}
 struct Heights {int ir,phase,magnitude;};
-inline Heights heights(int available,bool showIR,double irFraction=.14,double phaseFraction=.5){int ir=showIR?std::clamp((int)std::lround(available*irFraction),60,std::max(60,available-176)):0;int rest=available-(showIR?ir+8:0);int phase=std::clamp((int)std::floor((rest-8)*phaseFraction),80,std::max(80,rest-88));return {ir,phase,std::max(60,phaseFraction==.5?phase:rest-phase-8)};}
+inline Heights heights(int available,bool showIR,double irFraction=.14,double phaseFraction=.5){
+ const int usable=std::max(0,available-(showIR?16:8));
+ int ir=0;
+ if(showIR){
+  const int minIR=std::min(60,usable/3);
+  const int minPhase=std::min(80,(usable-minIR)/2);
+  const int minMagnitude=std::min(60,usable-minIR-minPhase);
+  ir=std::clamp((int)std::lround(available*irFraction),minIR,usable-minPhase-minMagnitude);
+ }
+ const int remaining=usable-ir;
+ const int minPhase=std::min(80,remaining/2);
+ const int minMagnitude=std::min(60,remaining-minPhase);
+ const int phase=std::clamp((int)std::floor(remaining*phaseFraction),minPhase,remaining-minMagnitude);
+ const int magnitude=phaseFraction==.5?std::min(phase,remaining-phase):remaining-phase;
+ return {ir,phase,magnitude};
+}
 struct Box {int x,y,w,h;bool intersects(const Box& b) const{return x<b.x+b.w&&b.x<x+w&&y<b.y+b.h&&b.y<y+h;}};
 inline Box meterBar(int width,int channel){return {17,channel*24+1,std::max(1,width-19),14};}
 inline Box meterScale(int width,int channel){return {17,channel*24+15,std::max(1,width-19),9};}
