@@ -1581,12 +1581,23 @@ class MainWindow : public DocumentWindow {
  Workstation* workstation=nullptr;
  ApplicationProperties& preferences;
  bool readyToPersist=false;
+ static bool coversDisplay(Rectangle<int> bounds){
+  if(bounds.isEmpty())return false;
+  auto* display=Desktop::getInstance().getDisplays().getDisplayForRect(bounds);
+  if(display==nullptr)return false;
+  auto area=display->userArea;
+  return bounds.getWidth()>=area.getWidth()*95/100
+      && bounds.getHeight()>=area.getHeight()*90/100
+      && std::abs(bounds.getX()-area.getX())<=80
+      && std::abs(bounds.getY()-area.getY())<=80;
+ }
  void saveUiState(){
   if(!readyToPersist)return;
   if(auto* properties=preferences.getUserSettings()){
    properties->setValue("window.bounds",getBounds().toString());
    properties->setValue("window.state",getWindowStateAsString());
    properties->setValue("window.fullScreen",isFullScreen());
+   properties->setValue("isWindowMaximized",isFullScreen()||coversDisplay(getBounds()));
    if(workstation)workstation->saveUiLayout(*properties);
   }
  }
@@ -1601,13 +1612,19 @@ public:
  #endif
  setResizable(true,false);setResizeLimits(1120,900,3000,2000);
  bool restored=false;
+ bool wasMaximized=false;
  if(auto* properties=preferences.getUserSettings()){
   auto state=properties->getValue("window.state");
   if(state.isNotEmpty())restored=restoreWindowStateFromString(state);
-  if(!restored){auto bounds=Rectangle<int>::fromString(properties->getValue("window.bounds"));if(!bounds.isEmpty()){setBounds(bounds);restored=true;}}
+  auto bounds=Rectangle<int>::fromString(properties->getValue("window.bounds"));
+  if(!restored&&!bounds.isEmpty()){setBounds(bounds);restored=true;}
+  wasMaximized=properties->getBoolValue("isWindowMaximized",
+      properties->getBoolValue("window.fullScreen",false)||coversDisplay(bounds));
+  if(wasMaximized)setFullScreen(true);
+  // The administrator's saved layout is applied after all child components exist.
   workstation->restoreUiLayout(*properties);
  }
- if(!restored)centreWithSize(1440,960);
+ if(!restored&&!wasMaximized)centreWithSize(1440,960);
  setVisible(true);readyToPersist=true;workstation->onUiLayoutChanged=[this]{saveUiState();};
  installMyaNativeTitleBrand(*this);workstation->grabKeyboardFocus();}
  ~MainWindow()override{
