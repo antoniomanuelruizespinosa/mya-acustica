@@ -569,7 +569,7 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
  int layoutRightWidth() const{return rightWidth;}
  int centerWidth() const{return getWidth()-centerX()-(rightVisible?layoutRightWidth()+16:8);}
  AffineTransform rightTransform()const{float scale=(float)rightWidth/276.f;return AffineTransform::scale(scale,1.f).translated((float)getWidth()-8-scale*(float)(getWidth()-20),0);}
- void persistWorkspace(){WorkspaceViewState state{leftWidth,rightWidth,leftVisible,rightVisible,inputMeterSettings,avgColour.toString()};if(!state.save(projectFile.getParentDirectory().getChildFile("vista-trabajo.json")))status="No se pudo guardar la vista de trabajo";}
+ void persistWorkspace(){WorkspaceViewState state{leftWidth,rightWidth,leftVisible,rightVisible,inputMeterSettings,avgColour.toString()};if(!state.save(projectFile.getParentDirectory().getChildFile("vista-trabajo.json")))status="No se pudo guardar la vista de trabajo";if(onUiLayoutChanged)onUiLayoutChanged();}
  void reflectPlayButtons(){for(size_t k=0;k<tfActions.size();++k){auto& button=tfActions[k][3];button.getProperties().set("playActive",k<liveTFActive.size()&&liveTFActive[k]&&inputEngine.running());button.getProperties().set("playColour",traceSwitch[k].colour.toString());button.repaint();}refreshAverageRows();}
  void reflectInputMeters(){for(size_t k=0;k<inputMeters.size();++k){inputMeters[k].colour=traceSwitch[k].colour;inputMeters[k].settings=inputMeterSettings;inputMeters[k].repaint();tfActions[k][1].getProperties().set("trackColour",traceSwitch[k].colour.toString());tfActions[k][1].repaint();}reflectPlayButtons();}
  void positionAnchored(){if(!anchoredOptions||!anchoredOptions->isVisible()||!optionsAnchor)return;if(mode!=0||!rightVisible||!optionsAnchor->isVisible()){anchoredOptions->setVisible(false);return;}auto r=getLocalArea(optionsAnchor,optionsAnchor->getLocalBounds());int w=anchoredOptions->getWidth(),h=anchoredOptions->getHeight();int x=r.getX()-w-6;if(x<8)x=jlimit(8,jmax(8,getWidth()-w-8),r.getRight()+6);int y=jlimit(82,jmax(82,getHeight()-h-33),r.getBottom()-h);if(principalMeter.isVisible()&&Rectangle<int>{x,y,w,h}.intersects(principalMeter.getBounds())){int below=principalMeter.getBottom()+6;y=jlimit(below,jmax(below,getHeight()-h-33),jmax(below,r.getY()));}anchoredOptions->setTopLeftPosition(x,y);anchoredOptions->toFront(false);}
@@ -962,6 +962,22 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
  }plotPanX[0]=0;for(int panel:{1,2}){auto k=(size_t)panel;double half=.5/plotZoomX[k];plotPanX[k]=jlimit(half,1.-half,.5+plotPanX[k])-.5;}if(auto graph=GraphViewState::decode(view["graphRepresentations"]))restoreGraphChoices(*graph);if(auto tf=TFDisplayState::decode(view["tfDisplay"])){tfSettings=*tf;reflectTF();if(tfSettings.linkFrequencyZoom)PlotPresentation::linkFrequency(plotZoomX,plotPanX,1);}if(writePreferences){persistTF();persistGraphChoices();}syncNames();reflectAvgColour();refreshAverageRows();refreshPlotSources();{int selected=source.getSelectedId()-1;if(selected>=0&&(size_t)selected<tfAverageDepth.size()){refreshAverageSelector(true);}}resized();tfContent.repaint();status="Proyecto demo recuperado";repaint();}
  #include "WorkstationCommands.inc"
 public:
+ std::function<void()> onUiLayoutChanged;
+ void saveUiLayout(PropertiesFile& properties) const {
+  properties.setValue("layout.leftWidth",leftWidth);
+  properties.setValue("layout.rightWidth",rightWidth);
+  properties.setValue("layout.leftVisible",leftVisible);
+  properties.setValue("layout.rightVisible",rightVisible);
+  properties.setValue("layout.mainMeterHeight",principalMeterHeight);
+ }
+ void restoreUiLayout(const PropertiesFile& properties){
+  leftWidth=jlimit(WorkspaceViewState::leftMin,WorkspaceViewState::leftMax,properties.getIntValue("layout.leftWidth",leftWidth));
+  rightWidth=jlimit(WorkspaceViewState::rightMin,WorkspaceViewState::rightMax,properties.getIntValue("layout.rightWidth",rightWidth));
+  leftVisible=properties.getBoolValue("layout.leftVisible",leftVisible);
+  rightVisible=properties.getBoolValue("layout.rightVisible",rightVisible);
+  principalMeterHeight=jlimit(PrincipalMeter::compactHeight,600,properties.getIntValue("layout.mainMeterHeight",principalMeterHeight));
+  resized();
+ }
  void setModeTitleCallback(std::function<void(int)> callback){onModeTitleChanged=std::move(callback);onModeTitleChanged(mode);}
  void checkForUpdates(bool manual){
   if(!updateChecker){
@@ -1263,7 +1279,7 @@ public:
  for(int n:{4,7,8,13,14,15,16,17,18})addAndMakeVisible(*measurementButtons[(size_t)n]);addAndMakeVisible(plotChoice);
  for(auto pair:std::initializer_list<std::pair<int,const char*>>{{20,"TF"},{0,"RTA"},{21,"IR"},{26,"Audio / E-S"},{2,"Medidores"}}){measurementButtons[(size_t)pair.first]->getProperties().set("commandGlyph",true);measurementButtons[(size_t)pair.first]->setButtonText(pair.second);}
  commands.bind(closeLeft,405);commands.bind(closeRight,406);commands.bind(restoreRight,406);for(auto* b:{&closeLeft,&closeRight,&restoreRight}){b->getProperties().set("commandGlyph",true);addAndMakeVisible(b);}
- addAndMakeVisible(leftDivider);addAndMakeVisible(rightDivider);addAndMakeVisible(meterHeightDivider);leftDivider.moved=[this](int x){leftWidth=jlimit(WorkspaceViewState::leftMin,WorkspaceViewState::leftMax,x-8);resized();repaint();persistWorkspace();};rightDivider.moved=[this](int x){rightWidth=jlimit(WorkspaceViewState::rightMin,WorkspaceViewState::rightMax,getWidth()-x-8);resized();repaint();persistWorkspace();};meterHeightDivider.moved=[this](int y){int maximum=jmax(PrincipalMeter::compactHeight,CompactLayout::tfBottom(getHeight(),alignmentExpanded)-CompactLayout::tfStart(true)+96-CompactLayout::tfCard);principalMeterHeight=jlimit(PrincipalMeter::compactHeight,maximum,y-88);resized();repaint();};
+ addAndMakeVisible(leftDivider);addAndMakeVisible(rightDivider);addAndMakeVisible(meterHeightDivider);leftDivider.moved=[this](int x){leftWidth=jlimit(WorkspaceViewState::leftMin,WorkspaceViewState::leftMax,x-8);resized();repaint();persistWorkspace();};rightDivider.moved=[this](int x){rightWidth=jlimit(WorkspaceViewState::rightMin,WorkspaceViewState::rightMax,getWidth()-x-8);resized();repaint();persistWorkspace();};meterHeightDivider.moved=[this](int y){int maximum=jmax(PrincipalMeter::compactHeight,CompactLayout::tfBottom(getHeight(),alignmentExpanded)-CompactLayout::tfStart(true)+96-CompactLayout::tfCard);principalMeterHeight=jlimit(PrincipalMeter::compactHeight,maximum,y-88);resized();repaint();if(onUiLayoutChanged)onUiLayoutChanged();};
  globalKeyCommands.registerAllCommandsForTarget(this);globalKeyCommands.setFirstCommandTarget(this);globalKeyCommands.getKeyMappings()->addKeyPress(504,KeyPress('g'));globalKeyCommands.getKeyMappings()->addKeyPress(504,KeyPress('G',ModifierKeys::shiftModifier,'G'));globalKeyCommands.getKeyMappings()->addKeyPress(505,KeyPress('s'));globalKeyCommands.getKeyMappings()->addKeyPress(505,KeyPress('S',ModifierKeys::shiftModifier,'S'));globalKeyCommands.getKeyMappings()->addKeyPress(526,KeyPress('v'));globalKeyCommands.getKeyMappings()->addKeyPress(526,KeyPress('V',ModifierKeys::shiftModifier,'V'));globalKeyCommands.getKeyMappings()->addKeyPress(406,KeyPress('o'));globalKeyCommands.getKeyMappings()->addKeyPress(406,KeyPress('O',ModifierKeys::shiftModifier,'O'));globalKeyCommands.getKeyMappings()->addKeyPress(405,KeyPress('b'));globalKeyCommands.getKeyMappings()->addKeyPress(405,KeyPress('B',ModifierKeys::shiftModifier,'B'));globalKeyCommands.getKeyMappings()->addKeyPress(103,KeyPress(KeyPress::spaceKey));registerKeys(*this);globalKeysInstalled=true;setSize(1440,960);select(0);
  if(projectFile.existsAsFile())load(false);
  if(auto state=WorkspaceViewState::read(projectFile.getParentDirectory().getChildFile("vista-trabajo.json"))){leftWidth=state->leftWidth;rightWidth=state->rightWidth;leftVisible=state->leftVisible;rightVisible=state->rightVisible;inputMeterSettings=state->meters;avgColour=Colour::fromString(state->avgColour);}if(JSON::parse(projectFile)["averageTFs"].isArray()&&!averageEntries.empty())avgColour=averageEntries[selectedAverage].colour;commitAverage();reflectAvgColour();refreshAverageRows();reflectInputMeters();
@@ -1563,8 +1579,19 @@ public:
 };
 class MainWindow : public DocumentWindow {
  Workstation* workstation=nullptr;
+ ApplicationProperties& preferences;
+ bool readyToPersist=false;
+ void saveUiState(){
+  if(!readyToPersist)return;
+  if(auto* properties=preferences.getUserSettings()){
+   properties->setValue("window.bounds",getBounds().toString());
+   properties->setValue("window.state",getWindowStateAsString());
+   properties->setValue("window.fullScreen",isFullScreen());
+   if(workstation)workstation->saveUiLayout(*properties);
+  }
+ }
 public:
- MainWindow():DocumentWindow(MyaIdentity::name(),Palette::bg,allButtons){
+ explicit MainWindow(ApplicationProperties& settings):DocumentWindow(MyaIdentity::name(),Palette::bg,allButtons),preferences(settings){
  setUsingNativeTitleBar(true);auto* surface=new WorkstationSurface();workstation=&surface->station;setContentOwned(surface,true);
  workstation->setModeTitleCallback([this](int currentMode){setName(currentMode==1?juce::String::fromUTF8("Mya Acústica DSP"):juce::String::fromUTF8("Mya Acústica Analyzer"));});
  #if JUCE_MAC
@@ -1572,23 +1599,38 @@ public:
  #else
  // All menus are retained in the chevron overlay on Windows.
  #endif
- setResizable(true,false);setResizeLimits(1120,900,3000,2000);centreWithSize(1440,960);setVisible(true);installMyaNativeTitleBrand(*this);workstation->grabKeyboardFocus();}
+ setResizable(true,false);setResizeLimits(1120,900,3000,2000);
+ bool restored=false;
+ if(auto* properties=preferences.getUserSettings()){
+  auto state=properties->getValue("window.state");
+  if(state.isNotEmpty())restored=restoreWindowStateFromString(state);
+  if(!restored){auto bounds=Rectangle<int>::fromString(properties->getValue("window.bounds"));if(!bounds.isEmpty()){setBounds(bounds);restored=true;}}
+  workstation->restoreUiLayout(*properties);
+ }
+ if(!restored)centreWithSize(1440,960);
+ setVisible(true);readyToPersist=true;workstation->onUiLayoutChanged=[this]{saveUiState();};
+ installMyaNativeTitleBrand(*this);workstation->grabKeyboardFocus();}
  ~MainWindow()override{
+ saveUiState();
+ preferences.saveIfNeeded();
  #if JUCE_MAC
  MenuBarModel::setMacMainMenu(nullptr);
  #else
  setMenuBar(nullptr);
  #endif
  }
+ void moved()override{DocumentWindow::moved();saveUiState();}
+ void resized()override{DocumentWindow::resized();saveUiState();}
  void closeButtonPressed()override{JUCEApplication::getInstance()->systemRequestedQuit();}
  void checkForUpdates(){if(workstation)workstation->checkForUpdates(false);}
 };
 class MyaApp:public JUCEApplication {
  std::unique_ptr<MainWindow> window;std::unique_ptr<MyaStartupWindow> startup;std::shared_ptr<bool> alive=std::make_shared<bool>(true);
+ ApplicationProperties preferences;
 public:
  const String getApplicationName()override{return MyaIdentity::name();}const String getApplicationVersion()override{return MyaIdentity::version();}
- void initialise(const String&)override{startup=std::make_unique<MyaStartupWindow>(true);auto token=alive;MessageManager::callAsync([this,token]{if(!*token)return;window=std::make_unique<MainWindow>();startup.reset();window->checkForUpdates();});}
- void shutdown()override{*alive=false;startup.reset();window.reset();}
+ void initialise(const String&)override{PropertiesFile::Options options;options.applicationName="Mya Acustica";options.filenameSuffix=".settings";options.folderName="Mya Acustica";options.osxLibrarySubFolder="Application Support";preferences.setStorageParameters(options);startup=std::make_unique<MyaStartupWindow>(true);auto token=alive;MessageManager::callAsync([this,token]{if(!*token)return;window=std::make_unique<MainWindow>(preferences);startup.reset();window->checkForUpdates();});}
+ void shutdown()override{*alive=false;startup.reset();window.reset();preferences.saveIfNeeded();}
 };
 
 #if !defined(MYA_OFFSCREEN_RENDER)
