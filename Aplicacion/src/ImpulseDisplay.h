@@ -14,7 +14,7 @@ class ImpulseDisplay {
   if(inverse)for(auto& value:a)value/=(double)n;
  }
 public:
- static constexpr double spanMs=80.,floorDb=-120.;
+ static constexpr double spanMs=170.,floorDb=-120.;
  static double timeMs(double u){return (u-.5)*spanMs;}
  static std::vector<double> envelope(const std::vector<double>& input){
   size_t n=input.size();if(n<2||(n&(n-1))!=0)return {};

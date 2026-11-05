@@ -11,20 +11,22 @@ int main(){
  }
  s.rebuild([](double f){return std::polar(1.,(f<1000?179.:-179.)*std::acos(-1.)/180.);});
  assert(std::abs(std::arg(s.at(1000,3,true)))>3.1);
- // Geometric magnitude mean differs from the erroneous arithmetic amplitude mean.
+ // Log-frequency weighting integrates linear energy, not dB or linear frequency.
  s.rebuild([](double f){return std::complex<double>(std::pow(10.,f/20000.),0.);});
- double ratio=std::pow(2.,.5/3.);double meanHz=(1000./ratio+1000.*ratio)*.5;
- assert(std::abs(20*std::log10(std::abs(s.at(1000,3,false)))-meanHz/1000.)<1.e-8);
+ double ratio=std::pow(2.,.5/3.),power=0.,weight=0.;
+ for(int i=0;i<200000;++i){double f=1000./ratio+(1000.*ratio-1000./ratio)*(i+.5)/200000.;power+=std::pow(10.,f/10000.)/f;weight+=1./f;}
+ assert(std::abs(20*std::log10(std::abs(s.at(1000,3,false)))-10*std::log10(power/weight))<.005);
  // Narrow peak: compare integration with an independent dense numerical reference.
  auto peak=[](double f){double db=12.*std::exp(-std::pow((f-1000.)/15.,2));return std::complex<double>(std::pow(10.,db/20.),0.);};
  s.rebuild(peak);
  for(double n:{48.,12.,3.,1.}){
-  double ratio=std::pow(2.,.5/n),a=1000./ratio,b=1000.*ratio,mean=0.;
+  double ratio=std::pow(2.,.5/n),a=1000./ratio,b=1000.*ratio,mean=0.,weight=0.;
   constexpr int points=200000;
-  for(int i=0;i<points;++i)mean+=20*std::log10(std::abs(peak(a+(b-a)*(i+.5)/points)))/points;
-  std::cout<<"peak 1/"<<n<<" error dB: "<<std::abs(20*std::log10(std::abs(s.at(1000,n,false)))-mean)<<std::endl;
+  for(int i=0;i<points;++i){double f=a+(b-a)*(i+.5)/points;mean+=std::norm(peak(f))/f;weight+=1./f;}
+  double expectedDb=10*std::log10(mean/weight);
+  std::cout<<"peak 1/"<<n<<" error dB: "<<std::abs(20*std::log10(std::abs(s.at(1000,n,false)))-expectedDb)<<std::endl;
   // Error budget: half the 0.01 dB cursor display increment.
-  assert(std::abs(20*std::log10(std::abs(s.at(1000,n,false)))-mean)<.005);
+  assert(std::abs(20*std::log10(std::abs(s.at(1000,n,false)))-expectedDb)<.005);
  }
  // Gaps do not poison distant bands or produce fabricated 0 dB samples.
  s.rebuild([](double f){return f>990&&f<1010?std::complex<double>(std::numeric_limits<double>::quiet_NaN(),0.):std::complex<double>(2.,0.);});
@@ -34,5 +36,5 @@ int main(){
  assert(!std::isfinite(s.at(1000,0,false).real()));
  s.rebuild([](double){return std::complex<double>{};});assert(!std::isfinite(s.at(1000,3,false).real()));
  s.rebuild([](double){return std::complex<double>(std::numeric_limits<double>::infinity(),0.);});assert(!std::isfinite(s.at(1000,3,true).real()));
- std::cout<<"PASS: constant gain/phase, band edges, wrapped phase, dB averaging, narrow peak reference, gaps, NaN/Inf/zero and out-of-range\n";
+ std::cout<<"PASS: constant gain/phase, band edges, wrapped phase, log-weighted energy, narrow peak reference, gaps, NaN/Inf/zero and out-of-range\n";
 }

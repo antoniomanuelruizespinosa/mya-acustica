@@ -12,6 +12,8 @@ int main(){
  assert(!CoherenceBlanking::passes(.49,50.,true));
  assert(CoherenceBlanking::passes(.49,70.,false));
  assert(!CoherenceBlanking::passes(.49,70.1,false));
+ assert(CoherenceBlanking::visuallyQuiet(.08,false)&&!CoherenceBlanking::visuallyQuiet(.25,false));
+ assert(CoherenceBlanking::visuallyQuiet(.25,true)&&!CoherenceBlanking::visuallyQuiet(.5,true));
  TransferFunctionCore::Estimator estimator;RTAEstimator retainedRta;
  constexpr double rate=48000.,frequency=1000.,gain=.5,phase=.4;
  int sample=0;
@@ -45,6 +47,13 @@ int main(){
  TransferFunctionCore::Queue<1> queue;assert(queue.push(gap));assert(!queue.push(gap));TransferFunctionCore::RawBlock out;assert(queue.pop(out)&&out.sequence==1000);assert(!queue.pop(out));
  // The selected temporal averaging depth changes when a TF becomes display-ready.
  estimator.setAverageDepth(2);assert(estimator.averaging()==2&&!estimator.ready());sample=0;for(int block=0;block<64;++block){TransferFunctionCore::RawBlock b;b.sequence=(std::uint64_t)block+1;b.sampleRate=rate;b.count=512;for(int i=0;i<b.count;++i,++sample){double a=2*3.14159265358979323846*frequency*sample/rate;b.ref[(size_t)i]=(float)(.5*std::sin(a));b.mic[(size_t)i]=(float)(.25*std::sin(a+phase));}estimator.feed(b);}assert(estimator.ready());auto smooth=estimator.smoothedAt(frequency,6.,false);assert(smooth&&estimator.at(frequency)&&smooth->magnitudeDb<estimator.at(frequency)->magnitudeDb-10.);
+ // High-frequency 1/12-oct smoothing averages power with logarithmic bin weights.
+ TransferFunctionCore::Estimator smoothingProbe;std::vector<std::complex<double>> spectrum(TransferFunctionCore::bins,{1.,0.});std::vector<bool> valid(TransferFunctionCore::bins,true);
+ constexpr double probeHz=10000.;const int peakBin=(int)std::round(probeHz*TransferFunctionCore::fftSize/rate);spectrum[(size_t)peakBin]={10.,0.};smoothingProbe.loadSweepSpectrum(spectrum,valid,rate);
+ double bandRatio=std::pow(2.,.5/12.),expectedPower=0.,bandWeight=0.;int firstBin=(int)std::ceil(probeHz/bandRatio*TransferFunctionCore::fftSize/rate),lastBin=(int)std::floor(probeHz*bandRatio*TransferFunctionCore::fftSize/rate);
+ for(int k=firstBin;k<=lastBin;++k){double weight=1./(k*rate/TransferFunctionCore::fftSize);expectedPower+=(k==peakBin?100.:1.)*weight;bandWeight+=weight;}
+ auto smoothedPeak=smoothingProbe.smoothedAt(probeHz,12.,false);assert(smoothedPeak&&std::abs(smoothedPeak->magnitudeDb-10.*std::log10(expectedPower/bandWeight))<1.e-8);
+ assert(smoothingProbe.impulseAt(80.).has_value()&&!smoothingProbe.impulseAt(86.));
  // An RTA is a single-channel spectrum; a full-scale-normalized 0.5 sine reads -6 dBFS.
  RTAEstimator rta;sample=0;for(int block=0;block<32;++block){TransferFunctionCore::RawBlock b;b.count=512;b.sampleRate=rate;for(int i=0;i<b.count;++i,++sample)b.mic[(size_t)i]=(float)(.5*std::sin(2*3.14159265358979323846*frequency*sample/rate));rta.feed(b);}auto rtaLevel=rta.dbfs(frequency);assert(rtaLevel&&std::abs(*rtaLevel+6.02)<1.);
  // A 1/3-octave band sums linear FFT-bin power; a two-window average uses exactly two powers.

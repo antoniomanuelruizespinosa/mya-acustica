@@ -1,11 +1,13 @@
 #include "OfflineDSPPlot.h"
 #include "GraphCursor.h"
+#include "ImpulseDisplay.h"
 #include <algorithm>
 #include <cmath>
 
 namespace {
 juce::Rectangle<float> frequencyArea(const juce::Component& component){return component.getLocalBounds().withTrimmedLeft(40).withTrimmedRight(8).withTrimmedTop(22).withTrimmedBottom(22).toFloat();}
 juce::Rectangle<float> impulseArea(const juce::Component& component){return component.getLocalBounds().withTrimmedLeft(52).withTrimmedRight(8).withTrimmedTop(18).withTrimmedBottom(18).toFloat();}
+float impulseX(double timeMs,juce::Rectangle<float> area){return area.getX()+area.getWidth()*(float)((timeMs+ImpulseDisplay::spanMs*.5)/ImpulseDisplay::spanMs);}
 double minFrequency(){return 20.0;}
 double maxFrequency(const OfflineDSPCore* core,int engine){return core&&core->state(engine).loaded?std::min(20000.0,core->state(engine).sampleRate*0.49):20000.0;}
 float xFor(double frequency,juce::Rectangle<float> r,double maximum){return r.getX()+r.getWidth()*(float)(std::log(frequency/minFrequency())/std::log(maximum/minFrequency()));}
@@ -60,12 +62,13 @@ void OfflineDSPPlot::updateCursor(juce::Point<float> point) {
         cursorY=phaseView?area.getY()+area.getHeight()*(float)((180.0-*reading.phaseDegrees)/360.0):yFor(*reading.magnitudeDb,area);
     }else{
         if(prediction.empty()||rate<=0.0){clearCursor();return;}
-        const double sample=(point.x-area.getX())/area.getWidth()*(prediction.size()-1);
+        reading.x=ImpulseDisplay::timeMs((point.x-area.getX())/area.getWidth());
+        const double sample=reading.x*rate/1000.0;
+        if(sample<0.0||sample>=(double)prediction.size()){clearCursor();return;}
         const auto lo=(size_t)std::floor(sample),hi=std::min(lo+1,prediction.size()-1);
         auto interpolated=GraphCursor::interpolate(prediction[lo],prediction[hi],sample-lo);
         if(!interpolated){clearCursor();return;}
         const double value=*interpolated;
-        reading.x=sample*1000.0/rate;
         reading.amplitude=value;
         cursorY=area.getCentreY()-(float)(value/impulsePeak)*area.getHeight()*0.45f;
     }
@@ -140,9 +143,12 @@ void OfflineDSPPlot::paint(juce::Graphics& g) {
     auto plot = impulseArea(*this);
     if (plot.isEmpty()) return;
     g.setColour(Colour(0xff142b38));
-    for (int i = 0; i <= 8; ++i) {
-        const float x = plot.getX() + plot.getWidth() * (float)i / 8.0f;
+    for (int ms : {-85,-60,-40,-20,0,20,40,60,85}) {
+        const float x = impulseX(ms,plot);
         g.drawVerticalLine(roundToInt(x), plot.getY(), plot.getBottom());
+        g.setColour(Colour(0xff26bad4));g.setFont(10.0f);
+        g.drawText(String(ms),roundToInt(x)-20,roundToInt(plot.getBottom())+2,40,14,Justification::centred);
+        g.setColour(Colour(0xff142b38));
     }
     for (int i = 0; i <= 4; ++i) {
         if(plot.getHeight()<100.f&&i%2!=0)continue;
@@ -161,12 +167,12 @@ void OfflineDSPPlot::paint(juce::Graphics& g) {
         g.drawText(spanishLanguage?juce::String::fromUTF8("IR - SIN MEDICIÓN"):"IR - NO MEASUREMENT", plot.toNearestInt(), Justification::centred);
         return;
     }
-    const auto count = prediction.size();
     auto draw = [&](const std::vector<float>& samples, Colour colour) {
         Path path;
+        const auto count=std::min(samples.size(),(std::size_t)std::floor(ImpulseDisplay::spanMs*.5*rate/1000.0)+1);
         for (std::size_t i = 0; i < count; ++i) {
-            const float value = i < samples.size() ? samples[i] : 0.0f;
-            const float x = plot.getX() + plot.getWidth() * (float)i / (float)std::max<std::size_t>(1, count - 1);
+            const float value = samples[i];
+            const float x = impulseX((double)i*1000.0/rate,plot);
             const float y = plot.getCentreY() - (value / impulsePeak) * plot.getHeight() * 0.45f;
             if (i == 0) path.startNewSubPath(x, y); else path.lineTo(x, y);
         }
@@ -176,6 +182,6 @@ void OfflineDSPPlot::paint(juce::Graphics& g) {
     draw(original, Colour(0xff19d7ea));
     draw(prediction, Colour(0xff6df23d));
     g.setColour(Colour(0xffdcebf0));
-    g.drawText((spanishLanguage?juce::String::fromUTF8("IR en frío · "):juce::String::fromUTF8("Offline IR · ")) + String((double)count * 1000.0 / rate, 2) + " ms", 34, 1, getWidth() - 68, 16, Justification::centredLeft);
+    g.drawText((spanishLanguage?juce::String::fromUTF8("IR en frío · "):juce::String::fromUTF8("Offline IR · ")) + String((double)prediction.size() * 1000.0 / rate, 2) + " ms", 34, 1, getWidth() - 68, 16, Justification::centredLeft);
     drawCursor(plot);
 }

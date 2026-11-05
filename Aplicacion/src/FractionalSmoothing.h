@@ -6,15 +6,16 @@
 #include <limits>
 
 // Display-only fractional-octave integration. Never modifies captured data.
-// Magnitude averages dB; phase averages complex values, avoiding phase-wrap errors.
+// Magnitude averages linear energy per logarithmic frequency interval; phase
+// averages unit phasors so wrapped angles do not cancel at +/-180 degrees.
 class FractionalSmoothing {
  static constexpr int count = 32768;
  static constexpr double low = 20., high = 20000., step = (high-low)/count;
- std::vector<double> db, dbIntegral;
+ std::vector<double> power, powerIntegral,weights,weightIntegral;
  std::vector<int> invalidCells;
  static std::complex<double> invalid(){return {std::numeric_limits<double>::quiet_NaN(),0.};}
  static bool valid(std::complex<double> v){return std::isfinite(v.real())&&std::isfinite(v.imag())&&std::abs(v)>1.e-15;}
- std::vector<std::complex<double>> values, complexIntegral;
+ std::vector<std::complex<double>> values,phaseValues,phaseIntegral;
  template<class T> T integralAt(double frequency, const std::vector<T>& samples,
                                 const std::vector<T>& integral) const {
   double position = (std::clamp(frequency,low,high)-low)/step;
@@ -24,14 +25,17 @@ class FractionalSmoothing {
  }
 public:
  template<class Sample> void rebuild(Sample sample) {
-  db.resize(count+1); values.resize(count+1);invalidCells.assign(count+1,0);
-  dbIntegral.assign(count+1,0.); complexIntegral.assign(count+1,{});
+  power.resize(count+1);weights.resize(count+1);values.resize(count+1);phaseValues.resize(count+1);invalidCells.assign(count+1,0);
+  powerIntegral.assign(count+1,0.);weightIntegral.assign(count+1,0.);phaseIntegral.assign(count+1,{});
   for(size_t i=0;i<=static_cast<size_t>(count);++i){
-   values[i]=sample(low+static_cast<double>(i)*step);
-   db[i]=valid(values[i])?20.*std::log10(std::abs(values[i])):0.;
+   double frequency=low+static_cast<double>(i)*step;values[i]=sample(frequency);
+   double weight=1./frequency,magnitude=std::abs(values[i]);weights[i]=weight;
+   power[i]=valid(values[i])?magnitude*magnitude*weight:0.;
+   phaseValues[i]=valid(values[i])?values[i]/magnitude*weight:std::complex<double>{};
    if(i){invalidCells[i]=invalidCells[i-1]+int(!valid(values[i-1])||!valid(values[i]));
-    dbIntegral[i]=dbIntegral[i-1]+step*.5*(db[i-1]+db[i]);
-    complexIntegral[i]=complexIntegral[i-1]+step*.5*((valid(values[i-1])?values[i-1]:std::complex<double>{})+(valid(values[i])?values[i]:std::complex<double>{}));}
+    powerIntegral[i]=powerIntegral[i-1]+step*.5*(power[i-1]+power[i]);
+    weightIntegral[i]=weightIntegral[i-1]+step*.5*(weights[i-1]+weights[i]);
+    phaseIntegral[i]=phaseIntegral[i-1]+step*.5*(phaseValues[i-1]+phaseValues[i]);}
   }
  }
  std::complex<double> at(double frequency,double divisions,bool phase) const {
@@ -43,8 +47,10 @@ public:
   auto first=static_cast<size_t>(std::clamp(int(std::floor((a-low)/step)),0,count-1));
   auto last=static_cast<size_t>(std::clamp(int(std::ceil((b-low)/step)),1,count));
   if(invalidCells[last]!=invalidCells[first])return invalid();
-  if(phase)return (integralAt(b,values,complexIntegral)-integralAt(a,values,complexIntegral))/(b-a);
-  double mean=(integralAt(b,db,dbIntegral)-integralAt(a,db,dbIntegral))/(b-a);
-  return {std::pow(10.,mean/20.),0.};
+  double weight=integralAt(b,weights,weightIntegral)-integralAt(a,weights,weightIntegral);
+  if(weight<=0.)return invalid();
+  if(phase)return (integralAt(b,phaseValues,phaseIntegral)-integralAt(a,phaseValues,phaseIntegral))/weight;
+  double mean=(integralAt(b,power,powerIntegral)-integralAt(a,power,powerIntegral))/weight;
+  return {std::sqrt(std::max(0.,mean)),0.};
  }
 };

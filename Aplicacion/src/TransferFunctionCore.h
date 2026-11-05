@@ -17,6 +17,7 @@ constexpr int fftSize=16384;
 constexpr int bins=fftSize/2+1;
 constexpr int maxFftSize=32768;
 constexpr int maxBins=maxFftSize/2+1;
+constexpr double impulseTimeLimitMs=85.;
 struct RawBlock {
  std::uint64_t sequence=0;
  double sampleRate=0;
@@ -42,7 +43,7 @@ class Estimator {
  std::array<double,maxBins> refPower{},micPower{};
  std::array<Point,maxBins> result{};
  std::array<Complex,maxBins> transfer{};
- std::array<double,maxBins> magnitudeIntegral{};
+ std::array<double,maxBins> powerIntegral{},weightIntegral{};
  std::array<Complex,maxBins> phaseIntegral{};
  std::array<int,maxBins> invalidIntegral{};
  std::array<double,maxFftSize> impulse{};
@@ -59,7 +60,7 @@ class Estimator {
  std::uint64_t revisionNumber=0;
  std::uint64_t lastSequence=0;
  bool readyFlag=false,sweepMeasurement=false,pendingAlignmentReset=false;
- void rebuildSmoothing(){magnitudeIntegral.fill(0);phaseIntegral.fill({});invalidIntegral.fill(0);if(!readyFlag)return;for(int k=1;k<activeBins();++k){bool valid=result[(size_t)k].valid;auto h=transfer[(size_t)k]*std::polar(1.,2.*3.14159265358979323846*result[(size_t)k].frequency*delayMs/1000.);magnitudeIntegral[(size_t)k]=magnitudeIntegral[(size_t)(k-1)]+(valid?result[(size_t)k].magnitudeDb:0.);phaseIntegral[(size_t)k]=phaseIntegral[(size_t)(k-1)]+(valid?h:Complex{});invalidIntegral[(size_t)k]=invalidIntegral[(size_t)(k-1)]+!valid;}}
+ void rebuildSmoothing(){powerIntegral.fill(0);weightIntegral.fill(0);phaseIntegral.fill({});invalidIntegral.fill(0);if(!readyFlag)return;for(int k=1;k<activeBins();++k){const auto& point=result[(size_t)k];bool valid=point.valid&&point.frequency>0;double weight=valid?1./point.frequency:0.;auto h=transfer[(size_t)k]*std::polar(1.,2.*3.14159265358979323846*point.frequency*delayMs/1000.);double magnitude=std::abs(h);powerIntegral[(size_t)k]=powerIntegral[(size_t)(k-1)]+(valid?magnitude*magnitude*weight:0.);weightIntegral[(size_t)k]=weightIntegral[(size_t)(k-1)]+weight;phaseIntegral[(size_t)k]=phaseIntegral[(size_t)(k-1)]+(valid&&magnitude>1.e-15?h/magnitude*weight:Complex{});invalidIntegral[(size_t)k]=invalidIntegral[(size_t)(k-1)]+!valid;}}
  static void fft(std::array<Complex,maxFftSize>& a,int size,bool inverse=false){
   for(int i=1,j=0;i<size;++i){int bit=size>>1;for(;j&bit;bit>>=1)j^=bit;j^=bit;if(i<j)std::swap(a[(size_t)i],a[(size_t)j]);}
   for(int len=2;len<=size;len<<=1){double angle=(inverse?2.:-2.)*3.14159265358979323846/len;Complex step{std::cos(angle),std::sin(angle)};for(int start=0;start<size;start+=len){Complex w{1,0};for(int j=0;j<len/2;++j){auto u=a[(size_t)(start+j)],v=a[(size_t)(start+j+len/2)]*w;a[(size_t)(start+j)]=u+v;a[(size_t)(start+j+len/2)]=u-v;w*=step;}}}
@@ -111,7 +112,7 @@ public:
  double delay()const{return delayMs;}
  std::optional<double> findDelayMs()const{auto snapshot=delaySnapshot();return snapshot?findDelayMs(*snapshot):std::nullopt;}
  std::optional<double> impulseAt(double timeMs,bool useEnvelope=false)const{
-  if(!readyFlag||rateHz<=0||!std::isfinite(timeMs)||std::abs(timeMs)>40.)return {};
+  if(!readyFlag||rateHz<=0||!std::isfinite(timeMs)||std::abs(timeMs)>impulseTimeLimitMs)return {};
   int sample=(int)std::round(timeMs*rateHz/1000.);if(std::abs(sample)>=activeSize/2)return {};
   return (useEnvelope?envelope:impulse)[(size_t)((sample+activeSize)%activeSize)];
  }
@@ -126,6 +127,20 @@ public:
   for(int i=0;i<block.count;++i){double m=block.mic[(size_t)i],r=block.ref[(size_t)i];if(!std::isfinite(m)||!std::isfinite(r)){reset();return;}if(multiWindowEnabled)multi->feed(m,r,block.sampleRate);mic[(size_t)filled]=m;ref[(size_t)filled]=r;if(++filled==activeSize){calculate();filled=0;}}
  }
  std::optional<Point> at(double hz)const{if(!readyFlag||hz<=0||rateHz<=0)return {};if(multiWindowEnabled&&!sweepMeasurement&&hz<270.)if(auto narrow=multi->transferAt(hz)){Point point;point.frequency=narrow->frequencyHz;point.magnitudeDb=narrow->magnitudeDb;point.phaseDegrees=std::arg(std::polar(1.,narrow->phaseDegrees*3.14159265358979323846/180.+2.*3.14159265358979323846*point.frequency*delayMs/1000.))*180./3.14159265358979323846;point.coherence=narrow->coherence;point.valid=true;return point;}double index=hz*activeSize/rateHz;int nearest=(int)std::round(index);if(nearest<1||nearest>=activeBins()||!result[(size_t)nearest].valid)return {};auto point=result[(size_t)nearest];point.phaseDegrees=std::arg(transfer[(size_t)nearest]*std::polar(1.,2.*3.14159265358979323846*point.frequency*delayMs/1000.))*180./3.14159265358979323846;return point;}
- std::optional<Point> smoothedAt(double hz,double divisions,bool phase)const{auto point=at(hz);if(!point||divisions<=0)return point;if(multiWindowEnabled&&!sweepMeasurement&&hz<270.&&multi->transferAt(hz)){int steps=std::clamp((int)std::ceil(MultiWindowSpectrum::pointsPerOctave/divisions),2,64);double total=0;Complex vector{};int count=0;for(int i=0;i<=steps;++i){double offset=((double)i/steps-.5)/divisions;auto sample=at(hz*std::pow(2.,offset));if(!sample)continue;total+=sample->magnitudeDb;vector+=std::polar(1.,sample->phaseDegrees*3.14159265358979323846/180.);++count;}if(count==0)return {};if(phase){if(std::abs(vector)<1.e-12)return {};point->phaseDegrees=std::arg(vector)*180./3.14159265358979323846;}else point->magnitudeDb=total/count;return point;}double ratio=std::pow(2.,.5/divisions);int lo=std::max(1,(int)std::ceil(hz/ratio*activeSize/rateHz));int hi=std::min(activeBins()-1,(int)std::floor(hz*ratio*activeSize/rateHz));if(hi<lo||invalidIntegral[(size_t)hi]-invalidIntegral[(size_t)(lo-1)]>0)return {};int count=hi-lo+1;if(phase){auto h=(phaseIntegral[(size_t)hi]-phaseIntegral[(size_t)(lo-1)])/(double)count;if(std::abs(h)<1.e-15)return {};point->phaseDegrees=std::arg(h)*180./3.14159265358979323846;}else point->magnitudeDb=(magnitudeIntegral[(size_t)hi]-magnitudeIntegral[(size_t)(lo-1)])/count;return point;}
+ std::optional<Point> smoothedAt(double hz,double divisions,bool phase)const{
+  auto point=at(hz);if(!point||divisions<=0)return point;
+  if(multiWindowEnabled&&!sweepMeasurement&&hz<270.&&multi->transferAt(hz)){
+   int steps=std::clamp((int)std::ceil(MultiWindowSpectrum::pointsPerOctave/divisions),2,64);double power=0.;Complex vector{};int count=0;
+   for(int i=0;i<=steps;++i){double offset=((double)i/steps-.5)/divisions;auto sample=at(hz*std::pow(2.,offset));if(!sample)continue;double amplitude=std::pow(10.,sample->magnitudeDb/20.);power+=amplitude*amplitude;vector+=std::polar(1.,sample->phaseDegrees*3.14159265358979323846/180.);++count;}
+   if(count==0)return {};if(phase){if(std::abs(vector)<1.e-12)return {};point->phaseDegrees=std::arg(vector)*180./3.14159265358979323846;}else point->magnitudeDb=10.*std::log10(std::max(1.e-24,power/count));return point;
+  }
+  double ratio=std::pow(2.,.5/divisions);int lo=std::max(1,(int)std::ceil(hz/ratio*activeSize/rateHz));int hi=std::min(activeBins()-1,(int)std::floor(hz*ratio*activeSize/rateHz));
+  if(hi<lo)return point;
+  if(invalidIntegral[(size_t)hi]-invalidIntegral[(size_t)(lo-1)]>0)return {};
+  double weight=weightIntegral[(size_t)hi]-weightIntegral[(size_t)(lo-1)];if(weight<=0.)return {};
+  if(phase){auto vector=(phaseIntegral[(size_t)hi]-phaseIntegral[(size_t)(lo-1)])/weight;if(std::abs(vector)<1.e-15)return {};point->phaseDegrees=std::arg(vector)*180./3.14159265358979323846;}
+  else{double power=(powerIntegral[(size_t)hi]-powerIntegral[(size_t)(lo-1)])/weight;point->magnitudeDb=10.*std::log10(std::max(1.e-24,power));}
+  return point;
+ }
 };
 }

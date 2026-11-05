@@ -261,17 +261,20 @@ void TransferFunctionPanel::drawTraces(juce::Graphics& g,juce::Rectangle<float> 
   if(suppressedTraces.count(trace.id))continue;
   if(trace.selected!=(layer==1))continue;
   if(phase?!trace.showPhase:!trace.showMagnitude)continue;
-  juce::Path path;bool started=false;double previousPhase=0.0;
+  juce::Path strong,muted;bool started=false,previousMuted=false;double previousPhase=0.0;
   for(const auto& sample:trace.samples){
    auto x=frequencyPosition(sample.frequencyHz,area,phase);
    double value=phase?sample.phaseDegrees:sample.magnitudeDb;
    if(!sample.valid||(phase?!sample.validPhase:!sample.validMagnitude)||!x||!std::isfinite(value)||(!sample.bypassBlanking&&!CoherenceBlanking::passes(sample.coherence,coherenceThresholdPercent,coherenceSquared))){started=false;continue;}
    auto y=valuePosition(value,area,phase);
-   if(!started||(phase&&std::abs(value-previousPhase)>180.0))path.startNewSubPath(*x,y);
+   bool lowCoherence=!sample.bypassBlanking&&CoherenceBlanking::visuallyQuiet(sample.coherence,coherenceSquared);
+   auto& path=lowCoherence?muted:strong;
+   if(!started||lowCoherence!=previousMuted||(phase&&std::abs(value-previousPhase)>180.0))path.startNewSubPath(*x,y);
    else path.lineTo(*x,y);
-   started=true;previousPhase=value;
+   started=true;previousMuted=lowCoherence;previousPhase=value;
   }
-  g.setColour(trace.colour);g.strokePath(path,juce::PathStrokeType(lineThickness));
+  g.setColour(trace.colour.withAlpha(.2f));g.strokePath(muted,juce::PathStrokeType(lineThickness));
+  g.setColour(trace.colour);g.strokePath(strong,juce::PathStrokeType(lineThickness));
  }
 }
 
