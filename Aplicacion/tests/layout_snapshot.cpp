@@ -5,6 +5,18 @@
 int main(int argc,char** argv){
  if(argc!=2)return 2;juce::ScopedJuceInitialiser_GUI init;juce::File(juce::String::fromUTF8(MYA_PROJECT_DIRECTORY)).getChildFile("MYA-006-A-fixture").createDirectory();
  if(juce::String::fromUTF8(argv[1])=="--trace-visibility"){WorkstationSurface surface;return surface.station.previewHiddenTraceKeepsAverage()?0:114;}
+ if(juce::String::fromUTF8(argv[1])=="--sample-validity"){
+  TransferFunctionCore::Point phase,magnitude;phase.phaseDegrees=90.;phase.coherence=.9;magnitude.magnitudeDb=-6.;magnitude.coherence=.8;
+  auto phaseOnly=analyzerLiveSample(1000.,phase,{},false);
+  auto magnitudeOnly=analyzerLiveSample(2000.,{},magnitude,false);
+  auto both=analyzerLiveSample(3000.,phase,magnitude,false);
+  auto neither=analyzerLiveSample(4000.,{},{},false);
+  if(!phaseOnly.valid||!phaseOnly.validPhase||phaseOnly.validMagnitude||!magnitudeOnly.valid||magnitudeOnly.validPhase||!magnitudeOnly.validMagnitude||!both.validPhase||!both.validMagnitude||neither.valid||neither.validPhase||neither.validMagnitude)return 117;
+  TransferFunctionPanel::Trace trace;trace.id=1;trace.samples={phaseOnly,magnitudeOnly,both,neither};
+  TransferFunctionPanel panel([&]{return std::vector<TransferFunctionPanel::Trace>{trace};});
+  panel.setSize(800,500);panel.setPlotLayout({0,0,800,230},{0,238,800,262});panel.refreshNow();
+  return panel.sampleAt(1,1000.,true)&&!panel.sampleAt(1,1000.,false)&&panel.sampleAt(1,2000.,false)&&!panel.sampleAt(1,2000.,true)&&panel.sampleAt(1,3000.,true)&&panel.sampleAt(1,3000.,false)&&!panel.sampleAt(1,4000.,true)&&!panel.sampleAt(1,4000.,false)?0:118;
+ }
  if(juce::String::fromUTF8(argv[1])=="--graph-focus"){
   for(auto size:{juce::Point<int>{1120,900},juce::Point<int>{1440,960},juce::Point<int>{1760,1080}}){WorkstationSurface surface;surface.setSize(size.x,size.y);if(!surface.station.previewGraphFocus())return 115;}
   return 0;

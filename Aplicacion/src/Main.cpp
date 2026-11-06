@@ -40,6 +40,21 @@
 #include "AppDataLocation.h"
 using namespace juce;
 namespace Palette { const Colour bg{0xff222427}, panel{0xff2c3036}, plot{0xff080a0c}, ink{0xffe5edf4}, muted{0xffa9bac8}, cyan{0xff00e5ed}, blue{0xff159fe5}, orange{0xffffac24}, green{0xff54ee22}, line{0xff626e78}; }
+static TransferFunctionPanel::Sample analyzerLiveSample(double hz,
+                                                        const std::optional<TransferFunctionCore::Point>& phase,
+                                                        const std::optional<TransferFunctionCore::Point>& magnitude,
+                                                        bool sweep){
+ TransferFunctionPanel::Sample sample;
+ sample.frequencyHz=hz;
+ sample.validPhase=phase.has_value();
+ sample.validMagnitude=magnitude.has_value();
+ sample.valid=sample.validPhase||sample.validMagnitude;
+ if(phase)sample.phaseDegrees=phase->phaseDegrees;
+ if(magnitude)sample.magnitudeDb=magnitude->magnitudeDb;
+ sample.coherence=magnitude?magnitude->coherence:phase?phase->coherence:std::numeric_limits<double>::quiet_NaN();
+ sample.bypassBlanking=sweep;
+ return sample;
+}
 class MyaLook : public LookAndFeel_V4 {
 public:
  Font getComboBoxFont(ComboBox& box) override{return Font(FontOptions(box.getHeight()<=20?11.f:13.f));}
@@ -1105,11 +1120,12 @@ public:
    for(auto* current=hit;current;current=current->getParentComponent())if(current==&target)return {};
    return name+" hit="+(hit?hit->getName():"none")+" area="+area.toString();
   };
-  for(const auto& item:std::initializer_list<std::pair<const Component*,const char*>>{{&globalSmth,"octave"},{&showCoherence,"coherence"},{&plotTypeChoice[0],"phase choice"},{&plotTypeChoice[1],"magnitude choice"},{&plotSmooth[0],"phase smooth"},{&plotSmooth[1],"magnitude smooth"}}){auto failure=check(*item.first,item.second);if(failure.isNotEmpty())return failure;}
-  tfViewport.setViewPosition(0,0);
-  for(const auto& item:std::initializer_list<std::pair<const Component*,const char*>>{{&tfActions[0][0],"TF1 Find"},{&micDelay[0],"TF1 delay"}}){auto failure=check(*item.first,item.second);if(failure.isNotEmpty())return failure;}
-  tfViewport.setViewPosition(0,jmax(0,tfContent.getHeight()-tfViewport.getHeight()));
-  for(const auto& item:std::initializer_list<std::pair<const Component*,const char*>>{{&tfActions[3][0],"TF4 Find"},{&micDelay[3],"TF4 delay"}}){auto failure=check(*item.first,item.second);if(failure.isNotEmpty())return failure;}
+  for(const auto& item:std::initializer_list<std::pair<const Component*,const char*>>{{&globalFFT,"FFT"},{&globalSmth,"octave"},{&averageChoice,"average depth"},{&showCoherence,"coherence"},{&plotTypeChoice[0],"phase choice"},{&plotTypeChoice[1],"magnitude choice"},{&plotSmooth[0],"phase smooth"},{&plotSmooth[1],"magnitude smooth"},{&leftDivider,"left splitter"},{&rightDivider,"right splitter"},{&meterHeightDivider,"meter splitter"},{&plotDividers[0],"IR splitter"},{&plotDividers[1],"phase splitter"}}){auto failure=check(*item.first,item.second);if(failure.isNotEmpty())return failure;}
+  const int maxScroll=jmax(0,tfContent.getHeight()-tfViewport.getHeight());
+  for(size_t i=0;i<tfActions.size();++i){
+   tfViewport.setViewPosition(0,jlimit(0,maxScroll,tfActions[i][0].getBounds().getCentreY()-tfViewport.getHeight()/2));
+   for(const auto& item:std::initializer_list<std::pair<const Component*,const char*>>{{&tfActions[i][0],"Find"},{&tfActions[i][1],"Track"},{&tfActions[i][3],"Play"},{&micDelay[i],"delay"}}){auto failure=check(*item.first,String("TF")+String((int)i+1)+" "+item.second);if(failure.isNotEmpty())return failure;}
+  }
   tfViewport.setViewPosition(0,0);
   return {};
  }
@@ -1230,12 +1246,12 @@ public:
    for(int x=0;x<MultiWindowSpectrum::gridCount();++x){
     double hz=MultiWindowSpectrum::gridFrequency(x);
     auto point=liveTFs[i].at(hz);
-    TransferFunctionPanel::Sample sample;sample.frequencyHz=hz;
+    TransferFunctionPanel::Sample sample;sample.frequencyHz=hz;sample.validPhase=false;sample.validMagnitude=false;
     if(point){
      double phaseSmoothing=smoothingDivisions(smoothingForPlot(0)),magnitudeSmoothing=smoothingDivisions(smoothingForPlot(1));
      auto phase=phaseSmoothing>0?liveTFs[i].smoothedAt(hz,phaseSmoothing,true):point;
      auto magnitude=magnitudeSmoothing>0?liveTFs[i].smoothedAt(hz,magnitudeSmoothing,false):point;
-     if(phase&&magnitude){sample.phaseDegrees=phase->phaseDegrees;sample.magnitudeDb=magnitude->magnitudeDb;sample.coherence=magnitude->coherence;sample.valid=true;sample.bypassBlanking=liveTFs[i].isSweep();}
+     sample=analyzerLiveSample(hz,phase,magnitude,liveTFs[i].isSweep());
     }
     trace.samples.push_back(sample);
    }
