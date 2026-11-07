@@ -303,7 +303,7 @@ public:
  std::function<void(int)> moved;
  MeterHeightDivider(){setMouseCursor(MouseCursor::UpDownResizeCursor);setTitle("Arrastrar altura del medidor principal");}
  void mouseDrag(const MouseEvent& e)override{if(moved)moved(e.getEventRelativeTo(getParentComponent()).y);}
- void paint(Graphics& g)override{g.setColour(isMouseOverOrDragging()?Palette::cyan:Palette::line);g.fillRoundedRectangle((float)getWidth()*.5f-22.f,2.f,44.f,3.f,1.5f);}
+ void paint(Graphics& g)override{g.setColour(isMouseOverOrDragging()?Palette::cyan:Palette::line);g.fillRoundedRectangle(1.f,2.f,(float)jmax(0,getWidth()-2),2.f,1.f);g.fillRoundedRectangle((float)getWidth()*.5f-22.f,1.f,44.f,4.f,2.f);}
 };
 class Workstation : public Component, public KeyListener, public MenuBarModel, public ApplicationCommandTarget, private ChangeListener, private Timer {
  MyaLook look;
@@ -435,14 +435,21 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
 
  bool alignmentExpanded=false;
  Slider selectedDelay, phasePreview;
+ File captureDocumentsBase()const{
+ #if defined(MYA_GEOMETRY_LAB)
+  return projectFile.getParentDirectory().getChildFile("Mya Projects QA");
+ #else
+  return File::getSpecialLocation(File::userDocumentsDirectory).getChildFile("Mya Projects");
+ #endif
+ }
  File documentsRootFolder(const String& folderId)const{
   auto* node=captureLibrary.find(folderId);if(!node||node->kind!=CaptureLibrary::Kind::Folder)return {};
   while(node->parent.isNotEmpty()){node=captureLibrary.find(node->parent);if(!node||node->kind!=CaptureLibrary::Kind::Folder)return {};}
-  return File::getSpecialLocation(File::userDocumentsDirectory).getChildFile("Mya Projects").getChildFile(File::createLegalFileName(node->name));
+  return captureDocumentsBase().getChildFile(File::createLegalFileName(node->name));
  }
  File documentsFolder(const String& folderId)const{
   std::vector<String> segments;auto id=folderId;while(id.isNotEmpty()){auto* node=captureLibrary.find(id);if(!node||node->kind!=CaptureLibrary::Kind::Folder)return {};segments.push_back(File::createLegalFileName(node->name));id=node->parent;}
-  if(segments.empty())return {};auto folder=File::getSpecialLocation(File::userDocumentsDirectory).getChildFile("Mya Projects");for(auto it=segments.rbegin();it!=segments.rend();++it)folder=folder.getChildFile(*it);if(segments.size()==1&&folder.getChildFile("Capturas").isDirectory())folder=folder.getChildFile("Capturas");return folder;
+  if(segments.empty())return {};auto folder=captureDocumentsBase();for(auto it=segments.rbegin();it!=segments.rend();++it)folder=folder.getChildFile(*it);if(segments.size()==1&&folder.getChildFile("Capturas").isDirectory())folder=folder.getChildFile("Capturas");return folder;
  }
  static String exportBase(const String& name,const String& id){return File::createLegalFileName(name).substring(0,70)+"__"+id;}
  bool renameLibraryItem(const String& id,String newName){
@@ -679,6 +686,8 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
  static File defaultProjectFile(){
  #if defined(MYA_OFFSCREEN_RENDER)
  return File(String::fromUTF8(MYA_PROJECT_DIRECTORY)).getChildFile("MYA-006-A-fixture").getChildFile("proyecto-demo.json");
+ #elif defined(MYA_GEOMETRY_LAB)
+ return File(String::fromUTF8(MYA_PROJECT_DIRECTORY)).getChildFile("proyecto-laboratorio.json");
  #else
  return MyaAppData::projectFile();
  #endif
@@ -826,7 +835,7 @@ class Workstation : public Component, public KeyListener, public MenuBarModel, p
 
  void refreshMeterSources(){std::vector<MeterState::Source> sources;for(const auto& device:audioEndpoints)if(std::find(deviceKeys.begin(),deviceKeys.end(),device.key)!=deviceKeys.end()||std::any_of(ioMonitorSources.begin(),ioMonitorSources.end(),[&](const auto& source){return source.device==device.key.toStdString();}))for(int i=0;i<device.inputs.size();++i){String label=device.name+" / "+device.inputs[i];for(size_t k=0;k<micNames.size();++k)if(deviceKeys[k]==device.key&&micInputs[k]==i+1)label+=" / "+micNames[k].getText();sources.push_back({device.key,label,i+1});}for(auto* model:meterModels())model->setSources(sources);}
  void principalMeterOptions(){showDrawer("principal-meter","SPL / configuracion",std::make_unique<MeterConfiguration>(meterState,[this]{commands.invoke(203);},[this]{deferredCalibration();}));}
- void showMeters(){if(meters&&meters->isVisible()){meters->closeButtonPressed();return;}refreshMeterSources();if(!meters){meters=std::make_unique<MeterWindow>(floatingMeterState,&meterState);meters->setLookAndFeel(&floatingLook);meters->panel->calibrateRequested=[this](String k,int c){deferredCalibration(k,c);};meters->panel->toggleRequested=[this]{commands.invoke(203);};}meters->setVisible(true);meters->toFront(true);attachMyaFloatingWindow(*this,*meters);}
+ void showMeters(){if(meters&&meters->isMinimised()){meters->setMinimised(false);meters->toFront(true);return;}if(meters&&meters->isVisible()){meters->closeButtonPressed();return;}refreshMeterSources();if(!meters){meters=std::make_unique<MeterWindow>(floatingMeterState,&meterState);meters->setLookAndFeel(&floatingLook);meters->panel->calibrateRequested=[this](String k,int c){deferredCalibration(k,c);};meters->panel->toggleRequested=[this]{commands.invoke(203);};}meters->setVisible(true);meters->toFront(true);}
  Rectangle<int> plotArea(Rectangle<int> r) const{auto p=CompactLayout::plot(r.getWidth(),r.getHeight());return {r.getX()+p.x,r.getY()+p.y,p.w,p.h};}
  Rectangle<int> activeGraphBounds(int type) const{if(mode==0||mode==1)return plotBounds(type);Rectangle<int> center{centerX()+8,118,centerWidth()-16,getHeight()-183};int usable=center.getHeight()-100,irHeight=plotChoice.getSelectedId()==2?0:104,gh=(usable-irHeight)/2;if(type==0)return {center.getX(),center.getY(),center.getWidth(),90};if(type==1)return {center.getX(),center.getY()+(irHeight?97:0),center.getWidth(),gh};return {center.getX(),center.getY()+irHeight+gh,center.getWidth(),gh};}
  File tfSettingsFile() const{return projectFile.getParentDirectory().getChildFile("tf-graficos.json");}
@@ -1129,6 +1138,31 @@ public:
   tfViewport.setViewPosition(0,0);
   return {};
  }
+ String previewGeometryTelemetry(const Component& surface){
+  String report="surface="+surface.getLocalBounds().toString()+" station="+getBounds().toString()+"\n";
+  auto describe=[&](const Component& target,const String& label){
+   const auto area=surface.getLocalArea(&target,target.getLocalBounds());
+   const auto centre=area.getCentre();
+   auto* hit=const_cast<Component&>(surface).getComponentAt(centre);
+   bool matches=false;
+   for(auto* node=hit;node;node=node->getParentComponent())if(node==&target)matches=true;
+   const auto local=getLocalPoint(&surface,centre);
+   report+=label+" surface="+area.toString()+" stationCentre="+String(local.x)+","+String(local.y)
+          +" hit="+(hit?hit->getTitle():String("none"))+" result="+(matches?"OK":"BLOCKED")+"\n";
+  };
+  describe(globalSmth,"Suavizado global");
+  describe(meterHeightDivider,"Divisor del medidor");
+  describe(plotSmooth[0],"Suavizado fase");
+  describe(plotSmooth[1],"Suavizado magnitud");
+  const int maxScroll=jmax(0,tfContent.getHeight()-tfViewport.getHeight());
+  for(size_t i=0;i<tfActions.size();++i){
+   tfViewport.setViewPosition(0,jlimit(0,maxScroll,tfActions[i][0].getBounds().getCentreY()-tfViewport.getHeight()/2));
+   describe(tfActions[i][0],"TF"+String((int)i+1)+" Find");
+   describe(micDelay[i],"TF"+String((int)i+1)+" milisegundos");
+  }
+  tfViewport.setViewPosition(0,0);
+  return report;
+ }
  bool previewFindPressIsolation(){
   int previous=source.getSelectedId();source.setSelectedId(1,sendNotificationSync);
   auto& button=tfActions[1][0];auto point=button.getLocalBounds().getCentre().toFloat();auto now=Time::getCurrentTime();
@@ -1139,6 +1173,15 @@ public:
  }
 
  bool previewIndependentViews(){auto side=dockMeterState.primaryCard()->id,floating=floatingMeterState.primaryCard()->id;int sChannel=dockMeterState.primaryCard()->channel,fMetric=floatingMeterState.primaryCard()->metric;auto card=*meterState.primaryCard();card.channel=3;card.metric=3;card.weight=2;if(!meterState.update(card)||dockMeterState.primaryCard()->channel!=sChannel||floatingMeterState.primaryCard()->metric!=fMetric||side==card.id||floating==card.id||side==floating)return false;for(auto grid:{std::pair<int,int>{2,2},{1,4},{4,1},{1,1}}){if(!dockMeterState.setGrid(grid.first,grid.second))return false;dockMeters.refreshNow();if(!dockMeters.previewPages())return false;MeterPanel floats(floatingMeterState);floats.setSize(480,340);if(!floatingMeterState.setGrid(grid.first,grid.second)||!floats.previewPages())return false;}return dockMeterState.primaryCard()->id==side&&floatingMeterState.primaryCard()->id==floating;}
+ bool previewFixedRacksAfterFloatingGrowth(){
+  leftWidth=148;rightWidth=224;principalMeterHeight=194;resized();dockMeters.refreshNow();
+  const auto& side=dockMeterState.state();
+  if(!side.sidebarMeters||side.rows!=5||side.columns!=1||side.cards.size()!=5||!dockMeters.previewPages())return false;
+  const auto dockBounds=dockMeters.getBounds(),mainBounds=principalMeter.getBounds(),tfBounds=tfViewport.getBounds();
+  if(dockBounds!=Rectangle<int>{12,147,140,getHeight()-319}||mainBounds!=Rectangle<int>{getWidth()-224,88,208,194}||tfBounds.getX()!=mainBounds.getX()||tfBounds.getY()<=mainBounds.getBottom())return false;
+  if(!floatingMeterState.setGrid(2,2)||!floatingMeterState.addFloatingColumn()||!floatingMeterState.duplicateFloatingRow())return false;
+  return dockMeterState.state().rows==5&&dockMeterState.state().columns==1&&dockMeterState.state().cards.size()==5&&dockMeters.getBounds()==dockBounds&&principalMeter.getBounds()==mainBounds&&tfViewport.getBounds()==tfBounds;
+ }
  bool previewRoutingStatus(){closeCalibration();if(settingsDrawer)settingsDrawer->setVisible(false);auto keys=deviceKeys;auto m=micInputs,r=refInputs;audioSettings();if(!routingStatusPanel||!routingStatusPanel->previewStatus().contains("Entradas detenidas"))return false;auto* panel=routingStatusPanel.getComponent();panel->setAcquisitionState(true);if(!panel->previewStatus().contains("Entradas dBFS activas"))return false;panel->setAcquisitionState(false,true);if(!panel->previewStatus().contains("Esperando permiso"))return false;stopInputs();if(!panel->previewStatus().contains("Entradas detenidas"))return false;return keys==deviceKeys&&m==micInputs&&r==refInputs&&!inputEngine.running();}
  bool previewAcquisitionGuard(){if(inputEngine.running()||permissionPending)return false;beginInputs(15);if(inputEngine.running()||permissionPending)return false;source.setSelectedId(5,sendNotificationSync);commands.refresh();for(size_t k=0;k<tfActions.size();++k){if(!tfActions[k][3].isEnabled())return false;tfActions[k][3].onClick();if(source.getSelectedId()!=(int)k+1||inputEngine.running()||permissionPending)return false;}stopInputs();return true;}
  bool previewRefreshAndGenerator(){if(plotValue(.5,0,1)||plotValue(.5,0,0)||impulseDisplay.physical(.5,0))return false;commands.invoke(526);if(!liveTracesCleared||plotValue(.5,0,1)||plotValue(.5,0,0))return false;commands.refresh();if(!measurementButtons[28]->isEnabled())return false;commands.invoke(293);return anchoredOptions&&anchoredOptions->isVisible()&&anchoredKey=="generator"&&optionsAnchor==measurementButtons[28].get();}
@@ -1205,6 +1248,25 @@ public:
  bool previewCalibrationDrawer(){if(settingsDrawer)settingsDrawer->setVisible(false);showCalibration();if(drawerKey!="spl-calibration"||!settingsDrawer||!settingsDrawer->isVisible()||inputEngine.running())return false;beginInputs(0,InputLevels::Source{"Core / Card",1});return !inputEngine.running()&&!permissionPending;}
  void previewPrincipalConfig(int tab=0){closeCalibration();if(settingsDrawer)settingsDrawer->setVisible(false);auto panel=std::make_unique<MeterConfiguration>(meterState,[this]{commands.invoke(203);},[this]{deferredCalibration();});panel->selectTab(tab);showDrawer("principal-meter","SPL / configuracion",std::move(panel));}
 
+ #endif
+ #if defined(MYA_GEOMETRY_LAB)
+ String previewNearbyMouseTargets(Point<int> screen)const{
+  String result;
+  auto append=[&](const Component& target,const String& name){
+   const auto bounds=target.getScreenBounds();
+   if(target.isVisible()&&bounds.expanded(70).contains(screen))
+    result+=name+"="+bounds.toString()+" ";
+  };
+  append(globalSmth,"globalSmth");
+  append(averageChoice,"averageChoice");
+  append(showCoherence,"showCoherence");
+  for(size_t i=0;i<plotSmooth.size();++i)append(plotSmooth[i],"plotSmooth"+String((int)i));
+  for(size_t i=0;i<tfActions.size();++i){
+   append(tfActions[i][0],"Find"+String((int)i+1));
+   append(micDelay[i],"Delay"+String((int)i+1));
+  }
+  return result;
+ }
  #endif
  std::vector<RTAPanel::Trace> buildRtaTraces(){
   std::vector<RTAPanel::Trace> result;
@@ -1711,7 +1773,60 @@ class WorkstationSurface : public Component {
 public:
  static constexpr int reclaimedHeight=66;
  Workstation station;
- WorkstationSurface(){addAndMakeVisible(station);setSize(1440,960);}
+ #if defined(MYA_GEOMETRY_LAB)
+ class GeometryProbe final : public MouseListener {
+ public:
+  explicit GeometryProbe(WorkstationSurface& surface):owner(surface){}
+  void mouseDown(const MouseEvent& event)override{record("down",event);}
+  void mouseUp(const MouseEvent& event)override{record("up",event);}
+ private:
+  void record(const char* action,const MouseEvent& event){
+   const auto screen=event.getScreenPosition();
+   const auto surfacePoint=event.getEventRelativeTo(&owner).getPosition();
+   const auto stationPoint=event.getEventRelativeTo(&owner.station).getPosition();
+   auto* hit=owner.getComponentAt(surfacePoint);
+   auto* display=Desktop::getInstance().getDisplays().getDisplayForPoint(screen);
+   const double scale=display?display->scale:0.;
+   auto* top=owner.getTopLevelComponent();
+   auto* peer=top?top->getPeer():nullptr;
+   auto describe=[](const Component* component){
+    if(!component)return String("none");
+    String path;
+    for(auto* node=component;node;node=node->getParentComponent()){
+     String name=node->getTitle();if(name.isEmpty())name=node->getName();
+     if(name.isEmpty())name=typeid(*node).name();
+     if(auto* button=dynamic_cast<const Button*>(node))name+=" ["+button->getButtonText()+"]";
+     const auto* parent=node->getParentComponent();
+     path+=name+"#"+String(parent?parent->getIndexOfChildComponent(node):-1)
+       +"("+node->getScreenBounds().toString()+")";
+     if(parent)path+=" < ";
+    }
+    return path;
+   };
+   const String line=Time::getCurrentTime().toISO8601(true)+" "+action+" screen="+screen.toString()
+      +" scale="+String(scale,2)+" surface="+surfacePoint.toString()+" station="+stationPoint.toString()
+      +" event="+describe(event.eventComponent)+" original="+describe(event.originalComponent)
+      +" hit="+describe(hit)+" nearby="+owner.station.previewNearbyMouseTargets(screen)
+      +" window="+(top?top->getBounds().toString():String("none"))
+      +" peer="+(peer?peer->getBounds().toString():String("none"))
+      +" display="+(display?display->totalArea.toString():String("none"))
+      +" userArea="+(display?display->userArea.toString():String("none"))+"\n";
+   auto file=File(String::fromUTF8(MYA_PROJECT_DIRECTORY)).getChildFile("mouse-events.log");
+   file.getParentDirectory().createDirectory();file.appendText(line,false,false,"\n");
+  }
+  WorkstationSurface& owner;
+ } probe{*this};
+ #endif
+ WorkstationSurface(){addAndMakeVisible(station);setSize(1440,960);
+ #if defined(MYA_GEOMETRY_LAB)
+  station.addMouseListener(&probe,true);
+ #endif
+ }
+ ~WorkstationSurface()override{
+ #if defined(MYA_GEOMETRY_LAB)
+  station.removeMouseListener(&probe);
+ #endif
+ }
  void resized()override{station.setBounds(0,-reclaimedHeight,getWidth(),getHeight()+reclaimedHeight);}
 };
 class MainWindow : public DocumentWindow {
@@ -1747,7 +1862,12 @@ class MainWindow : public DocumentWindow {
 public:
  explicit MainWindow(ApplicationProperties& settings):DocumentWindow(MyaIdentity::name(),Palette::bg,allButtons),preferences(settings){
  setUsingNativeTitleBar(true);auto* surface=new WorkstationSurface();workstation=&surface->station;setContentOwned(surface,true);
+ #if defined(MYA_GEOMETRY_LAB)
+ setName(juce::String::fromUTF8("Mya Acústica QA Geometría"));
+ workstation->setModeTitleCallback([this](int currentMode){setName(juce::String::fromUTF8("Mya Acústica QA Geometría · ")+(currentMode==1?"DSP":"Analyzer"));});
+ #else
  workstation->setModeTitleCallback([this](int currentMode){setName(currentMode==1?juce::String::fromUTF8("Mya Acústica DSP"):juce::String::fromUTF8("Mya Acústica Analyzer"));});
+ #endif
  #if JUCE_MAC
  MenuBarModel::setMacMainMenu(workstation);
  #else
@@ -1766,7 +1886,13 @@ public:
   if(maximized||nativeFullScreen){
    auto* display=Desktop::getInstance().getDisplays().getDisplayForRect(bounds.isEmpty()?getBounds():bounds);
    if(!display)display=Desktop::getInstance().getDisplays().getPrimaryDisplay();
-   if(display){setBounds(display->userArea);restored=true;}
+   if(display){
+    // JUCE's macOS peer interprets setBounds as the content rectangle. Fit the
+    // native frame inside the work area, including its actual title-bar inset.
+    auto area=display->userArea;
+    if(auto* peer=getPeer())area=peer->getFrameSize().subtractedFrom(area);
+    setBounds(area);restored=true;
+   }
   }else if(state.isNotEmpty()&&!state.startsWithIgnoreCase("fs "))restored=restoreWindowStateFromString(state);
   if(!restored&&!bounds.isEmpty()){setBounds(bounds);restored=true;}
   // Apply the administrator's rack dimensions after the native peer and window bounds exist.
@@ -1806,7 +1932,17 @@ class MyaApp:public JUCEApplication {
  ApplicationProperties preferences;
 public:
  const String getApplicationName()override{return MyaIdentity::name();}const String getApplicationVersion()override{return MyaIdentity::version();}
- void initialise(const String&)override{PropertiesFile::Options options;options.applicationName="Mya Acustica";options.filenameSuffix=".settings";options.folderName="Mya Acustica";options.osxLibrarySubFolder="Application Support";preferences.setStorageParameters(options);startup=std::make_unique<MyaStartupWindow>(true);auto token=alive;MessageManager::callAsync([this,token]{if(!*token)return;window=std::make_unique<MainWindow>(preferences);MessageManager::callAsync([this,token]{if(!*token||!window)return;window->showRestored([this,token]{if(!*token||!window)return;startup.reset();window->checkForUpdates();});});});}
+ void initialise(const String&)override{PropertiesFile::Options options;
+ #if defined(MYA_GEOMETRY_LAB)
+ options.applicationName="Mya Acustica Geometry Lab";options.folderName="Mya Acustica Geometry Lab";
+ #else
+ options.applicationName="Mya Acustica";options.folderName="Mya Acustica";
+ #endif
+ options.filenameSuffix=".settings";options.osxLibrarySubFolder="Application Support";preferences.setStorageParameters(options);startup=std::make_unique<MyaStartupWindow>(true);auto token=alive;MessageManager::callAsync([this,token]{if(!*token)return;window=std::make_unique<MainWindow>(preferences);MessageManager::callAsync([this,token]{if(!*token||!window)return;window->showRestored([this,token]{if(!*token||!window)return;startup.reset();
+ #if !defined(MYA_GEOMETRY_LAB)
+ window->checkForUpdates();
+ #endif
+ });});});}
  void shutdown()override{*alive=false;startup.reset();window.reset();preferences.saveIfNeeded();}
 };
 

@@ -40,7 +40,7 @@ public:
  void paint(juce::Graphics& g) override{owner.paintPane(g,getLocalBounds().toFloat(),phase);}
  void mouseMove(const juce::MouseEvent& e) override{owner.updatePaneCursor(phase?1:2,e.position,false);}
  void mouseDrag(const juce::MouseEvent& e) override{owner.updatePaneCursor(phase?1:2,e.position,false);}
- void mouseDown(const juce::MouseEvent&) override{if(owner.onPlotInteracted)owner.onPlotInteracted(phase?1:2,false);}
+ void mouseDown(const juce::MouseEvent& e) override{owner.updatePaneCursor(phase?1:2,e.position,false);if(owner.onPlotInteracted)owner.onPlotInteracted(phase?1:2,false);}
  void mouseDoubleClick(const juce::MouseEvent&) override{if(owner.onPlotInteracted)owner.onPlotInteracted(phase?1:2,true);}
  void mouseExit(const juce::MouseEvent&) override{owner.updatePaneCursor(phase?1:2,{},true);}
 private:
@@ -250,7 +250,8 @@ void TransferFunctionPanel::drawGrid(juce::Graphics& g,juce::Rectangle<float> ar
  }
  double minimum=phase?-180.:minDb,maximum=phase?180.:maxDb,span=maximum-minimum,centre=(minimum+maximum)*.5;
  double lower=centre+span*(panY[index]-.5/zoomY[index]),upper=centre+span*(panY[index]+.5/zoomY[index]);
- double step=readableStep((upper-lower)*50./area.getHeight());
+ if(phase){lower=std::max(lower,minimum);upper=std::min(upper,maximum);}
+ const double step=phase?30.:3.;
  int start=(int)std::ceil(lower/step-1.e-9),end=(int)std::floor(upper/step+1.e-9);
  for(int tick=start;tick<=end&&tick<start+512;++tick){
   double value=tick*step;float y=valuePosition(value,area,phase);

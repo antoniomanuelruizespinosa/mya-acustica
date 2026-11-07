@@ -4,6 +4,83 @@
 #include <iostream>
 int main(int argc,char** argv){
  if(argc!=2)return 2;juce::ScopedJuceInitialiser_GUI init;juce::File(juce::String::fromUTF8(MYA_PROJECT_DIRECTORY)).getChildFile("MYA-006-A-fixture").createDirectory();
+ if(juce::String::fromUTF8(argv[1])=="--axis-grid-steps"){
+  TransferFunctionPanel panel([]{return std::vector<TransferFunctionPanel::Trace>{};});
+  panel.setSize(800,500);panel.setPlotLayout({0,0,800,230},{0,238,800,262});panel.refreshNow();
+  std::array<double,3> pan{},zoom{{1.,1.,1.}};
+  auto checkGrid=[&](const juce::Image& image,int top,int height,double minimum,double maximum,double step,double verticalZoom,int index){
+   const int plotTop=top+23,plotHeight=height-48;
+   const double centre=(minimum+maximum)*.5,span=maximum-minimum;
+   std::vector<int> expected,actual;
+   for(int tick=(int)std::ceil(minimum/step);tick<=(int)std::floor(maximum/step);++tick){
+    const double value=tick*step;
+    const int y=juce::roundToInt(plotTop+plotHeight*.5-(value-centre)/span*verticalZoom*plotHeight);
+    if(y>plotTop+2&&y<plotTop+plotHeight-2)expected.push_back(y);
+   }
+   for(int y=plotTop+3;y<plotTop+plotHeight-2;++y){
+    int pixels=0;
+    for(int x=100;x<700;++x)if(image.getPixelAt(x,y)==juce::Colour(0xff2c3135))++pixels;
+    if(pixels>400)actual.push_back(y);
+   }
+   if(actual.size()!=expected.size()){
+    std::cerr<<"Grid "<<index<<" zoom "<<verticalZoom<<": expected "<<expected.size()<<" rows, got "<<actual.size()<<"\n";
+    return false;
+   }
+   for(size_t i=0;i<expected.size();++i)if(std::abs(actual[i]-expected[expected.size()-1-i])>1){
+    std::cerr<<"Grid "<<index<<" zoom "<<verticalZoom<<": row "<<actual[i]<<" differs from "<<expected[expected.size()-1-i]<<"\n";
+    return false;
+   }
+   return true;
+  };
+  auto baseline=panel.createComponentSnapshot(panel.getLocalBounds());
+  if(!checkGrid(baseline,0,230,-180.,180.,30.,1.,1)||!checkGrid(baseline,238,262,-18.,15.,3.,1.,2))return 122;
+  zoom[1]=zoom[2]=2.;panel.setPlotTransforms(pan,pan,std::array<double,3>{{1.,1.,1.}},zoom);
+  auto enlarged=panel.createComponentSnapshot(panel.getLocalBounds());
+  if(!checkGrid(enlarged,0,230,-180.,180.,30.,2.,1)||!checkGrid(enlarged,238,262,-18.,15.,3.,2.,2))return 123;
+  std::cout<<"PASS fixed 30-degree phase and 3-dB magnitude grid at normal and 2x vertical zoom\n";
+  return 0;
+ }
+ if(juce::String::fromUTF8(argv[1])=="--floating-meter-grid"){
+  auto fixture=juce::File(juce::String::fromUTF8(MYA_PROJECT_DIRECTORY)).getChildFile("floating-grid-"+juce::Uuid().toString());if(!fixture.createDirectory())return 124;
+  MeterState principal(fixture.getChildFile("principal.json")),floating(fixture.getChildFile("floating.json"),&principal);
+  auto dockFile=fixture.getChildFile("dock.json");MeterState dock(dockFile,&principal);
+  if(!dock.add()||!dock.setGrid(5,1)||!dock.sidebar(true))return 136;
+  MeterPanel fixed(dock,true,&principal);fixed.setSize(148,600);
+  PrincipalMeter main(principal);main.setSize(224,194);
+  auto fixedState=dockFile.loadFileAsString();auto fixedBounds=fixed.getBounds();auto mainBounds=main.getBounds();
+  auto fixedImage=fixed.createComponentSnapshot(fixed.getLocalBounds());
+  auto mainImage=main.createComponentSnapshot(main.getLocalBounds());
+  if(!fixed.previewPages()||!fixedImage.isValid()||!mainImage.isValid())return 137;
+  MeterPanel panel(floating,false,&principal);panel.setSize(480,310);if(!panel.previewPages()||!panel.previewFloatingCellMinimums())return 125;
+  const auto originalCards=floating.state().cards;
+  auto baseline=panel.createComponentSnapshot(panel.getLocalBounds());
+  if(!panel.addMeterRight())return 126;panel.refreshNow();if(floating.state().rows!=2||floating.state().columns!=3||floating.state().cards.size()!=6||!panel.previewPages()||!panel.previewFloatingCellMinimums())return 127;
+  auto wider=panel.createComponentSnapshot(panel.getLocalBounds());
+  if(!panel.addMeterBelow())return 128;panel.refreshNow();if(floating.state().rows!=3||floating.state().columns!=3||floating.state().cards.size()!=9||panel.addMeterBelow()||!panel.previewPages()||!panel.previewFloatingCellMinimums())return 129;
+  auto taller=panel.createComponentSnapshot(panel.getLocalBounds());
+  auto changed=[](const juce::Image& a,const juce::Image& b){int count=0;for(int y=0;y<a.getHeight();++y)for(int x=0;x<a.getWidth();++x)count+=a.getPixelAt(x,y)!=b.getPixelAt(x,y);return count;};
+  if(!baseline.isValid()||!wider.isValid()||!taller.isValid()||changed(baseline,wider)<500||changed(wider,taller)<500)return 130;
+  if(!panel.addMeterRight()||!panel.addMeterRight())return 131;panel.refreshNow();if(floating.state().rows!=3||floating.state().columns!=5||floating.state().cards.size()!=15||!panel.previewFloatingHorizontalScroll()||!panel.previewFloatingCellMinimums())return 132;
+  panel.setSize(800,570);if(panel.previewFloatingHorizontalScroll()||!panel.previewFloatingCellMinimums()||principal.state().rows!=2||principal.state().columns!=2||principal.state().cards.size()!=4)return 133;
+  if(!panel.removeMeterRight())return 142;panel.refreshNow();if(floating.state().rows!=3||floating.state().columns!=4||floating.state().cards.size()!=12||!panel.previewPages()||!panel.previewFloatingCellMinimums())return 143;
+  if(!panel.removeMeterBelow())return 144;panel.refreshNow();if(floating.state().rows!=2||floating.state().columns!=4||floating.state().cards.size()!=8||!panel.previewPages()||!panel.previewFloatingCellMinimums())return 145;
+  for(int row=0;row<2;++row)for(int column=0;column<2;++column)if(floating.state().cards[(size_t)row*4+(size_t)column].id!=originalCards[(size_t)row*2+(size_t)column].id)return 146;
+  if(dockFile.loadFileAsString()!=fixedState||dock.state().rows!=5||dock.state().columns!=1||dock.state().cards.size()!=5||fixed.getBounds()!=fixedBounds||main.getBounds()!=mainBounds)return 138;
+  if(changed(fixedImage,fixed.createComponentSnapshot(fixed.getLocalBounds()))!=0||changed(mainImage,main.createComponentSnapshot(main.getLocalBounds()))!=0)return 139;
+  if(!floating.setGrid(4,5))return 134;MeterWindow window(floating,&principal);juce::Button* gear=nullptr;for(auto* child:window.getChildren())if(auto* button=dynamic_cast<juce::TextButton*>(child))if(button->getButtonText()==juce::String::fromUTF8("⚙"))gear=button;
+  if(floating.state().rows!=3||window.isUsingNativeTitleBar()||!gear||!gear->isVisible()||!window.getTitleBarArea().contains(gear->getBounds()))return 134;
+  auto titleSnapshot=window.createComponentSnapshot(window.getLocalBounds());juce::FileOutputStream imageFile(fixture.getChildFile("floating-meter-titlebar.png"));if(!titleSnapshot.isValid()||!imageFile.openedOk()||!juce::PNGImageFormat{}.writeImageToStream(titleSnapshot,imageFile))return 135;
+  std::cout<<"PASS floating meter add/remove columns and rows, strict three-row limit, responsive tiles and isolated fixed rack\n";return 0;
+ }
+ if(juce::String::fromUTF8(argv[1])=="--qa-fixed-racks"){
+  WorkstationSurface surface;surface.setSize(1440,960);
+  if(!surface.station.previewFixedRacksAfterFloatingGrowth())return 140;
+  auto image=surface.createComponentSnapshot(surface.getLocalBounds());
+  auto file=juce::File(juce::String::fromUTF8(MYA_PROJECT_DIRECTORY)).getChildFile("qa-fixed-racks.png");
+  juce::FileOutputStream stream(file);
+  if(!image.isValid()||!stream.openedOk()||!juce::PNGImageFormat{}.writeImageToStream(image,stream))return 141;
+  std::cout<<"PASS fixed five-meter vertical rack and main/TF bounds unchanged by floating grid growth\n";return 0;
+ }
  if(juce::String::fromUTF8(argv[1])=="--trace-visibility"){WorkstationSurface surface;return surface.station.previewHiddenTraceKeepsAverage()?0:114;}
  if(juce::String::fromUTF8(argv[1])=="--sample-validity"){
   TransferFunctionCore::Point phase,magnitude;phase.phaseDegrees=90.;phase.coherence=.9;magnitude.magnitudeDb=-6.;magnitude.coherence=.8;
@@ -23,6 +100,148 @@ int main(int argc,char** argv){
  }
  if(juce::String::fromUTF8(argv[1])=="--hit-regions"){
   for(auto size:{juce::Point<int>{1120,900},juce::Point<int>{1440,960},juce::Point<int>{1760,1080}}){WorkstationSurface surface;surface.setSize(size.x,size.y);surface.setVisible(true);auto failure=surface.station.previewHitRegions(surface);if(failure.isNotEmpty())std::cerr<<size.x<<"x"<<size.y<<": "<<failure<<"\n";if(failure.isNotEmpty()||!surface.station.previewFindPressIsolation())return 116;}
+  return 0;
+ }
+ if(juce::String::fromUTF8(argv[1])=="--mouse-test"){
+  auto describe=[](const juce::Component* component){
+   if(component==nullptr)return juce::String("none");
+   auto name=component->getTitle();
+   if(name.isEmpty())name=component->getName();
+   if(auto* button=dynamic_cast<const juce::Button*>(component))name+=" ["+button->getButtonText()+"]";
+   if(name.isNotEmpty())return name;
+   if(auto* label=dynamic_cast<const juce::Label*>(component))return juce::String("Label [")+label->getText()+"]";
+   if(dynamic_cast<const juce::TextEditor*>(component))return juce::String("TextEditor");
+   if(dynamic_cast<const juce::Slider*>(component))return juce::String("Slider");
+   return juce::String("unnamed child");
+  };
+  auto contains=[](const juce::Component* target,const juce::Component* received){
+   return received!=nullptr&&(received==target||target->isParentOf(received));
+  };
+  for(auto size:{juce::Point<int>{1120,900},juce::Point<int>{1440,960},juce::Point<int>{1760,1080}}){
+   WorkstationSurface surface;
+   surface.setSize(size.x,size.y);
+   surface.setVisible(true);
+   auto failure=surface.station.previewHitRegions(surface);
+   if(failure.isNotEmpty()){std::cerr<<"Local layout "<<size.x<<"x"<<size.y<<": "<<failure<<"\n";return 150;}
+  }
+  {
+   auto fixture=juce::File(juce::String::fromUTF8(MYA_PROJECT_DIRECTORY)).getChildFile("mouse-test-"+juce::Uuid().toString());
+   if(!fixture.createDirectory())return 149;
+   juce::PropertiesFile::Options options;
+   options.applicationName="mya-qa-mouse-test";
+   options.filenameSuffix=".settings";
+   options.osxLibrarySubFolder="Application Support";
+   options.folderName=fixture.getFullPathName();
+   juce::ApplicationProperties preferences;
+   preferences.setStorageParameters(options);
+   auto* properties=preferences.getUserSettings();
+   if(properties==nullptr)return 155;
+   properties->setValue("window.bounds",juce::Rectangle<int>(30,45,1120,900).toString());
+   properties->setValue("window.fullScreen",false);
+   properties->setValue("isWindowMaximized",true);
+   MainWindow window(preferences);
+   window.showRestored([]{});
+   window.toFront(true);
+   auto* surface=dynamic_cast<WorkstationSurface*>(window.getContentComponent());
+   if(surface==nullptr)return 147;
+   auto* peer=window.getPeer();
+   if(peer==nullptr||!window.isUsingNativeTitleBar())return 156;
+   const auto client=peer->getBounds();
+   const auto windowBounds=window.getBounds();
+   const auto frame=peer->getFrameSize();
+   const auto outer=frame.addedTo(client);
+   auto* display=juce::Desktop::getInstance().getDisplays().getDisplayForRect(outer);
+   if(display==nullptr)display=juce::Desktop::getInstance().getDisplays().getPrimaryDisplay();
+   std::cout<<"Maximized native window: frame="<<frame.getLeft()<<","<<frame.getTop()<<","<<frame.getRight()<<","<<frame.getBottom()
+            <<" peer="<<client.toString()<<" MainWindow="<<windowBounds.toString()
+            <<" outer="<<outer.toString()<<" content="<<surface->getBounds().toString()
+            <<" userArea="<<(display==nullptr?juce::String("none"):display->userArea.toString())<<"\n";
+   if(client!=windowBounds||surface->getWidth()!=client.getWidth()||surface->getHeight()!=client.getHeight()){
+    std::cerr<<"Native peer, MainWindow and content bounds disagree after showRestored\n";
+    return 154;
+   }
+   if(display==nullptr||display->userArea.isEmpty())
+    std::cout<<"SKIP maximized monitor coverage: no valid display in CLI QA process\n";
+   else if(outer!=display->userArea){
+    std::cerr<<"Native window frame does not cover the display user area after showRestored\n";
+    return 157;
+   }else std::cout<<"PASS maximized native frame covers display user area\n";
+   auto findTarget=[&](const std::function<bool(juce::Component&)>& matches)->juce::Component*{
+    std::function<juce::Component*(juce::Component&)> visit=[&](juce::Component& parent)->juce::Component*{
+     for(auto* child:parent.getChildren()){
+      if(matches(*child)&&child->isShowing())return child;
+      if(auto* found=visit(*child))return found;
+     }
+     return nullptr;
+    };
+    return visit(*surface);
+   };
+   auto* find=findTarget([](juce::Component& component){if(auto* button=dynamic_cast<juce::TextButton*>(&component))return button->getButtonText()=="Find";return false;});
+   auto* smoothing=findTarget([](juce::Component& component){return component.getTitle()=="Suavizado de la pantalla activa";});
+   auto* phaseSmoothing=findTarget([](juce::Component& component){return component.getTitle().startsWith("Fase / Phase")&&component.getTitle().contains("smoothing");});
+   auto* magnitudeSmoothing=findTarget([](juce::Component& component){return component.getTitle().startsWith("Magnitud / Magnitude")&&component.getTitle().contains("smoothing");});
+   auto* delay=findTarget([](juce::Component& component){return component.getTitle().startsWith("Delay de medicion MICRO 1");});
+   auto* coherence=findTarget([](juce::Component& component){if(auto* button=dynamic_cast<juce::Button*>(&component))return button->getButtonText()=="Coh";return false;});
+   const std::array<std::pair<const char*,juce::Component*>,6> targets{{{"Find",find},{"Suavizado",smoothing},{"Suavizado Fase",phaseSmoothing},{"Suavizado Magnitud",magnitudeSmoothing},{"Milisegundos",delay},{"Coh",coherence}}};
+   for(const auto& [name,target]:targets)if(target==nullptr){std::cerr<<"Missing mouse-test target "<<name<<"\n";return 148;}
+   MeterState primary(fixture.getChildFile("primary.json")),floating(fixture.getChildFile("floating.json"),&primary);
+   MeterWindow meterWindow(floating,&primary);
+   meterWindow.setVisible(false);
+   auto testState=[&](const char* state)->bool{
+    auto failure=surface->station.previewHitRegions(*surface);
+    if(failure.isNotEmpty()){std::cerr<<window.getWidth()<<"x"<<window.getHeight()<<" "<<state<<": "<<failure<<"\n";return false;}
+    for(const auto& [name,target]:targets){
+     auto screen=target->getScreenBounds().getCentre();
+     auto local=target->getLocalPoint(nullptr,screen);
+     auto* hit=window.getComponentAt(window.getLocalPoint(nullptr,screen));
+     auto* stationHit=surface->station.getComponentAt(surface->station.getLocalPoint(nullptr,screen));
+     std::cout<<window.getWidth()<<"x"<<window.getHeight()<<" "<<state<<" "<<name<<" screen="<<screen.toString()
+              <<" local="<<local.toString()<<" bounds="<<target->getScreenBounds().toString()
+              <<" expected="<<describe(target).toStdString()<<" windowHit="<<describe(hit).toStdString()
+              <<" stationHit="<<describe(stationHit).toStdString()<<"\n";
+     if(!contains(target,hit)||!contains(target,stationHit)
+        ||std::abs(local.x-target->getWidth()/2)>1||std::abs(local.y-target->getHeight()/2)>1)return false;
+    }
+    return true;
+   };
+   if(!testState("cerrada"))return 150;
+   meterWindow.setVisible(true);
+   if(!testState("abierta"))return 151;
+   meterWindow.maximiseButtonPressed();
+   if(!testState("ampliada"))return 152;
+   meterWindow.maximiseButtonPressed();
+   if(!testState("restaurada"))return 153;
+   meterWindow.setVisible(false);
+   window.setVisible(false);
+  }
+  std::cout<<"PASS JUCE local centre hit geometry across floating meter states. Native mouseDown/mouseUp receivers require the in-app GeometryProbe and a physical UI click.\n";
+  return 0;
+ }
+ if(juce::String::fromUTF8(argv[1])=="--geometry-telemetry"){
+  for(auto size:{juce::Point<int>{1120,900},juce::Point<int>{1440,960},juce::Point<int>{1760,1080}}){
+   WorkstationSurface surface;surface.setSize(size.x,size.y);surface.setVisible(true);
+   std::cout<<surface.station.previewGeometryTelemetry(surface).toStdString();
+   if(surface.station.previewHitRegions(surface).isNotEmpty())return 119;
+  }
+  return 0;
+ }
+ if(juce::String::fromUTF8(argv[1])=="--cursor-direct-click"){
+  for(bool frozen:{false,true})for(int plot:{1,2}){
+   TransferFunctionPanel::Trace trace;trace.id=1;trace.selected=true;trace.frozen=frozen;
+   trace.samples={{20.,-6.,30.,1.,true},{20000.,-6.,30.,1.,true}};
+   TransferFunctionPanel panel([&]{return std::vector<TransferFunctionPanel::Trace>{trace};});
+   panel.setSize(800,500);panel.setPlotLayout({0,0,800,230},{0,238,800,262});panel.refreshNow();
+   auto baseline=panel.createComponentSnapshot(panel.getLocalBounds());
+   int cursorPlot=-1;bool validSample=false;
+   panel.onCursorMoved=[&](int selected,double,std::optional<TransferFunctionPanel::Sample> sample){cursorPlot=selected;validSample=sample&&sample->valid;};
+   auto* pane=panel.getChildComponent(plot-1);const juce::Point<float> point{400.f,100.f};auto now=juce::Time::getCurrentTime();
+   juce::MouseEvent click(juce::Desktop::getInstance().getMainMouseSource(),point,juce::ModifierKeys{},1.f,0.f,0.f,0.f,0.f,pane,pane,now,point,now,1,false);
+   pane->mouseDown(click);
+   if(cursorPlot!=plot||!validSample)return 120;
+   auto active=panel.createComponentSnapshot(panel.getLocalBounds());
+   auto changed=[&](juce::Rectangle<int> area){int count=0;for(int y=area.getY();y<area.getBottom();++y)for(int x=area.getX();x<area.getRight();++x)count+=baseline.getPixelAt(x,y)!=active.getPixelAt(x,y);return count;};
+   if(changed({0,0,800,230})<100||changed({0,238,800,262})<100)return 121;
+  }
   return 0;
  }
  juce::File out(juce::String::fromUTF8(argv[1]));if(!out.createDirectory())return 3;

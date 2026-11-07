@@ -80,6 +80,48 @@ public:
  void setSources(std::vector<Source> sources){inputs=std::move(sources);++revision;notify();}
  const Card* find(const juce::String& id) const{for(const auto& c:data.cards)if(c.id==id)return &c;return nullptr;}
  bool add(){if(data.cards.size()>=10000){error="Meter configuration capacity reached";return false;}auto s=data;auto added=card((int)s.cards.size()+1);if(auto* c=primaryCard())added.deviceKey=c->deviceKey;if(added.deviceKey.isEmpty())added.deviceKey=defaultDevice;s.cards.push_back(added);return commit(s);}
+ bool addFloatingColumn(){
+  auto s=data;if(s.rows<1||s.rows>3||s.columns<1||s.columns>=64||s.cards.size()+(size_t)s.rows>10000)return false;
+  const size_t oldCapacity=(size_t)s.rows*(size_t)s.columns;
+  std::vector<Card> next;next.reserve(s.cards.size()+(size_t)s.rows);
+  for(int row=0;row<s.rows;++row){
+   for(int column=0;column<s.columns;++column){const size_t index=(size_t)row*(size_t)s.columns+(size_t)column;if(index<s.cards.size())next.push_back(s.cards[index]);else next.push_back(card((int)next.size()+1));}
+   auto added=card((int)next.size()+1);if(auto* source=primaryCard())added.deviceKey=source->deviceKey;if(added.deviceKey.isEmpty())added.deviceKey=defaultDevice;next.push_back(std::move(added));
+  }
+  for(size_t i=oldCapacity;i<s.cards.size();++i)next.push_back(s.cards[i]);
+  s.cards=std::move(next);++s.columns;return commit(std::move(s));
+ }
+ bool duplicateFloatingRow(){
+  auto s=data;if(s.rows<1||s.rows>=3||s.columns<1||s.cards.size()+(size_t)s.columns>10000)return false;
+  const size_t oldCapacity=(size_t)s.rows*(size_t)s.columns;
+  std::vector<Card> next;next.reserve(s.cards.size()+(size_t)s.columns);
+  for(size_t i=0;i<oldCapacity;++i){if(i<s.cards.size())next.push_back(s.cards[i]);else next.push_back(card((int)next.size()+1));}
+  for(int column=0;column<s.columns;++column){auto copy=next[(size_t)(s.rows-1)*(size_t)s.columns+(size_t)column];copy.id=juce::Uuid().toString();next.push_back(std::move(copy));}
+  for(size_t i=oldCapacity;i<s.cards.size();++i)next.push_back(s.cards[i]);
+  s.cards=std::move(next);++s.rows;return commit(std::move(s));
+ }
+ bool removeFloatingColumn(){
+  auto s=data;if(s.rows<1||s.rows>3||s.columns<=1||s.columns>64)return false;
+  const size_t oldCapacity=(size_t)s.rows*(size_t)s.columns;
+  std::vector<Card> next;next.reserve(s.cards.size());std::vector<juce::String> removed;
+  for(int row=0;row<s.rows;++row)for(int column=0;column<s.columns;++column){
+   const size_t index=(size_t)row*(size_t)s.columns+(size_t)column;if(index>=s.cards.size())continue;
+   if(column==s.columns-1)removed.push_back(s.cards[index].id);else next.push_back(s.cards[index]);
+  }
+  for(size_t i=oldCapacity;i<s.cards.size();++i)next.push_back(s.cards[i]);
+  s.cards=std::move(next);--s.columns;
+  if(std::find(removed.begin(),removed.end(),s.primaryId)!=removed.end())s.primaryId=s.cards.empty()?juce::String{}:s.cards.front().id;
+  if(!commit(std::move(s)))return false;for(const auto& id:removed)readings.erase(id);return true;
+ }
+ bool removeFloatingRow(){
+  auto s=data;if(s.rows<=1||s.rows>3||s.columns<1||s.columns>64)return false;
+  const size_t firstRemoved=(size_t)(s.rows-1)*(size_t)s.columns,oldCapacity=(size_t)s.rows*(size_t)s.columns;
+  std::vector<Card> next;next.reserve(s.cards.size());std::vector<juce::String> removed;
+  for(size_t i=0;i<s.cards.size();++i){if(i>=firstRemoved&&i<oldCapacity)removed.push_back(s.cards[i].id);else next.push_back(s.cards[i]);}
+  s.cards=std::move(next);--s.rows;
+  if(std::find(removed.begin(),removed.end(),s.primaryId)!=removed.end())s.primaryId=s.cards.empty()?juce::String{}:s.cards.front().id;
+  if(!commit(std::move(s)))return false;for(const auto& id:removed)readings.erase(id);return true;
+ }
  bool remove(const juce::String& id){auto s=data;auto old=s.cards.size();s.cards.erase(std::remove_if(s.cards.begin(),s.cards.end(),[&](const Card& c){return c.id==id;}),s.cards.end());bool ok=old!=s.cards.size()&&commit(s);if(ok)readings.erase(id);return ok;}
  bool update(const Card& card){auto s=data;for(auto& c:s.cards)if(c.id==card.id){bool changed=c.deviceKey!=card.deviceKey||c.channel!=card.channel||c.metric!=card.metric||c.weight!=card.weight||c.leqSeconds!=card.leqSeconds;c=card;if(c.metric==1||c.metric==6)c.weight=1;bool ok=commit(s,false);if(ok){if(changed)readings.erase(card.id);notify();}return ok;}return false;}
  bool move(const juce::String& id,int step){auto s=data;for(size_t i=0;i<s.cards.size();++i)if(s.cards[i].id==id){int target=(int)i+step;if(target<0||target>=(int)s.cards.size())return false;std::swap(s.cards[i],s.cards[(size_t)target]);return commit(s);}return false;}
